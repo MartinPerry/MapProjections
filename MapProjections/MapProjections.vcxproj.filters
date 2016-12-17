@@ -24,10 +24,10 @@
     <ClCompile Include="lodepng.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="ProjectionDebugger.cpp">
+    <ClCompile Include="Projections.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Projections.cpp">
+    <ClCompile Include="ProjectionRenderer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -38,10 +38,10 @@
     <ClInclude Include="lodepng.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="ProjectionDebugger.h">
+    <ClInclude Include="Projections.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Projections.h">
+    <ClInclude Include="ProjectionRenderer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

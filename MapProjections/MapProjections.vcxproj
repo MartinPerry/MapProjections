@@ -145,13 +145,13 @@
     <ClCompile Include="lodepng.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="MapProjection.cpp" />
-    <ClCompile Include="ProjectionDebugger.cpp" />
+    <ClCompile Include="ProjectionRenderer.cpp" />
     <ClCompile Include="Projections.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="lodepng.h" />
     <ClInclude Include="MapProjection.h" />
-    <ClInclude Include="ProjectionDebugger.h" />
+    <ClInclude Include="ProjectionRenderer.h" />
     <ClInclude Include="Projections.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

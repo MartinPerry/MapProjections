@@ -1,4 +1,4 @@
-#include "ProjectionDebugger.h"
+#include "ProjectionRenderer.h"
 
 #include "./lodepng.h"
 
@@ -7,19 +7,19 @@
 //
 //=======================================================================
 
-ProjectionDebugger::ProjectionDebugger(IProjectionInfo * proj)
+ProjectionRenderer::ProjectionRenderer(IProjectionInfo * proj)
 	: rawData(nullptr), proj(nullptr)
 {
 	this->SetProjection(proj);
 }
 
-ProjectionDebugger::~ProjectionDebugger()
+ProjectionRenderer::~ProjectionRenderer()
 {
 	delete[] rawData;
 	rawData = nullptr;
 }
 
-void ProjectionDebugger::SetProjection(IProjectionInfo * proj)
+void ProjectionRenderer::SetProjection(IProjectionInfo * proj)
 {
 	this->proj = proj;
 	delete[] rawData;
@@ -27,12 +27,12 @@ void ProjectionDebugger::SetProjection(IProjectionInfo * proj)
 	this->Clear();
 }
 
-void ProjectionDebugger::Clear()
+void ProjectionRenderer::Clear()
 {
 	memset(rawData, 0, proj->GetFrameWidth() * proj->GetFrameHeight() * sizeof(uint8_t));
 }
 
-void ProjectionDebugger::SaveToFile(const char * fileName)
+void ProjectionRenderer::SaveToFile(const char * fileName)
 {
 
 	lodepng::encode(fileName, this->rawData, proj->GetFrameWidth(), proj->GetFrameHeight(),
@@ -54,7 +54,7 @@ void ProjectionDebugger::SaveToFile(const char * fileName)
 }
 
 
-std::string ProjectionDebugger::LoadFromFile(const char * filePath)
+std::string ProjectionRenderer::LoadFromFile(const char * filePath)
 {
 	FILE *f = NULL;  //pointer to file we will read in
 	f = fopen(filePath, "rb");
@@ -79,7 +79,7 @@ std::string ProjectionDebugger::LoadFromFile(const char * filePath)
 	return tmp;
 };
 
-std::vector<std::string> ProjectionDebugger::Split(const std::string &s, char delim)
+std::vector<std::string> ProjectionRenderer::Split(const std::string &s, char delim)
 {
 	std::stringstream ss;
 	ss.str(s);
@@ -92,7 +92,7 @@ std::vector<std::string> ProjectionDebugger::Split(const std::string &s, char de
 	return elems;
 }
 
-void ProjectionDebugger::AddBorders(const char * fileName, int useNthPoint)
+void ProjectionRenderer::AddBorders(const char * fileName, int useNthPoint)
 {
 	std::string content = LoadFromFile(fileName);
 
@@ -140,7 +140,7 @@ void ProjectionDebugger::AddBorders(const char * fileName, int useNthPoint)
 
 }
 
-void ProjectionDebugger::DrawBorders()
+void ProjectionRenderer::DrawBorders()
 {
 
 	for (auto it = this->debugBorder.begin(); it != this->debugBorder.end(); it++)
@@ -164,7 +164,7 @@ void ProjectionDebugger::DrawBorders()
 	}
 }
 
-void ProjectionDebugger::DrawParalells()
+void ProjectionRenderer::DrawParalells()
 {
 	double lonStep = 10;
 	double latStep = 5;
@@ -191,7 +191,7 @@ void ProjectionDebugger::DrawParalells()
 	}
 }
 
-void ProjectionDebugger::DrawLine(IProjectionInfo::Coordinate start,
+void ProjectionRenderer::DrawLine(IProjectionInfo::Coordinate start,
 	IProjectionInfo::Coordinate end, int stepCount)
 {
 	double difLat = (end.lat.rad() - start.lat.rad());
@@ -218,7 +218,7 @@ void ProjectionDebugger::DrawLine(IProjectionInfo::Coordinate start,
 	}
 }
 
-void ProjectionDebugger::DrawPoint(IProjectionInfo::Coordinate p)
+void ProjectionRenderer::DrawPoint(IProjectionInfo::Coordinate p)
 {
 	int size = 5;
 	IProjectionInfo::Pixel center = proj->Project(p);
@@ -240,7 +240,7 @@ void ProjectionDebugger::DrawPoint(IProjectionInfo::Coordinate p)
 
 }
 
-void ProjectionDebugger::DrawLines(const std::vector<IProjectionInfo::Coordinate> & points)
+void ProjectionRenderer::DrawLines(const std::vector<IProjectionInfo::Coordinate> & points)
 {
 	if (points.size() <= 1)
 	{
@@ -254,7 +254,7 @@ void ProjectionDebugger::DrawLines(const std::vector<IProjectionInfo::Coordinate
 
 }
 
-int ProjectionDebugger::ComputeOutCode(double x, double y)
+int ProjectionRenderer::ComputeOutCode(double x, double y)
 {
 	int code = INSIDE;
 
@@ -268,7 +268,7 @@ int ProjectionDebugger::ComputeOutCode(double x, double y)
 }
 
 
-void ProjectionDebugger::CohenSutherlandLineClipAndDraw(double x0, double y0, double x1, double y1)
+void ProjectionRenderer::CohenSutherlandLineClipAndDraw(double x0, double y0, double x1, double y1)
 {
 	// compute outcodes for P0, P1, and whatever point lies outside the clip rectangle
 	int outcode0 = ComputeOutCode(x0, y0);
@@ -338,8 +338,8 @@ void ProjectionDebugger::CohenSutherlandLineClipAndDraw(double x0, double y0, do
 		//LineSegment(x0, y0, x1, y1);
 		//DrawLine(x0, y0, x1, y1);
 		IProjectionInfo::Pixel start, end;
-		start.x = x0; start.y = y0;
-		end.x = x1; end.y = y1;
+		start.x = static_cast<int>(x0); start.y = static_cast<int>(y0);
+		end.x = static_cast<int>(x1); end.y = static_cast<int>(y1);
 
 		proj->LineBresenham(start, end,
 			[&](int x, int y) -> void {
@@ -348,7 +348,41 @@ void ProjectionDebugger::CohenSutherlandLineClipAndDraw(double x0, double y0, do
 	}
 }
 
-void ProjectionDebugger::DrawImage(uint8_t * imData, int w, int h, IProjectionInfo * imProj)
+std::vector<IProjectionInfo::Pixel> ProjectionRenderer::CreateReprojection(int w, int h, IProjectionInfo * imProj)
+{
+	std::vector<IProjectionInfo::Pixel> reprojection;
+	
+	for (int y = 0; y < this->proj->GetFrameHeight(); y++)
+	{
+		for (int x = 0; x < this->proj->GetFrameWidth(); x++)
+		{
+			reprojection.push_back({ -1, -1 });
+		}
+	}
+
+
+	for (int y = 0; y < this->proj->GetFrameHeight(); y++)
+	{
+		for (int x = 0; x < this->proj->GetFrameWidth(); x++)
+		{
+
+			IProjectionInfo::Coordinate cc = this->proj->ProjectInverse({ x,y });
+			IProjectionInfo::Pixel p = imProj->Project(cc);
+
+			if (p.x < 0) continue;
+			if (p.y < 0) continue;
+			if (p.x >= w) continue;
+			if (p.y >= h) continue;
+
+			reprojection[x + y * this->proj->GetFrameWidth()] = p;
+
+		}
+	}
+
+	return reprojection;
+}
+
+void ProjectionRenderer::DrawImage(uint8_t * imData, int w, int h, IProjectionInfo * imProj)
 {
 	for (int y = 0; y < this->proj->GetFrameHeight(); y++)
 	{
@@ -383,3 +417,8 @@ void ProjectionDebugger::DrawImage(uint8_t * imData, int w, int h, IProjectionIn
 	*/
 }
 
+
+void ProjectionRenderer::SetPixel(const IProjectionInfo::Pixel & p, uint8_t val)
+{
+	this->rawData[p.x + p.y * this->proj->GetFrameWidth()] = val;
+}

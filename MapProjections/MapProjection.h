@@ -76,12 +76,11 @@ public:
 	IProjectionInfo::Coordinate ProjectInverse(Pixel p) const;
 
 	void SetFrame(Coordinate minCoord, Coordinate maxCoord,
-		uint32_t w, uint32_t h, bool keepAR = true);
-	void SetFrame(Coordinate minCoord,
-		uint32_t w, uint32_t h, bool keepAR = true);
+		int w, int h, bool keepAR = true);
 
-	uint32_t GetFrameWidth() const { return this->w; }
-	uint32_t GetFrameHeight() const { return this->h; }
+
+	int GetFrameWidth() const { return this->w; }
+	int GetFrameHeight() const { return this->h; }
 
 	IProjectionInfo::Coordinate CalcEndPointShortest(IProjectionInfo::Coordinate start, Angle bearing, double dist);
 	IProjectionInfo::Coordinate CalcEndPointDirect(IProjectionInfo::Coordinate start, Angle bearing, double dist);
@@ -135,8 +134,8 @@ protected:
 	ProjectedValue min;
 	ProjectedValue max;
 
-	uint32_t w;
-	uint32_t h;
+	int w;
+	int h;
 
 	double wPadding;
 	double hPadding;

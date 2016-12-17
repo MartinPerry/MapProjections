@@ -29,35 +29,10 @@ double IProjectionInfo::NormalizeLat(double lat)
 	return (lat > 90) ? (lat - 180) : lat;
 }
 
-void IProjectionInfo::SetFrame(Coordinate minCoord,
-	uint32_t w, uint32_t h, bool keepAR)
-{
-	this->min = { std::numeric_limits<double>::max(), std::numeric_limits<double>::max() };
-	this->max = { std::numeric_limits<double>::min(), std::numeric_limits<double>::min() };
 
-	ProjectedValue minPixel = this->ProjectInternal(minCoord);
-	//ProjectedValue maxPixel = this->ProjectInternal(maxCoord);
-
-
-	this->min.x = std::min(this->min.x, minPixel.x);
-	this->min.y = std::min(this->min.y, minPixel.y);
-
-
-	//-----------------------------------------------------------
-
-	minPixel.x = minPixel.x - this->min.x;
-	minPixel.y = minPixel.y - this->min.y;
-
-	this->w = w;
-	this->h = h;
-	
-	auto ii = this->ProjectInverseInternal(minPixel.x + w, minPixel.y + h);
-	printf("x");
-
-}
 
 void IProjectionInfo::SetFrame(Coordinate minCoord, Coordinate maxCoord, 
-	uint32_t w, uint32_t h, bool keepAR)
+	int w, int h, bool keepAR)
 {
 		
 	this->min = { std::numeric_limits<double>::max(), std::numeric_limits<double>::max() };

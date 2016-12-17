@@ -8,11 +8,11 @@
 
 #include "MapProjection.h"
 
-class ProjectionDebugger
+class ProjectionRenderer
 {
 public:
-	ProjectionDebugger(IProjectionInfo * proj);
-	~ProjectionDebugger();
+	ProjectionRenderer(IProjectionInfo * proj);
+	~ProjectionRenderer();
 
 	void SetProjection(IProjectionInfo * proj);
 	void Clear();
@@ -29,6 +29,9 @@ public:
 	void DrawLines(const std::vector<IProjectionInfo::Coordinate> & points);
 
 	void DrawImage(uint8_t * imData, int w, int h, IProjectionInfo * imProj);
+	std::vector<IProjectionInfo::Pixel> CreateReprojection(int w, int h, IProjectionInfo * imProj);
+
+	void SetPixel(const IProjectionInfo::Pixel & p, uint8_t val);
 
 	void SaveToFile(const char * fileName);
 
@@ -51,7 +54,7 @@ private:
 	void CohenSutherlandLineClipAndDraw(double x0, double y0, double x1, double y1);
 
 	std::vector<std::string> Split(const std::string &s, char delim);
-	std::string ProjectionDebugger::LoadFromFile(const char * filePath);
+	std::string LoadFromFile(const char * filePath);
 	
 };
 

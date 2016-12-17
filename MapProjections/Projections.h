@@ -42,4 +42,22 @@ protected:
 };
 
 
+class Equirectangular : public IProjectionInfo
+{
+public:
+	Equirectangular();
+
+
+protected:
+
+	GeoCoordinate lonCentralMeridian;
+	GeoCoordinate standardParallel;
+	double cosStandardParallel;
+
+	virtual IProjectionInfo::ProjectedValue ProjectInternal(Coordinate c) const;
+	virtual IProjectionInfo::ProjectedValueInverse ProjectInverseInternal(double x, double y) const;
+
+};
+
+
 #endif

@@ -29,6 +29,33 @@ double IProjectionInfo::NormalizeLat(double lat)
 	return (lat > 90) ? (lat - 180) : lat;
 }
 
+void IProjectionInfo::SetFrame(Coordinate minCoord,
+	uint32_t w, uint32_t h, bool keepAR)
+{
+	this->min = { std::numeric_limits<double>::max(), std::numeric_limits<double>::max() };
+	this->max = { std::numeric_limits<double>::min(), std::numeric_limits<double>::min() };
+
+	ProjectedValue minPixel = this->ProjectInternal(minCoord);
+	//ProjectedValue maxPixel = this->ProjectInternal(maxCoord);
+
+
+	this->min.x = std::min(this->min.x, minPixel.x);
+	this->min.y = std::min(this->min.y, minPixel.y);
+
+
+	//-----------------------------------------------------------
+
+	minPixel.x = minPixel.x - this->min.x;
+	minPixel.y = minPixel.y - this->min.y;
+
+	this->w = w;
+	this->h = h;
+	
+	auto ii = this->ProjectInverseInternal(minPixel.x + w, minPixel.y + h);
+	printf("x");
+
+}
+
 void IProjectionInfo::SetFrame(Coordinate minCoord, Coordinate maxCoord, 
 	uint32_t w, uint32_t h, bool keepAR)
 {
@@ -110,8 +137,8 @@ IProjectionInfo::Coordinate IProjectionInfo::ProjectInverse(Pixel p) const
 	ProjectedValueInverse pi = this->ProjectInverseInternal(xx, yy);
 
 	Coordinate c;
-	c.lat = GeoCoordinate::deg(pi.lat);
-	c.lon = GeoCoordinate::deg(pi.lon);
+	c.lat = GeoCoordinate::deg(pi.latDeg);
+	c.lon = GeoCoordinate::deg(pi.lonDeg);
 	return c;
 }
 
@@ -234,4 +261,22 @@ void IProjectionInfo::LineBresenham(Pixel start, Pixel end,
 			start.y = start.y + sy;
 		}
 	}
+}
+
+void IProjectionInfo::ComputeAABB(const std::vector<IProjectionInfo::Coordinate> & c,
+	IProjectionInfo::Coordinate & min, IProjectionInfo::Coordinate & max)
+{
+	min = c[0];
+	max = c[0];
+	for (size_t i = 1; i < c.size(); i++)
+	{
+		if (c[i].lat.rad() < min.lat.rad()) min.lat = c[i].lat;
+		if (c[i].lon.rad() < min.lon.rad()) min.lon = c[i].lon;
+		
+
+		if (c[i].lat.rad() > max.lat.rad()) max.lat = c[i].lat;
+		if (c[i].lon.rad() > max.lon.rad()) max.lon = c[i].lon;
+		
+	}
+
 }

@@ -61,7 +61,12 @@ typedef GeoCoordinate Angle;
 class IProjectionInfo
 {
 public:
-	typedef enum PROJECTION { MERCATOR = 0, LAMBERT_CONIC = 1 } PROJECTION;
+	typedef enum PROJECTION {
+		MERCATOR = 0, 
+		LAMBERT_CONIC = 1, 
+		EQUIRECTANGULAR = 2
+	} PROJECTION;
+
 	struct Pixel { int x; int y; };
 	struct Coordinate { GeoCoordinate lat; GeoCoordinate lon; };
 
@@ -72,6 +77,8 @@ public:
 
 	void SetFrame(Coordinate minCoord, Coordinate maxCoord,
 		uint32_t w, uint32_t h, bool keepAR = true);
+	void SetFrame(Coordinate minCoord,
+		uint32_t w, uint32_t h, bool keepAR = true);
 
 	uint32_t GetFrameWidth() const { return this->w; }
 	uint32_t GetFrameHeight() const { return this->h; }
@@ -81,6 +88,8 @@ public:
 
 	void LineBresenham(Pixel start, Pixel end, std::function<void(int x, int y)> callback);
 
+	void ComputeAABB(const std::vector<IProjectionInfo::Coordinate> & c,
+		IProjectionInfo::Coordinate & min, IProjectionInfo::Coordinate & max);
 
 	static double NormalizeLon(double lon);
 	static double NormalizeLat(double lat);
@@ -97,15 +106,15 @@ protected:
 
 	struct ProjectedValueInverse
 	{
-		double lat;
-		double lon;
+		double latDeg;
+		double lonDeg;
 	};
 
 	IProjectionInfo(PROJECTION curProjection)
 		: curProjection(curProjection),
 		min({std::numeric_limits<double>::max(), std::numeric_limits<double>::max()}),
 		max({std::numeric_limits<double>::min(), std::numeric_limits<double>::min()}),
-		w(0), h(0), wPadding(0), hPadding(0), wAR(0), hAR(0)
+		w(0), h(0), wPadding(0), hPadding(0), wAR(1), hAR(1)
 	{}
 	
 	static const double PI;

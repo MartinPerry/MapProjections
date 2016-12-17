@@ -68,8 +68,8 @@ IProjectionInfo::ProjectedValueInverse LambertConic::ProjectInverseInternal(doub
 	double lon = lonCentralMeridian.rad() + delta / n;
 
 	IProjectionInfo::ProjectedValueInverse c;
-	c.lat = radToDeg(lat);
-	c.lon = radToDeg(lon);
+	c.latDeg = radToDeg(lat);
+	c.lonDeg = radToDeg(lon);
 
 	return c;
 }
@@ -82,7 +82,7 @@ IProjectionInfo::ProjectedValueInverse LambertConic::ProjectInverseInternal(doub
 //=======================================================================
 
 Mercator::Mercator()
-	: IProjectionInfo(IProjectionInfo::PROJECTION::MERCATOR)
+	: IProjectionInfo(IProjectionInfo::PROJECTION::MERCATOR)	
 {
 
 }
@@ -102,10 +102,48 @@ IProjectionInfo::ProjectedValueInverse Mercator::ProjectInverseInternal(double x
 
 	IProjectionInfo::ProjectedValueInverse c;
 
-	c.lat = 2 * std::atan(std::pow(E, y)) - PI_2;
-	c.lon = x;
+	c.latDeg = radToDeg(2 * std::atan(std::pow(E, y)) - PI_2);
+	c.lonDeg = radToDeg(x);
 
 	return c;
 }
 
+
+
+//=======================================================================
+// Equirectangular 
+//
+// Based on:
+// https://en.wikipedia.org/wiki/Equirectangular_projection
+//=======================================================================
+
+Equirectangular::Equirectangular()
+	: IProjectionInfo(IProjectionInfo::PROJECTION::EQUIRECTANGULAR),
+	standardParallel(0.0_deg), 
+	cosStandardParallel(std::cos(standardParallel.rad())),
+	lonCentralMeridian(0.0_deg)
+{
+
+}
+
+IProjectionInfo::ProjectedValue Equirectangular::ProjectInternal(Coordinate c) const
+{
+	IProjectionInfo::ProjectedValue p;
+	p.x = (c.lon.rad() - lonCentralMeridian.rad()) * cosStandardParallel;
+	p.y = c.lat.rad() - standardParallel.rad();
+
+	return p;
+}
+
+
+IProjectionInfo::ProjectedValueInverse Equirectangular::ProjectInverseInternal(double x, double y) const
+{
+
+	IProjectionInfo::ProjectedValueInverse c;
+
+	c.latDeg = radToDeg(y / cosStandardParallel + lonCentralMeridian.rad());
+	c.lonDeg = radToDeg(x + standardParallel.rad());
+
+	return c;
+}
 

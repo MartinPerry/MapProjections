@@ -24,6 +24,8 @@ public:
 	void DrawLine(IProjectionInfo::Coordinate start,
 		IProjectionInfo::Coordinate end, int stepCount = 20);
 
+	void DrawPoint(IProjectionInfo::Coordinate p);
+
 	void DrawLines(const std::vector<IProjectionInfo::Coordinate> & points);
 
 	void DrawImage(uint8_t * imData, int w, int h, IProjectionInfo * imProj);
@@ -50,6 +52,7 @@ private:
 
 	std::vector<std::string> Split(const std::string &s, char delim);
 	std::string ProjectionDebugger::LoadFromFile(const char * filePath);
+	
 };
 
 #endif

@@ -218,6 +218,28 @@ void ProjectionDebugger::DrawLine(IProjectionInfo::Coordinate start,
 	}
 }
 
+void ProjectionDebugger::DrawPoint(IProjectionInfo::Coordinate p)
+{
+	int size = 5;
+	IProjectionInfo::Pixel center = proj->Project(p);
+
+	IProjectionInfo::Pixel a = center;
+	IProjectionInfo::Pixel b = center;
+	IProjectionInfo::Pixel c = center;
+	IProjectionInfo::Pixel d = center;
+
+	a.x -= size; a.y -= size;
+	b.x += size; b.y -= size;
+	c.x += size; c.y += size;
+	d.x -= size; d.y += size;
+
+	this->CohenSutherlandLineClipAndDraw(a.x, a.y, b.x, b.y);
+	this->CohenSutherlandLineClipAndDraw(b.x, b.y, c.x, c.y);
+	this->CohenSutherlandLineClipAndDraw(c.x, c.y, d.x, d.y);
+	this->CohenSutherlandLineClipAndDraw(d.x, d.y, a.x, a.y);
+
+}
+
 void ProjectionDebugger::DrawLines(const std::vector<IProjectionInfo::Coordinate> & points)
 {
 	if (points.size() <= 1)
@@ -328,14 +350,20 @@ void ProjectionDebugger::CohenSutherlandLineClipAndDraw(double x0, double y0, do
 
 void ProjectionDebugger::DrawImage(uint8_t * imData, int w, int h, IProjectionInfo * imProj)
 {
-	for (int y = 0; y < h; y++)
+	for (int y = 0; y < this->proj->GetFrameHeight(); y++)
 	{
-		for (int x = 0; x < w; x++)
-		{
-			IProjectionInfo::Coordinate c = imProj->ProjectInverse({ x, h - y });
-			IProjectionInfo::Pixel p = proj->Project(c);
+		for (int x = 0; x < this->proj->GetFrameWidth(); x++)
+		{			
+						
+			IProjectionInfo::Coordinate cc = this->proj->ProjectInverse({ x,y });
+			IProjectionInfo::Pixel p = imProj->Project(cc);
 
-			this->rawData[p.x + p.y * this->proj->GetFrameWidth()] = imData[x + (h - y) * w];
+			if (p.x < 0) continue;
+			if (p.y < 0) continue;
+			if (p.x >= w) continue;
+			if (p.y >= h) continue;
+
+			this->rawData[x + y * this->proj->GetFrameWidth()] = imData[p.x + p.y * w];
 
 		}
 	}

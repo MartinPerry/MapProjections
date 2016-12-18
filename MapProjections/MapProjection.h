@@ -89,6 +89,8 @@ public:
 
 	void ComputeAABB(const std::vector<IProjectionInfo::Coordinate> & c,
 		IProjectionInfo::Coordinate & min, IProjectionInfo::Coordinate & max);
+	std::vector<IProjectionInfo::Pixel> CreateReprojection(IProjectionInfo * imProj);
+
 
 	static double NormalizeLon(double lon);
 	static double NormalizeLat(double lat);

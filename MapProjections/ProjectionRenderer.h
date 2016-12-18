@@ -29,7 +29,9 @@ public:
 	void DrawLines(const std::vector<IProjectionInfo::Coordinate> & points);
 
 	void DrawImage(uint8_t * imData, int w, int h, IProjectionInfo * imProj);
-	std::vector<IProjectionInfo::Pixel> CreateReprojection(int w, int h, IProjectionInfo * imProj);
+
+	void DrawImage(uint8_t * imData, int w, int h, const std::vector<IProjectionInfo::Pixel> & reproj);
+	
 
 	void SetPixel(const IProjectionInfo::Pixel & p, uint8_t val);
 

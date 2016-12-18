@@ -255,3 +255,39 @@ void IProjectionInfo::ComputeAABB(const std::vector<IProjectionInfo::Coordinate>
 	}
 
 }
+
+
+
+std::vector<IProjectionInfo::Pixel> IProjectionInfo::CreateReprojection(IProjectionInfo * imProj)
+{
+	std::vector<IProjectionInfo::Pixel> reprojection;
+
+	for (int y = 0; y < this->GetFrameHeight(); y++)
+	{
+		for (int x = 0; x < this->GetFrameWidth(); x++)
+		{
+			reprojection.push_back({ -1, -1 });
+		}
+	}
+
+
+	for (int y = 0; y < this->GetFrameHeight(); y++)
+	{
+		for (int x = 0; x < this->GetFrameWidth(); x++)
+		{
+
+			IProjectionInfo::Coordinate cc = this->ProjectInverse({ x,y });
+			IProjectionInfo::Pixel p = imProj->Project(cc);
+
+			if (p.x < 0) continue;
+			if (p.y < 0) continue;
+			if (p.x >= imProj->GetFrameWidth()) continue;
+			if (p.y >= imProj->GetFrameHeight()) continue;
+
+			reprojection[x + y * this->GetFrameWidth()] = p;
+
+		}
+	}
+
+	return reprojection;
+}

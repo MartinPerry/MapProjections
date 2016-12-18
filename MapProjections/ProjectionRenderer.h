@@ -17,7 +17,7 @@ public:
 	void SetProjection(IProjectionInfo * proj);
 	void Clear();
 
-	void AddBorders(const char * fileName, int useNthPoint = 1);
+	void AddBorders(const char * fileName, int useEveryNthPoint = 1);
 	void DrawBorders();
 	void DrawParalells();
 
@@ -45,12 +45,10 @@ private:
 	static const int TOP = 8;    // 1000
 
 
-	IProjectionInfo * proj;
-
 	uint8_t * rawData;
-
+	IProjectionInfo * proj;
+	
 	std::unordered_map<std::string, std::vector<IProjectionInfo::Coordinate> > debugBorder;
-	//void DrawLine(int startX, int startY, int endX, int endY);
 
 	int ComputeOutCode(double x, double y);
 	void CohenSutherlandLineClipAndDraw(double x0, double y0, double x1, double y1);

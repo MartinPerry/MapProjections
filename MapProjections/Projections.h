@@ -1,6 +1,7 @@
 #ifndef _PROJECTIONS_H_
 #define _PROJECTIONS_H_
 
+#include "GeoCoordinate.h"
 #include "MapProjection.h"
 
 class LambertConic : public IProjectionInfo
@@ -46,7 +47,7 @@ class Equirectangular : public IProjectionInfo
 {
 public:
 	Equirectangular();
-
+	Equirectangular(GeoCoordinate lonCentralMeridian);
 
 protected:
 

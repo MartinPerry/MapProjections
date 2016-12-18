@@ -92,7 +92,7 @@ std::vector<std::string> ProjectionRenderer::Split(const std::string &s, char de
 	return elems;
 }
 
-void ProjectionRenderer::AddBorders(const char * fileName, int useNthPoint)
+void ProjectionRenderer::AddBorders(const char * fileName, int useEveryNthPoint)
 {
 	std::string content = LoadFromFile(fileName);
 
@@ -116,7 +116,7 @@ void ProjectionRenderer::AddBorders(const char * fileName, int useNthPoint)
 		}
 		else
 		{
-			if (tmp % useNthPoint != 0)
+			if (tmp % useEveryNthPoint != 0)
 			{
 				tmp++;
 				continue;
@@ -254,6 +254,59 @@ void ProjectionRenderer::DrawLines(const std::vector<IProjectionInfo::Coordinate
 
 }
 
+void ProjectionRenderer::DrawImage(uint8_t * imData, int w, int h, IProjectionInfo * imProj)
+{
+	for (int y = 0; y < this->proj->GetFrameHeight(); y++)
+	{
+		for (int x = 0; x < this->proj->GetFrameWidth(); x++)
+		{			
+						
+			IProjectionInfo::Coordinate cc = this->proj->ProjectInverse({ x,y });
+			IProjectionInfo::Pixel p = imProj->Project(cc);
+
+			if (p.x < 0) continue;
+			if (p.y < 0) continue;
+			if (p.x >= w) continue;
+			if (p.y >= h) continue;
+
+			this->rawData[x + y * this->proj->GetFrameWidth()] = imData[p.x + p.y * w];
+
+		}
+	}
+
+}
+
+void ProjectionRenderer::DrawImage(uint8_t * imData, int w, int h, const std::vector<IProjectionInfo::Pixel> & reproj)
+{
+	if (w * h != reproj.size())
+	{
+		printf("Size of reprojection did not match size of image data");
+		return;
+	}
+
+	for (int y = 0; y < this->proj->GetFrameHeight(); y++)
+	{
+		for (int x = 0; x < this->proj->GetFrameWidth(); x++)
+		{
+			int index = x + y * this->proj->GetFrameWidth();
+			if ((reproj[index].x == -1) && (reproj[index].y == -1))
+			{
+				continue;
+			}
+
+
+			int origIndex = reproj[index].x + reproj[index].y * w;
+			this->rawData[x + y * this->proj->GetFrameWidth()] =  imData[origIndex];
+		}
+	}
+}
+
+void ProjectionRenderer::SetPixel(const IProjectionInfo::Pixel & p, uint8_t val)
+{
+	this->rawData[p.x + p.y * this->proj->GetFrameWidth()] = val;
+}
+
+
 int ProjectionRenderer::ComputeOutCode(double x, double y)
 {
 	int code = INSIDE;
@@ -346,69 +399,4 @@ void ProjectionRenderer::CohenSutherlandLineClipAndDraw(double x0, double y0, do
 			this->rawData[x + y * proj->GetFrameWidth()] = 255;
 		});
 	}
-}
-
-void ProjectionRenderer::DrawImage(uint8_t * imData, int w, int h, IProjectionInfo * imProj)
-{
-	for (int y = 0; y < this->proj->GetFrameHeight(); y++)
-	{
-		for (int x = 0; x < this->proj->GetFrameWidth(); x++)
-		{			
-						
-			IProjectionInfo::Coordinate cc = this->proj->ProjectInverse({ x,y });
-			IProjectionInfo::Pixel p = imProj->Project(cc);
-
-			if (p.x < 0) continue;
-			if (p.y < 0) continue;
-			if (p.x >= w) continue;
-			if (p.y >= h) continue;
-
-			this->rawData[x + y * this->proj->GetFrameWidth()] = imData[p.x + p.y * w];
-
-		}
-	}
-
-
-
-	/*
-	IProjectionInfo::Pixel topLeft = proj->Project(topLeftCorner);
-
-	for (int y = topLeft.y; y < topLeft.y + h; y++)
-	{
-	for (int x = topLeft.x; x < topLeft.x + w; x++)
-	{
-	this->rawData[x + y * proj->GetFrameWidth()] = imData[(x - topLeft.x) + (y - topLeft.y) * w];
-	}
-	}
-	*/
-}
-
-void ProjectionRenderer::DrawImage(uint8_t * imData, int w, int h, const std::vector<IProjectionInfo::Pixel> & reproj)
-{
-	if (w * h != reproj.size())
-	{
-		printf("Size of reprojrction dit not match size of image data");
-		return;
-	}
-
-	for (int y = 0; y < this->proj->GetFrameHeight(); y++)
-	{
-		for (int x = 0; x < this->proj->GetFrameWidth(); x++)
-		{
-			int index = x + y * this->proj->GetFrameWidth();
-			if ((reproj[index].x == -1) && (reproj[index].y == -1))
-			{
-				continue;
-			}
-
-
-			int origIndex = reproj[index].x + reproj[index].y * w;
-			this->rawData[x + y * this->proj->GetFrameWidth()] =  imData[origIndex];
-		}
-	}
-}
-
-void ProjectionRenderer::SetPixel(const IProjectionInfo::Pixel & p, uint8_t val)
-{
-	this->rawData[p.x + p.y * this->proj->GetFrameWidth()] = val;
 }

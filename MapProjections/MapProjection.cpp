@@ -1,6 +1,6 @@
 #include "./MapProjection.h"
 
-
+#include <limits>
 #include <algorithm>
 
 const double IProjectionInfo::PI = std::acos(-1);
@@ -17,19 +17,55 @@ const double IProjectionInfo::EARTH_RADIUS = 6371;
 //
 //=======================================================================
 
-
-double IProjectionInfo::NormalizeLon(double lon)
+IProjectionInfo::IProjectionInfo(IProjectionInfo::PROJECTION curProjection)
+	: curProjection(curProjection),
+	min({ std::numeric_limits<double>::max(), std::numeric_limits<double>::max() }),
+	max({ std::numeric_limits<double>::min(), std::numeric_limits<double>::min() }),
+	w(0), h(0),
+	wPadding(0), hPadding(0),
+	wAR(1), hAR(1),
+	stepLat(0.0_deg), stepLon(0.0_deg)
 {
-	return std::fmod(lon + 540, 360) - 180;
 }
 
 
-double IProjectionInfo::NormalizeLat(double lat)
+double IProjectionInfo::NormalizeLon(double lonDeg)
 {
-	return (lat > 90) ? (lat - 180) : lat;
+	return std::fmod(lonDeg + 540, 360) - 180;
 }
 
 
+double IProjectionInfo::NormalizeLat(double latDeg)
+{
+	return (latDeg > 90) ? (latDeg - 180) : latDeg;
+}
+
+void IProjectionInfo::ComputeAABB(const std::vector<IProjectionInfo::Coordinate> & c,
+	IProjectionInfo::Coordinate & min, IProjectionInfo::Coordinate & max)
+{
+	min = c[0];
+	max = c[0];
+	for (size_t i = 1; i < c.size(); i++)
+	{
+		if (c[i].lat.rad() < min.lat.rad()) min.lat = c[i].lat;
+		if (c[i].lon.rad() < min.lon.rad()) min.lon = c[i].lon;
+
+
+		if (c[i].lat.rad() > max.lat.rad()) max.lat = c[i].lat;
+		if (c[i].lon.rad() > max.lon.rad()) max.lon = c[i].lon;
+
+	}
+
+}
+
+void IProjectionInfo::SetFrame(IProjectionInfo * proj,
+	int w, int h, bool keepAR)
+{
+	IProjectionInfo::Coordinate cMin, cMax;
+	proj->ComputeAABB(cMin, cMax);
+
+	this->SetFrame(cMin, cMax, w, h, keepAR);
+}
 
 void IProjectionInfo::SetFrame(Coordinate minCoord, Coordinate maxCoord, 
 	int w, int h, bool keepAR)
@@ -80,7 +116,16 @@ void IProjectionInfo::SetFrame(Coordinate minCoord, Coordinate maxCoord,
 	this->wPadding = (this->w - (this->wAR * this->max.x)) * 0.5;
 	this->hPadding = (this->h - (this->hAR * this->max.y)) * 0.5;
 
+
+	this->stepLat = GeoCoordinate::rad((maxCoord.lat.rad() - minCoord.lat.rad()) / h);
+	this->stepLon = GeoCoordinate::rad((maxCoord.lon.rad() - minCoord.lon.rad()) / w);
 }
+
+IProjectionInfo::Coordinate IProjectionInfo::GetTopLeftCorner() const
+{
+	return this->ProjectInverse({ 0, 0 });
+}
+
 
 IProjectionInfo::Pixel IProjectionInfo::Project(Coordinate c) const
 {
@@ -112,15 +157,15 @@ IProjectionInfo::Coordinate IProjectionInfo::ProjectInverse(Pixel p) const
 	ProjectedValueInverse pi = this->ProjectInverseInternal(xx, yy);
 
 	Coordinate c;
-	c.lat = GeoCoordinate::deg(pi.latDeg);
-	c.lon = GeoCoordinate::deg(pi.lonDeg);
+	c.lat = GeoCoordinate::deg(NormalizeLat(pi.latDeg));
+	c.lon = GeoCoordinate::deg(NormalizeLon(pi.lonDeg));
 	return c;
 }
 
 //http://www.movable-type.co.uk/scripts/latlong.html
 //Calculate end point based on shortest path (on real earth surface)
 IProjectionInfo::Coordinate IProjectionInfo::CalcEndPointShortest(IProjectionInfo::Coordinate start,
-	Angle bearing, double dist)
+	Angle bearing, double dist) const
 {
 	
 	double dr = dist / EARTH_RADIUS;
@@ -151,7 +196,7 @@ IProjectionInfo::Coordinate IProjectionInfo::CalcEndPointShortest(IProjectionInf
 //Calculate end point based on direct path (straight line between two points in projected earth)
 IProjectionInfo::Coordinate IProjectionInfo::CalcEndPointDirect(
 	IProjectionInfo::Coordinate start,
-	Angle bearing, double dist)
+	Angle bearing, double dist) const
 {	
 	double dr = dist / EARTH_RADIUS;
 
@@ -179,7 +224,7 @@ IProjectionInfo::Coordinate IProjectionInfo::CalcEndPointDirect(
 
 
 void IProjectionInfo::LineBresenham(Pixel start, Pixel end,
-	std::function<void(int x, int y)> callback)
+	std::function<void(int x, int y)> callback) const
 {
 	if ((start.x >= static_cast<int>(this->GetFrameWidth()))
 		|| (start.y >= static_cast<int>(this->GetFrameHeight())))
@@ -238,27 +283,8 @@ void IProjectionInfo::LineBresenham(Pixel start, Pixel end,
 	}
 }
 
-void IProjectionInfo::ComputeAABB(const std::vector<IProjectionInfo::Coordinate> & c,
-	IProjectionInfo::Coordinate & min, IProjectionInfo::Coordinate & max)
-{
-	min = c[0];
-	max = c[0];
-	for (size_t i = 1; i < c.size(); i++)
-	{
-		if (c[i].lat.rad() < min.lat.rad()) min.lat = c[i].lat;
-		if (c[i].lon.rad() < min.lon.rad()) min.lon = c[i].lon;
-		
 
-		if (c[i].lat.rad() > max.lat.rad()) max.lat = c[i].lat;
-		if (c[i].lon.rad() > max.lon.rad()) max.lon = c[i].lon;
-		
-	}
-
-}
-
-
-
-std::vector<IProjectionInfo::Pixel> IProjectionInfo::CreateReprojection(IProjectionInfo * imProj)
+std::vector<IProjectionInfo::Pixel> IProjectionInfo::CreateReprojection(IProjectionInfo * imProj) const
 {
 	std::vector<IProjectionInfo::Pixel> reprojection;
 
@@ -290,4 +316,35 @@ std::vector<IProjectionInfo::Pixel> IProjectionInfo::CreateReprojection(IProject
 	}
 
 	return reprojection;
+}
+
+void IProjectionInfo::ComputeAABB(IProjectionInfo::Coordinate & min, IProjectionInfo::Coordinate & max) const
+{
+	int ww = this->w - 1;
+	int hh = this->h - 1;
+
+	std::vector<IProjectionInfo::Coordinate> border;
+	this->LineBresenham({ 0,0 }, { 0, hh },
+		[&](int x, int y) -> void {
+		IProjectionInfo::Coordinate c = this->ProjectInverse({ x, y });
+		border.push_back(c);
+	});
+	this->LineBresenham({ 0,0 }, { ww, 0 },
+		[&](int x, int y) -> void {
+		IProjectionInfo::Coordinate c = this->ProjectInverse({ x, y });
+		border.push_back(c);
+	});
+	this->LineBresenham({ ww, hh }, { 0, hh },
+		[&](int x, int y) -> void {
+		IProjectionInfo::Coordinate c = this->ProjectInverse({ x, y });
+		border.push_back(c);
+	});
+	this->LineBresenham({ ww, hh }, { 0, hh },
+		[&](int x, int y) -> void {
+		IProjectionInfo::Coordinate c = this->ProjectInverse({ x, y });
+		border.push_back(c);
+	});
+
+	
+	IProjectionInfo::ComputeAABB(border, min, max);
 }

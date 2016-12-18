@@ -9,53 +9,10 @@
 #include <complex>
 #include <functional>
 
+
 #include <string>
 
-struct GeoCoordinate
-{
-	GeoCoordinate() : valRad(0) {};
-	static GeoCoordinate deg(double val) { return GeoCoordinate(val * 0.0174532925); };
-	static GeoCoordinate rad(double val) { return GeoCoordinate(val);};
-	
-	inline double deg() const
-	{
-		return valRad * 57.2957795;
-	}
-
-	inline double rad() const
-	{
-		return valRad;
-	}
-			
-
-	inline GeoCoordinate operator -()
-	{
-		return GeoCoordinate(-valRad);
-	};
-
-	
-private:
-	GeoCoordinate(double val) : valRad(val) {};
-	double valRad;
-	
-};
-
-
-
-
-inline GeoCoordinate operator "" _deg(long double value)
-{
-	return GeoCoordinate::deg(value);
-}
-
-inline GeoCoordinate operator "" _rad(long double value)
-{
-	return  GeoCoordinate::rad(value);
-}
-
-
-typedef GeoCoordinate Angle;
-
+#include "GeoCoordinate.h"
 
 
 class IProjectionInfo
@@ -75,28 +32,36 @@ public:
 	IProjectionInfo::Pixel Project(Coordinate c) const;
 	IProjectionInfo::Coordinate ProjectInverse(Pixel p) const;
 
+	void SetFrame(IProjectionInfo * proj,
+		int w, int h, bool keepAR = true);
 	void SetFrame(Coordinate minCoord, Coordinate maxCoord,
 		int w, int h, bool keepAR = true);
+	
+	IProjectionInfo::Coordinate GetTopLeftCorner() const;
 
+	Angle GetStepLat() const { return this->stepLat;}
+	Angle GetStepLon() const { return this->stepLon; }
 
 	int GetFrameWidth() const { return this->w; }
 	int GetFrameHeight() const { return this->h; }
 
-	IProjectionInfo::Coordinate CalcEndPointShortest(IProjectionInfo::Coordinate start, Angle bearing, double dist);
-	IProjectionInfo::Coordinate CalcEndPointDirect(IProjectionInfo::Coordinate start, Angle bearing, double dist);
+	IProjectionInfo::Coordinate CalcEndPointShortest(IProjectionInfo::Coordinate start, Angle bearing, double dist) const;
+	IProjectionInfo::Coordinate CalcEndPointDirect(IProjectionInfo::Coordinate start, Angle bearing, double dist) const;
 
-	void LineBresenham(Pixel start, Pixel end, std::function<void(int x, int y)> callback);
+	void LineBresenham(Pixel start, Pixel end, std::function<void(int x, int y)> callback) const;
 
-	void ComputeAABB(const std::vector<IProjectionInfo::Coordinate> & c,
+	
+	std::vector<IProjectionInfo::Pixel> CreateReprojection(IProjectionInfo * imProj) const;
+
+	void ComputeAABB(IProjectionInfo::Coordinate & min, IProjectionInfo::Coordinate & max) const;
+
+	static void ComputeAABB(const std::vector<IProjectionInfo::Coordinate> & c,
 		IProjectionInfo::Coordinate & min, IProjectionInfo::Coordinate & max);
-	std::vector<IProjectionInfo::Pixel> CreateReprojection(IProjectionInfo * imProj);
 
+	static double NormalizeLon(double lonDeg);
+	static double NormalizeLat(double latDeg);
 
-	static double NormalizeLon(double lon);
-	static double NormalizeLat(double lat);
-
-	friend class ProjectionDebugger;
-
+	
 protected:
 
 	struct ProjectedValue
@@ -111,26 +76,20 @@ protected:
 		double lonDeg;
 	};
 
-	IProjectionInfo(PROJECTION curProjection)
-		: curProjection(curProjection),
-		min({std::numeric_limits<double>::max(), std::numeric_limits<double>::max()}),
-		max({std::numeric_limits<double>::min(), std::numeric_limits<double>::min()}),
-		w(0), h(0), wPadding(0), hPadding(0), wAR(1), hAR(1)
-	{}
-	
+		
 	static const double PI;
 	static const double PI_4;
 	static const double PI_2;
 	static const double E;
 	static const double EARTH_RADIUS;
 
-	inline double cot(double x) const { return 1.0 / std::tan(x); };
-	inline double sec(double x) const { return 1.0 / std::cos(x); };
-	inline double sinc(double x) const { return std::sin(x) / x; };
-	inline double sgn(double x) const { return (x < 0) ? -1 : (x > 0); };
+	inline static double cot(double x) { return 1.0 / std::tan(x); };
+	inline static double sec(double x) { return 1.0 / std::cos(x); };
+	inline static double sinc(double x) { return std::sin(x) / x; };
+	inline static double sgn(double x) { return (x < 0) ? -1 : (x > 0); };
 	
-	inline double degToRad(double x) const { return x * 0.0174532925;}
-	inline double radToDeg(double x) const { return x * 57.2957795; }
+	inline static double degToRad(double x) { return x * 0.0174532925;}
+	inline static double radToDeg(double x) { return x * 57.2957795; }
 
 
 	ProjectedValue min;
@@ -143,7 +102,11 @@ protected:
 	double hPadding;
 	double wAR;
 	double hAR;
-	//double globalAR;
+
+	Angle stepLat;
+	Angle stepLon;
+
+	IProjectionInfo(PROJECTION curProjection);
 
 	virtual ProjectedValue ProjectInternal(Coordinate c) const = 0;
 	virtual ProjectedValueInverse ProjectInverseInternal(double x, double y) const = 0;

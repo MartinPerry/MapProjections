@@ -118,12 +118,17 @@ IProjectionInfo::ProjectedValueInverse Mercator::ProjectInverseInternal(double x
 //=======================================================================
 
 Equirectangular::Equirectangular()
-	: IProjectionInfo(IProjectionInfo::PROJECTION::EQUIRECTANGULAR),
-	standardParallel(0.0_deg), 
-	cosStandardParallel(std::cos(standardParallel.rad())),
-	lonCentralMeridian(0.0_deg)
+	: Equirectangular(0.0_deg)
 {
 
+}
+
+Equirectangular::Equirectangular(GeoCoordinate lonCentralMeridian)
+	: IProjectionInfo(IProjectionInfo::PROJECTION::EQUIRECTANGULAR),
+	lonCentralMeridian(lonCentralMeridian),
+	standardParallel(0.0_deg),
+	cosStandardParallel(std::cos(standardParallel.rad()))	
+{
 }
 
 IProjectionInfo::ProjectedValue Equirectangular::ProjectInternal(Coordinate c) const

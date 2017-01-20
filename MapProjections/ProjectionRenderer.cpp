@@ -7,18 +7,31 @@
 //
 //=======================================================================
 
+/// <summary>
+/// ctor
+/// </summary>
+/// <param name="proj"></param>
 ProjectionRenderer::ProjectionRenderer(IProjectionInfo * proj)
 	: rawData(nullptr), proj(nullptr)
 {
 	this->SetProjection(proj);
 }
 
+/// <summary>
+/// dtor
+/// </summary>
 ProjectionRenderer::~ProjectionRenderer()
 {
 	delete[] rawData;
 	rawData = nullptr;
 }
 
+/// <summary>
+/// Set current projection - rewrites projection from ctor
+/// It also clears current data, because new projection can have
+/// different frame size
+/// </summary>
+/// <param name="proj"></param>
 void ProjectionRenderer::SetProjection(IProjectionInfo * proj)
 {
 	this->proj = proj;
@@ -27,11 +40,18 @@ void ProjectionRenderer::SetProjection(IProjectionInfo * proj)
 	this->Clear();
 }
 
+/// <summary>
+/// Clear data
+/// </summary>
 void ProjectionRenderer::Clear()
 {
 	memset(rawData, 0, proj->GetFrameWidth() * proj->GetFrameHeight() * sizeof(uint8_t));
 }
 
+/// <summary>
+/// Save data to *.png file
+/// </summary>
+/// <param name="fileName"></param>
 void ProjectionRenderer::SaveToFile(const char * fileName)
 {
 
@@ -53,7 +73,11 @@ void ProjectionRenderer::SaveToFile(const char * fileName)
 	*/
 }
 
-
+/// <summary>
+/// Load input data from file
+/// </summary>
+/// <param name="filePath"></param>
+/// <returns></returns>
 std::string ProjectionRenderer::LoadFromFile(const char * filePath)
 {
 	FILE *f = NULL;  //pointer to file we will read in
@@ -92,6 +116,11 @@ std::vector<std::string> ProjectionRenderer::Split(const std::string &s, char de
 	return elems;
 }
 
+/// <summary>
+/// Load borders from file in format "lat;lon\n"
+/// </summary>
+/// <param name="fileName"></param>
+/// <param name="useEveryNthPoint"></param>
 void ProjectionRenderer::AddBorders(const char * fileName, int useEveryNthPoint)
 {
 	std::string content = LoadFromFile(fileName);
@@ -140,6 +169,9 @@ void ProjectionRenderer::AddBorders(const char * fileName, int useEveryNthPoint)
 
 }
 
+/// <summary>
+/// Draw borders
+/// </summary>
 void ProjectionRenderer::DrawBorders()
 {
 
@@ -164,6 +196,9 @@ void ProjectionRenderer::DrawBorders()
 	}
 }
 
+/// <summary>
+/// Draw parallels
+/// </summary>
 void ProjectionRenderer::DrawParalells()
 {
 	double lonStep = 10;
@@ -191,6 +226,12 @@ void ProjectionRenderer::DrawParalells()
 	}
 }
 
+/// <summary>
+/// Draw line from [start] to [end] with a stepCount
+/// </summary>
+/// <param name="start"></param>
+/// <param name="end"></param>
+/// <param name="stepCount"></param>
 void ProjectionRenderer::DrawLine(IProjectionInfo::Coordinate start,
 	IProjectionInfo::Coordinate end, int stepCount)
 {
@@ -218,6 +259,10 @@ void ProjectionRenderer::DrawLine(IProjectionInfo::Coordinate start,
 	}
 }
 
+/// <summary>
+/// Draw point - point is represented by small square
+/// </summary>
+/// <param name="p"></param>
 void ProjectionRenderer::DrawPoint(IProjectionInfo::Coordinate p)
 {
 	int size = 5;
@@ -240,6 +285,10 @@ void ProjectionRenderer::DrawPoint(IProjectionInfo::Coordinate p)
 
 }
 
+/// <summary>
+/// Draw lines created by points
+/// </summary>
+/// <param name="points"></param>
 void ProjectionRenderer::DrawLines(const std::vector<IProjectionInfo::Coordinate> & points)
 {
 	if (points.size() <= 1)
@@ -254,6 +303,16 @@ void ProjectionRenderer::DrawLines(const std::vector<IProjectionInfo::Coordinate
 
 }
 
+/// <summary>
+/// Draw image based on input projection
+/// For each pixel [x, y] -> calculate inverse based on this projection -> [lat, lon]
+/// Use [lat, lon] on imProj to get pixel coordinates [xx, yy]
+/// Map imData[xx, yy] to currentData[x, y]
+/// </summary>
+/// <param name="imData"></param>
+/// <param name="w"></param>
+/// <param name="h"></param>
+/// <param name="imProj"></param>
 void ProjectionRenderer::DrawImage(uint8_t * imData, int w, int h, IProjectionInfo * imProj)
 {
 	for (int y = 0; y < this->proj->GetFrameHeight(); y++)
@@ -276,11 +335,19 @@ void ProjectionRenderer::DrawImage(uint8_t * imData, int w, int h, IProjectionIn
 
 }
 
+/// <summary>
+/// Draw image based on re-projection pixels
+/// e.g.: currentData[index] = imData[reprojection[index]]
+/// </summary>
+/// <param name="imData"></param>
+/// <param name="w"></param>
+/// <param name="h"></param>
+/// <param name="reproj"></param>
 void ProjectionRenderer::DrawImage(uint8_t * imData, int w, int h, const std::vector<IProjectionInfo::Pixel> & reproj)
 {
 	if (w * h != reproj.size())
 	{
-		printf("Size of reprojection did not match size of image data");
+		printf("Size of re-projection did not match size of image data");
 		return;
 	}
 
@@ -296,17 +363,27 @@ void ProjectionRenderer::DrawImage(uint8_t * imData, int w, int h, const std::ve
 
 
 			int origIndex = reproj[index].x + reproj[index].y * w;
-			this->rawData[x + y * this->proj->GetFrameWidth()] =  imData[origIndex];
+			this->rawData[index] =  imData[origIndex];
 		}
 	}
 }
 
+/// <summary>
+/// Set pixel value
+/// </summary>
+/// <param name="p"></param>
+/// <param name="val"></param>
 void ProjectionRenderer::SetPixel(const IProjectionInfo::Pixel & p, uint8_t val)
 {
 	this->rawData[p.x + p.y * this->proj->GetFrameWidth()] = val;
 }
 
-
+/// <summary>
+/// Codes for Cohen-Sutherlan
+/// </summary>
+/// <param name="x"></param>
+/// <param name="y"></param>
+/// <returns></returns>
 int ProjectionRenderer::ComputeOutCode(double x, double y)
 {
 	int code = INSIDE;
@@ -320,7 +397,13 @@ int ProjectionRenderer::ComputeOutCode(double x, double y)
 	return code;
 }
 
-
+/// <summary>
+/// Cohen-Sutherland line clipping
+/// </summary>
+/// <param name="x0"></param>
+/// <param name="y0"></param>
+/// <param name="x1"></param>
+/// <param name="y1"></param>
 void ProjectionRenderer::CohenSutherlandLineClipAndDraw(double x0, double y0, double x1, double y1)
 {
 	// compute outcodes for P0, P1, and whatever point lies outside the clip rectangle

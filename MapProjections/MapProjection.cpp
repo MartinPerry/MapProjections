@@ -28,18 +28,35 @@ IProjectionInfo::IProjectionInfo(IProjectionInfo::PROJECTION curProjection)
 {
 }
 
-
+/// <summary>
+/// [Static] 
+/// Normalize lon to be [-180, 180]
+/// </summary>
+/// <param name="lonDeg"></param>
+/// <returns></returns>
 double IProjectionInfo::NormalizeLon(double lonDeg)
 {
 	return std::fmod(lonDeg + 540, 360) - 180;
 }
 
-
+/// <summary>
+/// [Static]
+/// Normalize lat to be [-90, 90]
+/// </summary>
+/// <param name="latDeg"></param>
+/// <returns></returns>
 double IProjectionInfo::NormalizeLat(double latDeg)
 {
 	return (latDeg > 90) ? (latDeg - 180) : latDeg;
 }
 
+/// <summary>
+/// [Static] 
+/// Compute AABB from coordinates 
+/// </summary>
+/// <param name="c">input coordinates</param>
+/// <param name="min">output AABB min</param>
+/// <param name="max">output AABB max</param>
 void IProjectionInfo::ComputeAABB(const std::vector<IProjectionInfo::Coordinate> & c,
 	IProjectionInfo::Coordinate & min, IProjectionInfo::Coordinate & max)
 {
@@ -58,6 +75,15 @@ void IProjectionInfo::ComputeAABB(const std::vector<IProjectionInfo::Coordinate>
 
 }
 
+/// <summary>
+/// Set current data active frame based on existing projection
+/// </summary>
+/// <param name="proj">existing projection</param>
+/// <param name="w">frame width</param>
+/// <param name="h">frame height</param>
+/// <param name="keepAR">keep AR of data (default: true) 
+/// if yes, data are enlarged and not 1:1 to bounding box to keep AR
+/// </param>
 void IProjectionInfo::SetFrame(IProjectionInfo * proj,
 	int w, int h, bool keepAR)
 {
@@ -67,6 +93,16 @@ void IProjectionInfo::SetFrame(IProjectionInfo * proj,
 	this->SetFrame(cMin, cMax, w, h, keepAR);
 }
 
+/// <summary>
+/// Set current data active frame based on AABB (minCoord, maxCoord)
+/// </summary>
+/// <param name="minCoord">AABB min</param>
+/// <param name="maxCoord">AABB max</param>
+/// <param name="w">frame width</param>
+/// <param name="h">frame height</param>
+/// <param name="keepAR">keep AR of data (default: true) 
+/// if yes, data are enlarged beyond AABB to keep AR
+/// </param>
 void IProjectionInfo::SetFrame(Coordinate minCoord, Coordinate maxCoord, 
 	int w, int h, bool keepAR)
 {
@@ -121,12 +157,20 @@ void IProjectionInfo::SetFrame(Coordinate minCoord, Coordinate maxCoord,
 	this->stepLon = GeoCoordinate::rad((maxCoord.lon.rad() - minCoord.lon.rad()) / w);
 }
 
+/// <summary>
+/// Get projection top left corner
+/// </summary>
+/// <returns></returns>
 IProjectionInfo::Coordinate IProjectionInfo::GetTopLeftCorner() const
 {
 	return this->ProjectInverse({ 0, 0 });
 }
 
-
+/// <summary>
+/// Project Coordinate point to pixel
+/// </summary>
+/// <param name="c"></param>
+/// <returns></returns>
 IProjectionInfo::Pixel IProjectionInfo::Project(Coordinate c) const
 {
 	
@@ -143,7 +187,11 @@ IProjectionInfo::Pixel IProjectionInfo::Project(Coordinate c) const
 	return p;
 }
 
-
+/// <summary>
+/// Project pixel to coordinate
+/// </summary>
+/// <param name="p"></param>
+/// <returns></returns>
 IProjectionInfo::Coordinate IProjectionInfo::ProjectInverse(Pixel p) const
 {
 	
@@ -162,8 +210,14 @@ IProjectionInfo::Coordinate IProjectionInfo::ProjectInverse(Pixel p) const
 	return c;
 }
 
-//http://www.movable-type.co.uk/scripts/latlong.html
-//Calculate end point based on shortest path (on real earth surface)
+/// <summary>
+/// Calculate end point based on shortest path (on real earth surface)
+/// see: http://www.movable-type.co.uk/scripts/latlong.html
+/// </summary>
+/// <param name="start"></param>
+/// <param name="bearing"></param>
+/// <param name="dist"></param>
+/// <returns></returns>
 IProjectionInfo::Coordinate IProjectionInfo::CalcEndPointShortest(IProjectionInfo::Coordinate start,
 	Angle bearing, double dist) const
 {
@@ -192,8 +246,14 @@ IProjectionInfo::Coordinate IProjectionInfo::CalcEndPointShortest(IProjectionInf
 
 }
 
-//"Rhumb lines"
-//Calculate end point based on direct path (straight line between two points in projected earth)
+/// <summary>
+/// "Rhumb lines"
+/// Calculate end point based on direct path (straight line between two points in projected earth)
+/// </summary>
+/// <param name="start"></param>
+/// <param name="bearing"></param>
+/// <param name="dist"></param>
+/// <returns></returns>
 IProjectionInfo::Coordinate IProjectionInfo::CalcEndPointDirect(
 	IProjectionInfo::Coordinate start,
 	Angle bearing, double dist) const
@@ -222,7 +282,12 @@ IProjectionInfo::Coordinate IProjectionInfo::CalcEndPointDirect(
 	return end;
 }
 
-
+/// <summary>
+/// Get pixels on line. For each pixel, callback function is called
+/// </summary>
+/// <param name="start"></param>
+/// <param name="end"></param>
+/// <param name="callback"></param>
 void IProjectionInfo::LineBresenham(Pixel start, Pixel end,
 	std::function<void(int x, int y)> callback) const
 {
@@ -283,7 +348,12 @@ void IProjectionInfo::LineBresenham(Pixel start, Pixel end,
 	}
 }
 
-
+/// <summary>
+/// Re-project data from current to imProj. 
+/// Calculates mapping: newData[index] = oldData[reprojection[index]]
+/// </summary>
+/// <param name="imProj"></param>
+/// <returns></returns>
 std::vector<IProjectionInfo::Pixel> IProjectionInfo::CreateReprojection(IProjectionInfo * imProj) const
 {
 	std::vector<IProjectionInfo::Pixel> reprojection;
@@ -318,6 +388,13 @@ std::vector<IProjectionInfo::Pixel> IProjectionInfo::CreateReprojection(IProject
 	return reprojection;
 }
 
+/// <summary>
+/// Compute AABB for current active frame
+/// It uses Bresenham lines around the image 
+/// E.g.: [0,0] -> [0, h] and reproject each pixel, and from those, AABB is calculated
+/// </summary>
+/// <param name="min"></param>
+/// <param name="max"></param>
 void IProjectionInfo::ComputeAABB(IProjectionInfo::Coordinate & min, IProjectionInfo::Coordinate & max) const
 {
 	int ww = this->w - 1;

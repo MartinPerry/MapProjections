@@ -27,11 +27,24 @@ public:
 	struct Pixel { int x; int y; };
 	struct Coordinate { GeoCoordinate lat; GeoCoordinate lon; };
 
+	struct Reprojection {
+		int inW;
+		int inH;
+		int outW;
+		int outH;
+		std::vector<IProjectionInfo::Pixel> pixels;
+
+		static Reprojection CreateFromFile(const std::string & fileName);
+		void SaveToFile(const std::string & fileName);
+
+	};
+
 	const PROJECTION curProjection;
 
 	IProjectionInfo::Pixel Project(Coordinate c) const;
 	IProjectionInfo::Coordinate ProjectInverse(Pixel p) const;
 
+	void SetFrame(IProjectionInfo * proj, bool keepAR = true);
 	void SetFrame(IProjectionInfo * proj,
 		int w, int h, bool keepAR = true);
 	void SetFrame(Coordinate minCoord, Coordinate maxCoord,
@@ -51,7 +64,7 @@ public:
 	void LineBresenham(Pixel start, Pixel end, std::function<void(int x, int y)> callback) const;
 
 	
-	std::vector<IProjectionInfo::Pixel> CreateReprojection(IProjectionInfo * imProj) const;
+	Reprojection CreateReprojection(IProjectionInfo * imProj) const;
 
 	void ComputeAABB(IProjectionInfo::Coordinate & min, IProjectionInfo::Coordinate & max) const;
 

@@ -30,7 +30,7 @@ public:
 
 	void DrawImage(uint8_t * imData, int w, int h, IProjectionInfo * imProj);
 
-	void DrawImage(uint8_t * imData, int w, int h, const std::vector<IProjectionInfo::Pixel> & reproj);
+	void DrawImage(uint8_t * imData, const IProjectionInfo::Reprojection & reproj);
 	
 
 	void SetPixel(const IProjectionInfo::Pixel & p, uint8_t val);

@@ -75,6 +75,23 @@ void IProjectionInfo::ComputeAABB(const std::vector<IProjectionInfo::Coordinate>
 
 }
 
+
+/// <summary>
+/// Set current data active frame based on existing projection
+/// </summary>
+/// <param name="proj">existing projection</param>
+/// <param name="keepAR">keep AR of data (default: true) 
+/// if yes, data are enlarged and not 1:1 to bounding box to keep AR
+/// </param>
+void IProjectionInfo::SetFrame(IProjectionInfo * proj, bool keepAR)
+{
+	IProjectionInfo::Coordinate cMin, cMax;
+	proj->ComputeAABB(cMin, cMax);
+
+	this->SetFrame(cMin, cMax, proj->GetFrameWidth(), proj->GetFrameHeight(), keepAR);
+}
+
+
 /// <summary>
 /// Set current data active frame based on existing projection
 /// </summary>
@@ -354,15 +371,15 @@ void IProjectionInfo::LineBresenham(Pixel start, Pixel end,
 /// </summary>
 /// <param name="imProj"></param>
 /// <returns></returns>
-std::vector<IProjectionInfo::Pixel> IProjectionInfo::CreateReprojection(IProjectionInfo * imProj) const
+IProjectionInfo::Reprojection IProjectionInfo::CreateReprojection(IProjectionInfo * imProj) const
 {
-	std::vector<IProjectionInfo::Pixel> reprojection;
+	Reprojection reprojection;
 
 	for (int y = 0; y < this->GetFrameHeight(); y++)
 	{
 		for (int x = 0; x < this->GetFrameWidth(); x++)
 		{
-			reprojection.push_back({ -1, -1 });
+			reprojection.pixels.push_back({ -1, -1 });
 		}
 	}
 
@@ -380,10 +397,15 @@ std::vector<IProjectionInfo::Pixel> IProjectionInfo::CreateReprojection(IProject
 			if (p.x >= imProj->GetFrameWidth()) continue;
 			if (p.y >= imProj->GetFrameHeight()) continue;
 
-			reprojection[x + y * this->GetFrameWidth()] = p;
+			reprojection.pixels[x + y * this->GetFrameWidth()] = p;
 
 		}
 	}
+
+	reprojection.inW = imProj->GetFrameWidth();
+	reprojection.inH = imProj->GetFrameHeight();
+	reprojection.outW = this->GetFrameWidth();
+	reprojection.outH = this->GetFrameHeight();
 
 	return reprojection;
 }
@@ -424,4 +446,58 @@ void IProjectionInfo::ComputeAABB(IProjectionInfo::Coordinate & min, IProjection
 
 	
 	IProjectionInfo::ComputeAABB(border, min, max);
+}
+
+
+
+IProjectionInfo::Reprojection IProjectionInfo::Reprojection::CreateFromFile(const std::string & fileName)
+{
+	Reprojection r;
+
+
+	FILE *f = nullptr;  //pointer to file we will read in
+	f = fopen(fileName.c_str(), "rb");
+	if (f == nullptr)
+	{
+		printf("Failed to open file: \"%s\"\n", fileName.c_str());
+		return r;
+	}
+
+	fseek(f, 0L, SEEK_END);
+	long size = ftell(f);
+	fseek(f, 0L, SEEK_SET);
+
+	long dataSize = size - 4 * sizeof(int);
+
+	fread(&(r.inW), sizeof(int), 1, f);
+	fread(&(r.inH), sizeof(int), 1, f);
+	fread(&(r.outW), sizeof(int), 1, f);
+	fread(&(r.outH), sizeof(int), 1, f);
+
+	r.pixels.resize(dataSize / sizeof(IProjectionInfo::Pixel));
+	fread(&r.pixels[0], sizeof(IProjectionInfo::Pixel), r.pixels.size(), f);
+
+	fclose(f);	
+
+	return r;
+}
+
+void IProjectionInfo::Reprojection::SaveToFile(const std::string & fileName)
+{
+	FILE * f = nullptr;
+	//my_fopen(&f, fileName.GetConstString(), "wb");
+	f = fopen(fileName.c_str(), "wb");
+
+	if (f == nullptr)
+	{
+		printf("Failed to open file %s (%s)", fileName, strerror(errno));
+		return;
+	}
+	fwrite(&this->inW, sizeof(int), 1, f);
+	fwrite(&this->inH, sizeof(int), 1, f);
+	fwrite(&this->outW, sizeof(int), 1, f);
+	fwrite(&this->outH, sizeof(int), 1, f);
+	fwrite(this->pixels.data(), sizeof(IProjectionInfo::Pixel), this->pixels.size(), f);
+	fclose(f);
+
 }

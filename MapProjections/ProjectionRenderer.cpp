@@ -340,29 +340,21 @@ void ProjectionRenderer::DrawImage(uint8_t * imData, int w, int h, IProjectionIn
 /// e.g.: currentData[index] = imData[reprojection[index]]
 /// </summary>
 /// <param name="imData"></param>
-/// <param name="w"></param>
-/// <param name="h"></param>
 /// <param name="reproj"></param>
-void ProjectionRenderer::DrawImage(uint8_t * imData, int w, int h, const std::vector<IProjectionInfo::Pixel> & reproj)
-{
-	if (w * h != reproj.size())
+void ProjectionRenderer::DrawImage(uint8_t * imData, const IProjectionInfo::Reprojection & reproj)
+{	
+	for (int y = 0; y < reproj.outH; y++)
 	{
-		printf("Size of re-projection did not match size of image data");
-		return;
-	}
-
-	for (int y = 0; y < this->proj->GetFrameHeight(); y++)
-	{
-		for (int x = 0; x < this->proj->GetFrameWidth(); x++)
+		for (int x = 0; x < reproj.outW; x++)
 		{
-			int index = x + y * this->proj->GetFrameWidth();
-			if ((reproj[index].x == -1) && (reproj[index].y == -1))
+			int index = x + y * reproj.outW;
+			if ((reproj.pixels[index].x == -1) && (reproj.pixels[index].y == -1))
 			{
 				continue;
 			}
 
 
-			int origIndex = reproj[index].x + reproj[index].y * w;
+			int origIndex = reproj.pixels[index].x + reproj.pixels[index].y * reproj.inW;
 			this->rawData[index] =  imData[origIndex];
 		}
 	}

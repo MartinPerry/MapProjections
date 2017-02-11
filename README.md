@@ -1,7 +1,7 @@
 
 Sample:
 
-//===================================================
+        //===================================================
 	//Build input projection
 	//===================================================
 
@@ -26,8 +26,8 @@ Sample:
 	// Build output projection
 	//===================================================
 
-  //Mercator latitude in <-85, 85>
-  if (bbMin.lat.deg() < -85) bbMin.lat = -85.0_deg;			
+        //Mercator latitude in <-85, 85>
+        if (bbMin.lat.deg() < -85) bbMin.lat = -85.0_deg;			
 	if (bbMax.lat.deg() > 85) bbMax.lat = 85.0_deg;
 	
 	IProjectionInfo * mercator = new Mercator();	

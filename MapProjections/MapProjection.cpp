@@ -2,6 +2,7 @@
 
 #include <limits>
 #include <algorithm>
+#include <cstring>
 
 const double IProjectionInfo::PI = std::acos(-1);
 const double IProjectionInfo::PI_4 = 0.25 * IProjectionInfo::PI;
@@ -366,46 +367,46 @@ void IProjectionInfo::LineBresenham(Pixel start, Pixel end,
 }
 
 /// <summary>
-/// Re-project data from current to imProj. 
-/// Calculates mapping: newData[index] = oldData[reprojection[index]]
+/// Re-project data from -> to
+/// Calculates mapping: toData[index] = fromData[reprojection[index]]
 /// </summary>
 /// <param name="imProj"></param>
 /// <returns></returns>
-IProjectionInfo::Reprojection IProjectionInfo::CreateReprojection(IProjectionInfo * imProj) const
+IProjectionInfo::Reprojection IProjectionInfo::CreateReprojection(IProjectionInfo * from, IProjectionInfo * to)
 {
 	Reprojection reprojection;
 
-	for (int y = 0; y < this->GetFrameHeight(); y++)
+	for (int y = 0; y < to->GetFrameHeight(); y++)
 	{
-		for (int x = 0; x < this->GetFrameWidth(); x++)
+		for (int x = 0; x < to->GetFrameWidth(); x++)
 		{
 			reprojection.pixels.push_back({ -1, -1 });
 		}
 	}
 
 
-	for (int y = 0; y < this->GetFrameHeight(); y++)
+	for (int y = 0; y < to->GetFrameHeight(); y++)
 	{
-		for (int x = 0; x < this->GetFrameWidth(); x++)
+		for (int x = 0; x < to->GetFrameWidth(); x++)
 		{
 
-			IProjectionInfo::Coordinate cc = this->ProjectInverse({ x,y });
-			IProjectionInfo::Pixel p = imProj->Project(cc);
+			IProjectionInfo::Coordinate cc = to->ProjectInverse({ x,y });
+			IProjectionInfo::Pixel p = from->Project(cc);
 
 			if (p.x < 0) continue;
 			if (p.y < 0) continue;
-			if (p.x >= imProj->GetFrameWidth()) continue;
-			if (p.y >= imProj->GetFrameHeight()) continue;
+			if (p.x >= from->GetFrameWidth()) continue;
+			if (p.y >= from->GetFrameHeight()) continue;
 
-			reprojection.pixels[x + y * this->GetFrameWidth()] = p;
+			reprojection.pixels[x + y * to->GetFrameWidth()] = p;
 
 		}
 	}
 
-	reprojection.inW = imProj->GetFrameWidth();
-	reprojection.inH = imProj->GetFrameHeight();
-	reprojection.outW = this->GetFrameWidth();
-	reprojection.outH = this->GetFrameHeight();
+	reprojection.inW = from->GetFrameWidth();
+	reprojection.inH = from->GetFrameHeight();
+	reprojection.outW = to->GetFrameWidth();
+	reprojection.outH = to->GetFrameHeight();
 
 	return reprojection;
 }
@@ -453,7 +454,10 @@ void IProjectionInfo::ComputeAABB(IProjectionInfo::Coordinate & min, IProjection
 IProjectionInfo::Reprojection IProjectionInfo::Reprojection::CreateFromFile(const std::string & fileName)
 {
 	Reprojection r;
-
+	r.inH = 0;
+	r.inW = 0;
+	r.outW = 0;
+	r.outH = 0;
 
 	FILE *f = nullptr;  //pointer to file we will read in
 	f = fopen(fileName.c_str(), "rb");
@@ -490,7 +494,7 @@ void IProjectionInfo::Reprojection::SaveToFile(const std::string & fileName)
 
 	if (f == nullptr)
 	{
-		printf("Failed to open file %s (%s)", fileName, strerror(errno));
+		printf("Failed to open file %s (%s)", fileName.c_str(), strerror(errno));
 		return;
 	}
 	fwrite(&this->inW, sizeof(int), 1, f);

@@ -73,6 +73,13 @@ void ProjectionRenderer::SaveToFile(const char * fileName)
 	*/
 }
 
+void ProjectionRenderer::FillData(std::vector<uint8_t> & output)
+{
+	output.resize(proj->GetFrameWidth() * proj->GetFrameHeight());
+	memcpy(&output[0], this->rawData, output.size());
+}
+
+
 /// <summary>
 /// Load input data from file
 /// </summary>

@@ -35,6 +35,7 @@ public:
 
 	void SetPixel(const IProjectionInfo::Pixel & p, uint8_t val);
 
+	void FillData(std::vector<uint8_t> & output);
 	void SaveToFile(const char * fileName);
 
 private:

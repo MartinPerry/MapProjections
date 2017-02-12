@@ -64,9 +64,10 @@ public:
 	void LineBresenham(Pixel start, Pixel end, std::function<void(int x, int y)> callback) const;
 
 	
-	Reprojection CreateReprojection(IProjectionInfo * imProj) const;
-
+	
 	void ComputeAABB(IProjectionInfo::Coordinate & min, IProjectionInfo::Coordinate & max) const;
+	
+	static Reprojection CreateReprojection(IProjectionInfo * from, IProjectionInfo * to);
 
 	static void ComputeAABB(const std::vector<IProjectionInfo::Coordinate> & c,
 		IProjectionInfo::Coordinate & min, IProjectionInfo::Coordinate & max);

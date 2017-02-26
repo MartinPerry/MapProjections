@@ -25,8 +25,10 @@ public:
 		WEB_MERCATOR = 3
 	} PROJECTION;
 
-	template <typename PixelType = int>
+	template <typename PixelType = int, 
+		typename = typename std::enable_if<std::is_arithmetic<PixelType>::value, PixelType>::type>
 	struct Pixel { PixelType x; PixelType y; };
+
 	struct Coordinate { GeoCoordinate lat; GeoCoordinate lon; };
 
 	struct Reprojection {

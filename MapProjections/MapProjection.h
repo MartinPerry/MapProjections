@@ -21,10 +21,12 @@ public:
 	typedef enum PROJECTION {
 		MERCATOR = 0, 
 		LAMBERT_CONIC = 1, 
-		EQUIRECTANGULAR = 2
+		EQUIRECTANGULAR = 2,
+		WEB_MERCATOR = 3
 	} PROJECTION;
 
-	struct Pixel { int x; int y; };
+	template <typename PixelType = int>
+	struct Pixel { PixelType x; PixelType y; };
 	struct Coordinate { GeoCoordinate lat; GeoCoordinate lon; };
 
 	struct Reprojection {
@@ -32,7 +34,7 @@ public:
 		int inH;
 		int outW;
 		int outH;
-		std::vector<IProjectionInfo::Pixel> pixels;
+		std::vector<IProjectionInfo::Pixel<int>> pixels;
 
 		static Reprojection CreateFromFile(const std::string & fileName);
 		void SaveToFile(const std::string & fileName);
@@ -41,27 +43,32 @@ public:
 
 	const PROJECTION curProjection;
 
-	IProjectionInfo::Pixel Project(Coordinate c) const;
-	IProjectionInfo::Coordinate ProjectInverse(Pixel p) const;
+	template <typename PixelType = int>
+	IProjectionInfo::Pixel<PixelType> Project(Coordinate c) const;
+
+	template <typename PixelType = int>
+	IProjectionInfo::Coordinate ProjectInverse(Pixel<PixelType> p) const;
 
 	void SetFrame(IProjectionInfo * proj, bool keepAR = true);
 	void SetFrame(IProjectionInfo * proj,
-		int w, int h, bool keepAR = true);
+		double w, double h, bool keepAR = true);
 	void SetFrame(Coordinate minCoord, Coordinate maxCoord,
-		int w, int h, bool keepAR = true);
+		double w, double h, bool keepAR = true);
 	
 	IProjectionInfo::Coordinate GetTopLeftCorner() const;
 
 	Angle GetStepLat() const { return this->stepLat;}
 	Angle GetStepLon() const { return this->stepLon; }
 
-	int GetFrameWidth() const { return this->w; }
-	int GetFrameHeight() const { return this->h; }
+	template <typename T = int>
+	T GetFrameWidth() const { return static_cast<T>(this->w); }
+	template <typename T = int>
+	T GetFrameHeight() const { return static_cast<T>(this->h); }
 
 	IProjectionInfo::Coordinate CalcEndPointShortest(IProjectionInfo::Coordinate start, Angle bearing, double dist) const;
 	IProjectionInfo::Coordinate CalcEndPointDirect(IProjectionInfo::Coordinate start, Angle bearing, double dist) const;
 
-	void LineBresenham(Pixel start, Pixel end, std::function<void(int x, int y)> callback) const;
+	void LineBresenham(Pixel<int> start, Pixel<int> end, std::function<void(int x, int y)> callback) const;
 
 	
 	
@@ -106,16 +113,15 @@ protected:
 	inline static double radToDeg(double x) { return x * 57.2957795; }
 
 
-	ProjectedValue min;
-	ProjectedValue max;
-
-	int w;
-	int h;
+	ProjectedValue minOffset; //offset to move min corner to [0,0] and other corners accordingly
+	
+	double w; //current frame width
+	double h; //current frame height
 
 	double wPadding;
 	double hPadding;
-	double wAR;
-	double hAR;
+	double wAR; //width AR
+	double hAR; //height AR
 
 	Angle stepLat;
 	Angle stepLon;
@@ -130,6 +136,51 @@ protected:
 
 
 
+/// <summary>
+/// Project Coordinate point to pixel
+/// </summary>
+/// <param name="c"></param>
+/// <returns></returns>
+template <typename PixelType>
+IProjectionInfo::Pixel<PixelType> IProjectionInfo::Project(Coordinate c) const
+{
+
+	ProjectedValue raw = this->ProjectInternal(c);
+
+
+	raw.x = raw.x - this->minOffset.x;
+	raw.y = raw.y - this->minOffset.y;
+
+	IProjectionInfo::Pixel<PixelType> p;
+	p.x = static_cast<PixelType>(this->wPadding + (raw.x * this->wAR));
+	p.y = static_cast<PixelType>(this->h - this->hPadding - (raw.y * this->hAR));
+
+	return p;
+}
+
+/// <summary>
+/// Project pixel to coordinate
+/// </summary>
+/// <param name="p"></param>
+/// <returns></returns>
+template <typename PixelType>
+IProjectionInfo::Coordinate IProjectionInfo::ProjectInverse(Pixel<PixelType> p) const
+{
+
+	double xx = (static_cast<double>(p.x) - this->wPadding + this->wAR * this->minOffset.x);
+	xx /= this->wAR;
+
+	double yy = -1 * (static_cast<double>(p.y) - this->h + this->hPadding - this->hAR * this->minOffset.y);
+	yy /= this->hAR;
+
+
+	ProjectedValueInverse pi = this->ProjectInverseInternal(xx, yy);
+
+	Coordinate c;
+	c.lat = GeoCoordinate::deg(NormalizeLat(pi.latDeg));
+	c.lon = GeoCoordinate::deg(NormalizeLon(pi.lonDeg));
+	return c;
+}
 
 
 

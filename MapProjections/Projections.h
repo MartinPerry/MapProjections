@@ -33,14 +33,12 @@ class Mercator : public IProjectionInfo
 {
 public:
 	Mercator();
-
-
 protected:
-
 	virtual IProjectionInfo::ProjectedValue ProjectInternal(Coordinate c) const;
 	virtual IProjectionInfo::ProjectedValueInverse ProjectInverseInternal(double x, double y) const;
 
 };
+
 
 
 class Equirectangular : public IProjectionInfo

@@ -33,7 +33,7 @@ public:
 	void DrawImage(uint8_t * imData, const IProjectionInfo::Reprojection & reproj);
 	
 
-	void SetPixel(const IProjectionInfo::Pixel & p, uint8_t val);
+	void SetPixel(const IProjectionInfo::Pixel<int> & p, uint8_t val);
 
 	void FillData(std::vector<uint8_t> & output);
 	void SaveToFile(const char * fileName);

@@ -3,6 +3,7 @@
 #include <limits>
 #include <algorithm>
 #include <cstring>
+#include <cassert>
 
 const double IProjectionInfo::PI = std::acos(-1);
 const double IProjectionInfo::PI_4 = 0.25 * IProjectionInfo::PI;
@@ -20,8 +21,8 @@ const double IProjectionInfo::EARTH_RADIUS = 6371;
 
 IProjectionInfo::IProjectionInfo(IProjectionInfo::PROJECTION curProjection)
 	: curProjection(curProjection),
-	min({ std::numeric_limits<double>::max(), std::numeric_limits<double>::max() }),
-	max({ std::numeric_limits<double>::min(), std::numeric_limits<double>::min() }),
+	minOffset({ std::numeric_limits<double>::max(), std::numeric_limits<double>::max() }),
+	//max({ std::numeric_limits<double>::min(), std::numeric_limits<double>::min() }),
 	w(0), h(0),
 	wPadding(0), hPadding(0),
 	wAR(1), hAR(1),
@@ -103,7 +104,7 @@ void IProjectionInfo::SetFrame(IProjectionInfo * proj, bool keepAR)
 /// if yes, data are enlarged and not 1:1 to bounding box to keep AR
 /// </param>
 void IProjectionInfo::SetFrame(IProjectionInfo * proj,
-	int w, int h, bool keepAR)
+	double w, double h, bool keepAR)
 {
 	IProjectionInfo::Coordinate cMin, cMax;
 	proj->ComputeAABB(cMin, cMax);
@@ -122,39 +123,52 @@ void IProjectionInfo::SetFrame(IProjectionInfo * proj,
 /// if yes, data are enlarged beyond AABB to keep AR
 /// </param>
 void IProjectionInfo::SetFrame(Coordinate minCoord, Coordinate maxCoord, 
-	int w, int h, bool keepAR)
+	double w, double h, bool keepAR)
 {
 		
-	this->min = { std::numeric_limits<double>::max(), std::numeric_limits<double>::max() };
-	this->max = { std::numeric_limits<double>::min(), std::numeric_limits<double>::min() };
-
+	//calculate minimum internal projection value
+	ProjectedValue  min = { std::numeric_limits<double>::max(), std::numeric_limits<double>::max() };
+	
 	ProjectedValue minPixel = this->ProjectInternal(minCoord);
 	ProjectedValue maxPixel = this->ProjectInternal(maxCoord);
 	
-	this->min.x = std::min(std::min(this->min.x, minPixel.x), maxPixel.x);
-	this->min.y = std::min(std::min(this->min.y, minPixel.y), maxPixel.y);
+	min.x = std::min(std::min(min.x, minPixel.x), maxPixel.x);
+	min.y = std::min(std::min(min.y, minPixel.y), maxPixel.y);
 
+	this->minOffset = min;
 
 	//-----------------------------------------------------------
+	//calculate maximum internal projection value
 
-	minPixel.x = minPixel.x - this->min.x;
-	minPixel.y = minPixel.y - this->min.y;
+	//move origin to [0, 0]
+	minPixel.x = minPixel.x - min.x;
+	minPixel.y = minPixel.y - min.y;
 
-	maxPixel.x = maxPixel.x - this->min.x;
-	maxPixel.y = maxPixel.y - this->min.y;
+	//now, minPixel should be [0,0]
+	assert(minPixel.x == 0);
+	assert(minPixel.y == 0);
 
+	//move max accordingly
+	maxPixel.x = maxPixel.x - min.x;
+	maxPixel.y = maxPixel.y - min.y;
 
-	this->max.x = std::max(std::max(this->max.x, minPixel.x), maxPixel.x);
-	this->max.y = std::max(std::max(this->max.y, minPixel.y), maxPixel.y);
+	//calculate moved maximum
+	ProjectedValue max = { std::numeric_limits<double>::min(), std::numeric_limits<double>::min() };
+
+	max.x = std::max(std::max(max.x, minPixel.x), maxPixel.x);
+	max.y = std::max(std::max(max.y, minPixel.y), maxPixel.y);
 
 	//----------------------------------------------------------
 	
 	this->w = w;
 	this->h = h;
 
-	this->wAR = this->w / this->max.x;
-	this->hAR = this->h / this->max.y;
-
+	//calculate scale in width and height
+	this->wAR = this->w / max.x;
+	this->hAR = this->h / max.y;
+	
+	this->wPadding = 0;
+	this->hPadding = 0;
 
 	// Using different ratios for width and height will cause the map to be stretched,
 	// but fitting the desired region
@@ -165,12 +179,12 @@ void IProjectionInfo::SetFrame(Coordinate minCoord, Coordinate maxCoord,
 		double globalAR = std::min(this->wAR, this->hAR);
 		this->wAR = globalAR;
 		this->hAR = globalAR;
+
+		this->wPadding = (this->w - (this->wAR * max.x)) * 0.5;
+		this->hPadding = (this->h - (this->hAR * max.y)) * 0.5;
 	}
 	
-	this->wPadding = (this->w - (this->wAR * this->max.x)) * 0.5;
-	this->hPadding = (this->h - (this->hAR * this->max.y)) * 0.5;
-
-
+	
 	this->stepLat = GeoCoordinate::rad((maxCoord.lat.rad() - minCoord.lat.rad()) / h);
 	this->stepLon = GeoCoordinate::rad((maxCoord.lon.rad() - minCoord.lon.rad()) / w);
 }
@@ -184,49 +198,7 @@ IProjectionInfo::Coordinate IProjectionInfo::GetTopLeftCorner() const
 	return this->ProjectInverse({ 0, 0 });
 }
 
-/// <summary>
-/// Project Coordinate point to pixel
-/// </summary>
-/// <param name="c"></param>
-/// <returns></returns>
-IProjectionInfo::Pixel IProjectionInfo::Project(Coordinate c) const
-{
-	
-	ProjectedValue raw = this->ProjectInternal(c);
 
-
-	raw.x = raw.x - this->min.x;
-	raw.y = raw.y - this->min.y;
-
-	IProjectionInfo::Pixel p;
-	p.x = static_cast<int>(this->wPadding + (raw.x * this->wAR));
-	p.y = static_cast<int>(this->h - this->hPadding - (raw.y * this->hAR));
-	
-	return p;
-}
-
-/// <summary>
-/// Project pixel to coordinate
-/// </summary>
-/// <param name="p"></param>
-/// <returns></returns>
-IProjectionInfo::Coordinate IProjectionInfo::ProjectInverse(Pixel p) const
-{
-	
-	double xx = (static_cast<double>(p.x) - this->wPadding + this->wAR * this->min.x);
-	xx /= this->wAR;
-
-	double yy = -1 * (static_cast<double>(p.y) - this->h + this->hPadding - this->hAR * this->min.y);
-	yy /= this->hAR;
-	
-
-	ProjectedValueInverse pi = this->ProjectInverseInternal(xx, yy);
-
-	Coordinate c;
-	c.lat = GeoCoordinate::deg(NormalizeLat(pi.latDeg));
-	c.lon = GeoCoordinate::deg(NormalizeLon(pi.lonDeg));
-	return c;
-}
 
 /// <summary>
 /// Calculate end point based on shortest path (on real earth surface)
@@ -306,7 +278,7 @@ IProjectionInfo::Coordinate IProjectionInfo::CalcEndPointDirect(
 /// <param name="start"></param>
 /// <param name="end"></param>
 /// <param name="callback"></param>
-void IProjectionInfo::LineBresenham(Pixel start, Pixel end,
+void IProjectionInfo::LineBresenham(Pixel<int> start, Pixel<int> end,
 	std::function<void(int x, int y)> callback) const
 {
 	if ((start.x >= static_cast<int>(this->GetFrameWidth()))
@@ -375,15 +347,7 @@ void IProjectionInfo::LineBresenham(Pixel start, Pixel end,
 IProjectionInfo::Reprojection IProjectionInfo::CreateReprojection(IProjectionInfo * from, IProjectionInfo * to)
 {
 	Reprojection reprojection;
-
-	for (int y = 0; y < to->GetFrameHeight(); y++)
-	{
-		for (int x = 0; x < to->GetFrameWidth(); x++)
-		{
-			reprojection.pixels.push_back({ -1, -1 });
-		}
-	}
-
+	reprojection.pixels.resize(to->GetFrameHeight() * to->GetFrameWidth(), { -1, -1 });
 
 	for (int y = 0; y < to->GetFrameHeight(); y++)
 	{
@@ -391,7 +355,7 @@ IProjectionInfo::Reprojection IProjectionInfo::CreateReprojection(IProjectionInf
 		{
 
 			IProjectionInfo::Coordinate cc = to->ProjectInverse({ x,y });
-			IProjectionInfo::Pixel p = from->Project(cc);
+			IProjectionInfo::Pixel<int> p = from->Project(cc);
 
 			if (p.x < 0) continue;
 			if (p.y < 0) continue;
@@ -420,8 +384,8 @@ IProjectionInfo::Reprojection IProjectionInfo::CreateReprojection(IProjectionInf
 /// <param name="max"></param>
 void IProjectionInfo::ComputeAABB(IProjectionInfo::Coordinate & min, IProjectionInfo::Coordinate & max) const
 {
-	int ww = this->w - 1;
-	int hh = this->h - 1;
+	int ww = static_cast<int>(this->w - 1);
+	int hh = static_cast<int>(this->h - 1);
 
 	std::vector<IProjectionInfo::Coordinate> border;
 	this->LineBresenham({ 0,0 }, { 0, hh },
@@ -478,8 +442,8 @@ IProjectionInfo::Reprojection IProjectionInfo::Reprojection::CreateFromFile(cons
 	fread(&(r.outW), sizeof(int), 1, f);
 	fread(&(r.outH), sizeof(int), 1, f);
 
-	r.pixels.resize(dataSize / sizeof(IProjectionInfo::Pixel));
-	fread(&r.pixels[0], sizeof(IProjectionInfo::Pixel), r.pixels.size(), f);
+	r.pixels.resize(dataSize / sizeof(IProjectionInfo::Pixel<int>));
+	fread(&r.pixels[0], sizeof(IProjectionInfo::Pixel<int>), r.pixels.size(), f);
 
 	fclose(f);	
 
@@ -501,7 +465,7 @@ void IProjectionInfo::Reprojection::SaveToFile(const std::string & fileName)
 	fwrite(&this->inH, sizeof(int), 1, f);
 	fwrite(&this->outW, sizeof(int), 1, f);
 	fwrite(&this->outH, sizeof(int), 1, f);
-	fwrite(this->pixels.data(), sizeof(IProjectionInfo::Pixel), this->pixels.size(), f);
+	fwrite(this->pixels.data(), sizeof(IProjectionInfo::Pixel<int>), this->pixels.size(), f);
 	fclose(f);
 
 }

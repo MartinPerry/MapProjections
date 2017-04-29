@@ -22,8 +22,11 @@ ProjectionRenderer::ProjectionRenderer(IProjectionInfo * proj)
 /// </summary>
 ProjectionRenderer::~ProjectionRenderer()
 {
-	delete[] rawData;
-	rawData = nullptr;
+	if (!externalData)
+	{
+		delete[] rawData;
+		rawData = nullptr;
+	}
 }
 
 /// <summary>
@@ -35,8 +38,11 @@ ProjectionRenderer::~ProjectionRenderer()
 void ProjectionRenderer::SetProjection(IProjectionInfo * proj)
 {
 	this->proj = proj;
-	delete[] rawData;
-	rawData = new uint8_t[proj->GetFrameWidth() * proj->GetFrameHeight()];
+	if (!externalData)
+	{
+		delete[] rawData;
+		rawData = new uint8_t[proj->GetFrameWidth() * proj->GetFrameHeight()];
+	}
 	this->Clear();
 }
 

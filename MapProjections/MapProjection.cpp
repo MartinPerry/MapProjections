@@ -355,7 +355,7 @@ IProjectionInfo::Reprojection IProjectionInfo::CreateReprojection(IProjectionInf
 		{
 
 			IProjectionInfo::Coordinate cc = to->ProjectInverse({ x,y });
-			IProjectionInfo::Pixel<int> p = from->Project(cc);
+			IProjectionInfo::Pixel<int> p = from->Project<int>(cc);
 
 			if (p.x < 0) continue;
 			if (p.y < 0) continue;

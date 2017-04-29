@@ -17,6 +17,8 @@ public:
 	void SetProjection(IProjectionInfo * proj);
 	void Clear();
 
+	void SetRawDataTarget(uint8_t * target);
+
 	void AddBorders(const char * fileName, int useEveryNthPoint = 1);
 	void DrawBorders();
 	void DrawParalells();
@@ -47,6 +49,7 @@ private:
 
 
 	uint8_t * rawData;
+	bool externalData;
 	IProjectionInfo * proj;
 	
 	std::unordered_map<std::string, std::vector<IProjectionInfo::Coordinate> > debugBorder;

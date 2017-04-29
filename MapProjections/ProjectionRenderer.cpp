@@ -12,7 +12,7 @@
 /// </summary>
 /// <param name="proj"></param>
 ProjectionRenderer::ProjectionRenderer(IProjectionInfo * proj)
-	: rawData(nullptr), proj(nullptr)
+	: rawData(nullptr), externalData(false), proj(nullptr)
 {
 	this->SetProjection(proj);
 }
@@ -46,6 +46,24 @@ void ProjectionRenderer::SetProjection(IProjectionInfo * proj)
 void ProjectionRenderer::Clear()
 {
 	memset(rawData, 0, proj->GetFrameWidth() * proj->GetFrameHeight() * sizeof(uint8_t));
+}
+
+void ProjectionRenderer::SetRawDataTarget(uint8_t * target)
+{
+	if (target == nullptr)
+	{
+		this->rawData = nullptr;
+		this->rawData = new uint8_t[proj->GetFrameWidth() * proj->GetFrameHeight()];
+
+		this->externalData = false;
+		return;
+	}
+	if (!externalData)
+	{
+		delete[] rawData;
+	}
+	this->rawData = target;
+	this->externalData = true;
 }
 
 /// <summary>
@@ -193,8 +211,8 @@ void ProjectionRenderer::DrawBorders()
 
 
 
-			IProjectionInfo::Pixel<int> pp1 = proj->Project(p);
-			IProjectionInfo::Pixel<int> pp2 = proj->Project(p1);
+			IProjectionInfo::Pixel<int> pp1 = proj->Project<int>(p);
+			IProjectionInfo::Pixel<int> pp2 = proj->Project<int>(p1);
 
 
 			this->CohenSutherlandLineClipAndDraw(pp1.x, pp1.y, pp2.x, pp2.y);
@@ -223,8 +241,8 @@ void ProjectionRenderer::DrawParalells()
 			p1.lat = GeoCoordinate::deg(lat);
 			p1.lon = GeoCoordinate::deg(lon + lonStep);
 
-			IProjectionInfo::Pixel<int> pp1 = proj->Project(p);
-			IProjectionInfo::Pixel<int> pp2 = proj->Project(p1);
+			IProjectionInfo::Pixel<int> pp1 = proj->Project<int>(p);
+			IProjectionInfo::Pixel<int> pp2 = proj->Project<int>(p1);
 
 
 			this->CohenSutherlandLineClipAndDraw(pp1.x, pp1.y, pp2.x, pp2.y);
@@ -257,8 +275,8 @@ void ProjectionRenderer::DrawLine(IProjectionInfo::Coordinate start,
 		p1.lat = GeoCoordinate::rad(p1.lat.rad() + latStep);
 		p1.lon = GeoCoordinate::rad(p1.lon.rad() + lonStep);
 
-		IProjectionInfo::Pixel<int> pp1 = proj->Project(p);
-		IProjectionInfo::Pixel<int> pp2 = proj->Project(p1);
+		IProjectionInfo::Pixel<int> pp1 = proj->Project<int>(p);
+		IProjectionInfo::Pixel<int> pp2 = proj->Project<int>(p1);
 
 		this->CohenSutherlandLineClipAndDraw(pp1.x, pp1.y, pp2.x, pp2.y);
 
@@ -273,7 +291,7 @@ void ProjectionRenderer::DrawLine(IProjectionInfo::Coordinate start,
 void ProjectionRenderer::DrawPoint(IProjectionInfo::Coordinate p)
 {
 	int size = 5;
-	IProjectionInfo::Pixel<int> center = proj->Project(p);
+	IProjectionInfo::Pixel<int> center = proj->Project<int>(p);
 
 	IProjectionInfo::Pixel<int> a = center;
 	IProjectionInfo::Pixel<int> b = center;
@@ -328,7 +346,7 @@ void ProjectionRenderer::DrawImage(uint8_t * imData, int w, int h, IProjectionIn
 		{			
 						
 			IProjectionInfo::Coordinate cc = this->proj->ProjectInverse({ x,y });
-			IProjectionInfo::Pixel<int> p = imProj->Project(cc);
+			IProjectionInfo::Pixel<int> p = imProj->Project<int>(cc);
 
 			if (p.x < 0) continue;
 			if (p.y < 0) continue;

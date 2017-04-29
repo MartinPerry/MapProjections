@@ -45,8 +45,21 @@ public:
 
 	const PROJECTION curProjection;
 
-	template <typename PixelType = int>
-	IProjectionInfo::Pixel<PixelType> Project(Coordinate c) const;
+	virtual ~IProjectionInfo() = default;
+
+	template <typename PixelType = int> 
+	typename std::enable_if<std::is_integral<PixelType>::value, 
+		IProjectionInfo::Pixel<PixelType>>::type
+	Project(Coordinate c) const;
+
+
+	template <typename PixelType = float>
+	typename std::enable_if<std::is_floating_point<PixelType>::value, 
+		IProjectionInfo::Pixel<PixelType>>::type
+	Project(Coordinate c) const;
+	
+
+
 
 	template <typename PixelType = int>
 	IProjectionInfo::Coordinate ProjectInverse(Pixel<PixelType> p) const;
@@ -144,7 +157,28 @@ protected:
 /// <param name="c"></param>
 /// <returns></returns>
 template <typename PixelType>
-IProjectionInfo::Pixel<PixelType> IProjectionInfo::Project(Coordinate c) const
+typename std::enable_if<std::is_integral<PixelType>::value, 
+	IProjectionInfo::Pixel<PixelType>>::type
+IProjectionInfo::Project(Coordinate c) const
+{
+
+	ProjectedValue raw = this->ProjectInternal(c);
+
+
+	raw.x = raw.x - this->minOffset.x;
+	raw.y = raw.y - this->minOffset.y;
+
+	IProjectionInfo::Pixel<PixelType> p;
+	p.x = static_cast<PixelType>(std::round(this->wPadding + (raw.x * this->wAR)));
+	p.y = static_cast<PixelType>(std::round(this->h - this->hPadding - (raw.y * this->hAR)));
+
+	return p;
+}
+
+template <typename PixelType>
+typename std::enable_if<std::is_floating_point<PixelType>::value, 
+	IProjectionInfo::Pixel<PixelType>>::type
+IProjectionInfo::Project(Coordinate c) const
 {
 
 	ProjectedValue raw = this->ProjectInternal(c);

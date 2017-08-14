@@ -142,8 +142,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="lodepng.cpp" />
-    <ClCompile Include="main.cpp" />
+    <ClCompile Include="lodepng.cpp" />    
     <ClCompile Include="MapProjection.cpp" />
     <ClCompile Include="ProjectionRenderer.cpp" />
     <ClCompile Include="Projections.cpp" />

@@ -374,6 +374,11 @@ void ProjectionRenderer::DrawImage(uint8_t * imData, int w, int h, IProjectionIn
 /// <param name="reproj"></param>
 void ProjectionRenderer::DrawImage(uint8_t * imData, const IProjectionInfo::Reprojection & reproj)
 {	
+	ProjectionRenderer::ReprojectImage(imData, this->rawData, reproj);
+}
+
+void ProjectionRenderer::ReprojectImage(uint8_t * fromData, uint8_t * toData, const IProjectionInfo::Reprojection & reproj)
+{
 	for (int y = 0; y < reproj.outH; y++)
 	{
 		for (int x = 0; x < reproj.outW; x++)
@@ -386,7 +391,7 @@ void ProjectionRenderer::DrawImage(uint8_t * imData, const IProjectionInfo::Repr
 
 
 			int origIndex = reproj.pixels[index].x + reproj.pixels[index].y * reproj.inW;
-			this->rawData[index] =  imData[origIndex];
+			toData[index] = fromData[origIndex];
 		}
 	}
 }

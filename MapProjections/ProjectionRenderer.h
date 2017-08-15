@@ -11,6 +11,9 @@
 class ProjectionRenderer
 {
 public:
+
+	static void ReprojectImage(uint8_t * fromData, uint8_t * toData, const IProjectionInfo::Reprojection & reproj);
+
 	ProjectionRenderer(IProjectionInfo * proj);
 	~ProjectionRenderer();
 
@@ -30,10 +33,8 @@ public:
 
 	void DrawLines(const std::vector<IProjectionInfo::Coordinate> & points);
 
-	void DrawImage(uint8_t * imData, int w, int h, IProjectionInfo * imProj);
-
+	void DrawImage(uint8_t * imData, int w, int h, IProjectionInfo * imProj);	
 	void DrawImage(uint8_t * imData, const IProjectionInfo::Reprojection & reproj);
-	
 
 	void SetPixel(const IProjectionInfo::Pixel<int> & p, uint8_t val);
 

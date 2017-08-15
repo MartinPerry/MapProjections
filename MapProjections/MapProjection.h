@@ -36,7 +36,7 @@ public:
 		int inH;
 		int outW;
 		int outH;
-		std::vector<IProjectionInfo::Pixel<int>> pixels;
+		std::vector<IProjectionInfo::Pixel<int>> pixels; //[to] = from
 
 		static Reprojection CreateFromFile(const std::string & fileName);
 		void SaveToFile(const std::string & fileName);

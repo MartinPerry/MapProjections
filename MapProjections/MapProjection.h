@@ -129,7 +129,7 @@ protected:
 	inline static double radToDeg(double x) { return x * 57.2957795; }
 
 
-	ProjectedValue minOffset; //offset to move min corner to [0,0] and other corners accordingly
+	ProjectedValue minPixelOffset; //offset to move min corner to [0,0] and other corners accordingly
 	
 	double w; //current frame width
 	double h; //current frame height
@@ -166,8 +166,8 @@ IProjectionInfo::Project(Coordinate c) const
 	ProjectedValue raw = this->ProjectInternal(c);
 
 
-	raw.x = raw.x - this->minOffset.x;
-	raw.y = raw.y - this->minOffset.y;
+	raw.x = raw.x - this->minPixelOffset.x;
+	raw.y = raw.y - this->minPixelOffset.y;
 
 	IProjectionInfo::Pixel<PixelType> p;
 	p.x = static_cast<PixelType>(std::round(this->wPadding + (raw.x * this->wAR)));
@@ -182,15 +182,17 @@ typename std::enable_if<std::is_floating_point<PixelType>::value,
 IProjectionInfo::Project(Coordinate c) const
 {
 
-	ProjectedValue raw = this->ProjectInternal(c);
+	//project value and get "pseudo" pixel coordinate
+	ProjectedValue rawPixel = this->ProjectInternal(c);
 
+	//move our pseoude pixel to "origin"
+	rawPixel.x = rawPixel.x - this->minPixelOffset.x;
+	rawPixel.y = rawPixel.y - this->minPixelOffset.y;
 
-	raw.x = raw.x - this->minOffset.x;
-	raw.y = raw.y - this->minOffset.y;
-
+	//calculate pixel in final frame
 	IProjectionInfo::Pixel<PixelType> p;
-	p.x = static_cast<PixelType>(this->wPadding + (raw.x * this->wAR));
-	p.y = static_cast<PixelType>(this->h - this->hPadding - (raw.y * this->hAR));
+	p.x = static_cast<PixelType>(this->wPadding + (rawPixel.x * this->wAR));
+	p.y = static_cast<PixelType>(this->h - this->hPadding - (rawPixel.y * this->hAR));
 
 	return p;
 }
@@ -204,10 +206,10 @@ template <typename PixelType>
 IProjectionInfo::Coordinate IProjectionInfo::ProjectInverse(Pixel<PixelType> p) const
 {
 
-	double xx = (static_cast<double>(p.x) - this->wPadding + this->wAR * this->minOffset.x);
+	double xx = (static_cast<double>(p.x) - this->wPadding + this->wAR * this->minPixelOffset.x);
 	xx /= this->wAR;
 
-	double yy = (static_cast<double>(p.y) - this->h + this->hPadding - this->hAR * this->minOffset.y);
+	double yy = (static_cast<double>(p.y) - this->h + this->hPadding - this->hAR * this->minPixelOffset.y);
 	yy /= -this->hAR;
 
 

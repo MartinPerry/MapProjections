@@ -21,7 +21,7 @@ const double IProjectionInfo::EARTH_RADIUS = 6371;
 
 IProjectionInfo::IProjectionInfo(IProjectionInfo::PROJECTION curProjection)
 	: curProjection(curProjection),
-	minOffset({ std::numeric_limits<double>::max(), std::numeric_limits<double>::max() }),
+	minPixelOffset({ std::numeric_limits<double>::max(), std::numeric_limits<double>::max() }),
 	//max({ std::numeric_limits<double>::min(), std::numeric_limits<double>::min() }),
 	w(0), h(0),
 	wPadding(0), hPadding(0),
@@ -143,36 +143,36 @@ void IProjectionInfo::SetFrame(Coordinate minCoord, Coordinate maxCoord,
 {
 		
 	//calculate minimum internal projection value
-	ProjectedValue  min = { std::numeric_limits<double>::max(), std::numeric_limits<double>::max() };
+	ProjectedValue  minPixel = { std::numeric_limits<double>::max(), std::numeric_limits<double>::max() };
 	
-	ProjectedValue minPixel = this->ProjectInternal(minCoord);
-	ProjectedValue maxPixel = this->ProjectInternal(maxCoord);
+	ProjectedValue tmpMinPixel = this->ProjectInternal(minCoord);
+	ProjectedValue tmpMaxPixel = this->ProjectInternal(maxCoord);
 	
-	min.x = std::min(std::min(min.x, minPixel.x), maxPixel.x);
-	min.y = std::min(std::min(min.y, minPixel.y), maxPixel.y);
+	minPixel.x = std::min(tmpMinPixel.x, tmpMaxPixel.x);
+	minPixel.y = std::min(tmpMinPixel.y, tmpMaxPixel.y);
 
-	this->minOffset = min;
+	this->minPixelOffset = minPixel;
 
 	//-----------------------------------------------------------
 	//calculate maximum internal projection value
 
 	//move origin to [0, 0]
-	minPixel.x = minPixel.x - min.x;
-	minPixel.y = minPixel.y - min.y;
+	tmpMinPixel.x = tmpMinPixel.x - minPixel.x;
+	tmpMinPixel.y = tmpMinPixel.y - minPixel.y;
 
 	//now, minPixel should be [0,0]
-	assert(minPixel.x == 0);
-	assert(minPixel.y == 0);
+	assert(tmpMinPixel.x == 0);
+	assert(tmpMinPixel.y == 0);
 
 	//move max accordingly
-	maxPixel.x = maxPixel.x - min.x;
-	maxPixel.y = maxPixel.y - min.y;
+	tmpMaxPixel.x = tmpMaxPixel.x - minPixel.x;
+	tmpMaxPixel.y = tmpMaxPixel.y - minPixel.y;
 
 	//calculate moved maximum
-	ProjectedValue max = { std::numeric_limits<double>::min(), std::numeric_limits<double>::min() };
+	ProjectedValue maxPixel = { std::numeric_limits<double>::min(), std::numeric_limits<double>::min() };
 
-	max.x = std::max(std::max(max.x, minPixel.x), maxPixel.x);
-	max.y = std::max(std::max(max.y, minPixel.y), maxPixel.y);
+	maxPixel.x = std::max(tmpMinPixel.x, tmpMaxPixel.x);
+	maxPixel.y = std::max(tmpMinPixel.y, tmpMaxPixel.y);
 
 	//----------------------------------------------------------
 	
@@ -180,8 +180,8 @@ void IProjectionInfo::SetFrame(Coordinate minCoord, Coordinate maxCoord,
 	this->h = h;
 
 	//calculate scale in width and height
-	this->wAR = this->w / max.x;
-	this->hAR = this->h / max.y;
+	this->wAR = this->w / maxPixel.x; //minPixel.x == 0 => no need to calc difference abs(min - max)
+	this->hAR = this->h / maxPixel.y; //minPixel.y == 0 => no need to calc difference abs(min - max)
 	
 	this->wPadding = 0;
 	this->hPadding = 0;
@@ -196,11 +196,11 @@ void IProjectionInfo::SetFrame(Coordinate minCoord, Coordinate maxCoord,
 		this->wAR = globalAR;
 		this->hAR = globalAR;
 
-		this->wPadding = (this->w - (this->wAR * max.x)) * 0.5;
-		this->hPadding = (this->h - (this->hAR * max.y)) * 0.5;
+		this->wPadding = (this->w - (this->wAR * maxPixel.x)) * 0.5;
+		this->hPadding = (this->h - (this->hAR * maxPixel.y)) * 0.5;
 	}
 	
-	
+	//calculate how many "degrees" is for one "pixel" in lat / lon
 	this->stepLat = GeoCoordinate::rad((maxCoord.lat.rad() - minCoord.lat.rad()) / h);
 	this->stepLon = GeoCoordinate::rad((maxCoord.lon.rad() - minCoord.lon.rad()) / w);
 }

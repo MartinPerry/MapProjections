@@ -52,9 +52,25 @@ double IProjectionInfo::NormalizeLat(double latDeg)
 	return (latDeg > 90) ? (latDeg - 180) : latDeg;
 }
 
+double IProjectionInfo::Distance(const Coordinate & from, const Coordinate & to)
+{
+    //haversine distance in km
+    //http://stackoverflow.com/questions/365826/calculate-distance-between-2-gps-coordinates
+    
+    double dlong = to.lon.rad() - from.lon.rad();
+    double dlat = to.lat.rad() - from.lat.rad();
+    
+    double a = std::pow(std::sin(dlat/2.0), 2) + std::cos(from.lat.rad()) * std::cos(to.lat.rad()) * std::pow(std::sin(dlong/2.0), 2);
+    double c = 2 * std::atan2(std::sqrt(a), std::sqrt(1 - a));
+    double d = 6367 * c;
+    
+    return d;
+}
+
+
 /// <summary>
-/// [Static] 
-/// Compute AABB from coordinates 
+/// [Static]
+/// Compute AABB from coordinates
 /// </summary>
 /// <param name="c">input coordinates</param>
 /// <param name="min">output AABB min</param>
@@ -453,7 +469,7 @@ IProjectionInfo::Reprojection IProjectionInfo::Reprojection::CreateFromFile(cons
 void IProjectionInfo::Reprojection::SaveToFile(const std::string & fileName)
 {
 	FILE * f = nullptr;
-	//my_fopen(&f, fileName.GetConstString(), "wb");
+	//my_fopen(&f, fileName.c_str(), "wb");
 	f = fopen(fileName.c_str(), "wb");
 
 	if (f == nullptr)

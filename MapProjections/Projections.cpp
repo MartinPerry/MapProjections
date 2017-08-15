@@ -68,8 +68,8 @@ IProjectionInfo::ProjectedValueInverse LambertConic::ProjectInverseInternal(doub
 	double lon = lonCentralMeridian.rad() + delta / n;
 
 	IProjectionInfo::ProjectedValueInverse c;
-	c.latDeg = radToDeg(lat);
-	c.lonDeg = radToDeg(lon);
+	c.lat = GeoCoordinate::rad(lat);
+	c.lon = GeoCoordinate::rad(lon);
 
 	return c;
 }
@@ -88,10 +88,24 @@ Mercator::Mercator()
 }
 
 IProjectionInfo::ProjectedValue Mercator::ProjectInternal(Coordinate c) const
-{
+{	
 	IProjectionInfo::ProjectedValue p;
 	p.x = c.lon.rad();
-	p.y = std::log(std::tan(PI_4 + 0.5 * c.lat.rad()));
+
+	/*
+	if (c.lat.rad() > 1.48352986) // > 85 deg
+	{
+		p.y = std::log(std::tan(PI_4 + 0.5 * 1.48352986));
+	}
+	else if (c.lat.rad() < -1.48352986) // < -85 deg
+	{
+		p.y = std::log(std::tan(PI_4 + 0.5 * -1.48352986));
+	}
+	else
+	*/
+	{
+		p.y = std::log(std::tan(PI_4 + 0.5 * c.lat.rad()));
+	}
 
 	return p;
 }
@@ -101,9 +115,9 @@ IProjectionInfo::ProjectedValueInverse Mercator::ProjectInverseInternal(double x
 {
 
 	IProjectionInfo::ProjectedValueInverse c;
-
-	c.latDeg = radToDeg(2 * std::atan(std::pow(E, y)) - PI_2);
-	c.lonDeg = radToDeg(x);
+	c.lon = GeoCoordinate::rad(x);
+	c.lat = GeoCoordinate::rad(2 * std::atan(std::pow(E, y)) - PI_2);
+	
 
 	return c;
 }
@@ -146,8 +160,8 @@ IProjectionInfo::ProjectedValueInverse Equirectangular::ProjectInverseInternal(d
 
 	IProjectionInfo::ProjectedValueInverse c;
 
-	c.latDeg = radToDeg(y / cosStandardParallel + lonCentralMeridian.rad());
-	c.lonDeg = radToDeg(x + standardParallel.rad());
+	c.lat = GeoCoordinate::rad(y / cosStandardParallel + lonCentralMeridian.rad());
+	c.lon = GeoCoordinate::rad(x + standardParallel.rad());
 
 	return c;
 }

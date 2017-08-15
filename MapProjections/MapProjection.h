@@ -97,6 +97,7 @@ public:
 	static double NormalizeLon(double lonDeg);
 	static double NormalizeLat(double latDeg);
 
+    static double Distance(const Coordinate & from, const Coordinate & to);
 	
 protected:
 
@@ -108,8 +109,8 @@ protected:
 
 	struct ProjectedValueInverse
 	{
-		double latDeg;
-		double lonDeg;
+		GeoCoordinate lat;
+		GeoCoordinate lon;
 	};
 
 		
@@ -206,15 +207,15 @@ IProjectionInfo::Coordinate IProjectionInfo::ProjectInverse(Pixel<PixelType> p) 
 	double xx = (static_cast<double>(p.x) - this->wPadding + this->wAR * this->minOffset.x);
 	xx /= this->wAR;
 
-	double yy = -1 * (static_cast<double>(p.y) - this->h + this->hPadding - this->hAR * this->minOffset.y);
-	yy /= this->hAR;
+	double yy = (static_cast<double>(p.y) - this->h + this->hPadding - this->hAR * this->minOffset.y);
+	yy /= -this->hAR;
 
 
 	ProjectedValueInverse pi = this->ProjectInverseInternal(xx, yy);
 
 	Coordinate c;
-	c.lat = GeoCoordinate::deg(NormalizeLat(pi.latDeg));
-	c.lon = GeoCoordinate::deg(NormalizeLon(pi.lonDeg));
+	c.lat = GeoCoordinate::deg(NormalizeLat(pi.lat.deg()));
+	c.lon = GeoCoordinate::deg(NormalizeLon(pi.lon.deg()));
 	return c;
 }
 

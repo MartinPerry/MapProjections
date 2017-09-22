@@ -1,5 +1,5 @@
 #ifndef _PROJECTION_DEBUGGER_H_
-#define _PROJECTION_DEBUGGER_H
+#define _PROJECTION_DEBUGGER_H_
 
 #include <cstdint>
 #include <vector>

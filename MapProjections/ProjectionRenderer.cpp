@@ -456,7 +456,8 @@ void ProjectionRenderer::CohenSutherlandLineClipAndDraw(double x0, double y0, do
 		else {
 			// failed both tests, so calculate the line segment to clip
 			// from an outside point to an intersection with clip edge
-			double x, y;
+			double x = 0;
+			double y = 0;
 
 			// At least one endpoint is outside the clip rectangle; pick it.
 			int outcodeOut = outcode0 ? outcode0 : outcode1;

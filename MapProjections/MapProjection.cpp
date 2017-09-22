@@ -20,14 +20,18 @@ const double IProjectionInfo::EARTH_RADIUS = 6371;
 //=======================================================================
 
 IProjectionInfo::IProjectionInfo(IProjectionInfo::PROJECTION curProjection)
-	: curProjection(curProjection),
-	minPixelOffset({ std::numeric_limits<double>::max(), std::numeric_limits<double>::max() }),
+	: curProjection(curProjection)	
 	//max({ std::numeric_limits<double>::min(), std::numeric_limits<double>::min() }),
-	w(0), h(0),
-	wPadding(0), hPadding(0),
-	wAR(1), hAR(1),
-	stepLat(0.0_deg), stepLon(0.0_deg)
 {
+	frame.minPixelOffset = { std::numeric_limits<double>::max(), std::numeric_limits<double>::max() };
+	frame.w = 0;
+	frame.h = 0;
+	frame.wPadding = 0;
+	frame.hPadding = 0;
+	frame.wAR = 1;
+	frame.hAR = 1;
+	frame.stepLat = 0.0_deg;
+	frame.stepLon = 0.0_deg;
 }
 
 /// <summary>
@@ -94,6 +98,19 @@ void IProjectionInfo::ComputeAABB(const std::vector<IProjectionInfo::Coordinate>
 }
 
 
+void IProjectionInfo::SetFrame(const ProjectionFrame & frame)
+{
+	this->frame.h = frame.h;
+	this->frame.w = frame.w;
+	this->frame.hAR = frame.hAR;
+	this->frame.wAR = frame.wAR;
+	this->frame.hPadding = frame.hPadding;
+	this->frame.wPadding = frame.wPadding;
+	this->frame.minPixelOffset = frame.minPixelOffset;
+	this->frame.stepLat = frame.stepLat;
+	this->frame.stepLon = frame.stepLon;	
+}
+
 /// <summary>
 /// Set current data active frame based on existing projection
 /// </summary>
@@ -151,7 +168,7 @@ void IProjectionInfo::SetFrame(Coordinate minCoord, Coordinate maxCoord,
 	minPixel.x = std::min(tmpMinPixel.x, tmpMaxPixel.x);
 	minPixel.y = std::min(tmpMinPixel.y, tmpMaxPixel.y);
 
-	this->minPixelOffset = minPixel;
+	frame.minPixelOffset = minPixel;
 
 	//-----------------------------------------------------------
 	//calculate maximum internal projection value
@@ -176,15 +193,15 @@ void IProjectionInfo::SetFrame(Coordinate minCoord, Coordinate maxCoord,
 
 	//----------------------------------------------------------
 	
-	this->w = w;
-	this->h = h;
+	this->frame.w = w;
+	this->frame.h = h;
 
 	//calculate scale in width and height
-	this->wAR = this->w / maxPixel.x; //minPixel.x == 0 => no need to calc difference abs(min - max)
-	this->hAR = this->h / maxPixel.y; //minPixel.y == 0 => no need to calc difference abs(min - max)
+	this->frame.wAR = this->frame.w / maxPixel.x; //minPixel.x == 0 => no need to calc difference abs(min - max)
+	this->frame.hAR = this->frame.h / maxPixel.y; //minPixel.y == 0 => no need to calc difference abs(min - max)
 	
-	this->wPadding = 0;
-	this->hPadding = 0;
+	this->frame.wPadding = 0;
+	this->frame.hPadding = 0;
 
 	// Using different ratios for width and height will cause the map to be stretched,
 	// but fitting the desired region
@@ -192,17 +209,17 @@ void IProjectionInfo::SetFrame(Coordinate minCoord, Coordinate maxCoord,
 	// be the one, we have set. One dimmension will be changed to keep AR	
 	if (keepAR)
 	{
-		double globalAR = std::min(this->wAR, this->hAR);
-		this->wAR = globalAR;
-		this->hAR = globalAR;
+		double globalAR = std::min(this->frame.wAR, this->frame.hAR);
+		this->frame.wAR = globalAR;
+		this->frame.hAR = globalAR;
 
-		this->wPadding = (this->w - (this->wAR * maxPixel.x)) * 0.5;
-		this->hPadding = (this->h - (this->hAR * maxPixel.y)) * 0.5;
+		this->frame.wPadding = (this->frame.w - (this->frame.wAR * maxPixel.x)) * 0.5;
+		this->frame.hPadding = (this->frame.h - (this->frame.hAR * maxPixel.y)) * 0.5;
 	}
 	
 	//calculate how many "degrees" is for one "pixel" in lat / lon
-	this->stepLat = GeoCoordinate::rad((maxCoord.lat.rad() - minCoord.lat.rad()) / h);
-	this->stepLon = GeoCoordinate::rad((maxCoord.lon.rad() - minCoord.lon.rad()) / w);
+	this->frame.stepLat = GeoCoordinate::rad((maxCoord.lat.rad() - minCoord.lat.rad()) / h);
+	this->frame.stepLon = GeoCoordinate::rad((maxCoord.lon.rad() - minCoord.lon.rad()) / w);
 }
 
 /// <summary>
@@ -214,7 +231,10 @@ IProjectionInfo::Coordinate IProjectionInfo::GetTopLeftCorner() const
 	return this->ProjectInverse({ 0, 0 });
 }
 
-
+const IProjectionInfo::ProjectionFrame & IProjectionInfo::GetFrame() const
+{
+	return this->frame;
+}
 
 /// <summary>
 /// Calculate end point based on shortest path (on real earth surface)
@@ -400,8 +420,8 @@ IProjectionInfo::Reprojection IProjectionInfo::CreateReprojection(IProjectionInf
 /// <param name="max"></param>
 void IProjectionInfo::ComputeAABB(IProjectionInfo::Coordinate & min, IProjectionInfo::Coordinate & max) const
 {
-	int ww = static_cast<int>(this->w - 1);
-	int hh = static_cast<int>(this->h - 1);
+	int ww = static_cast<int>(this->frame.w - 1);
+	int hh = static_cast<int>(this->frame.h - 1);
 
 	std::vector<IProjectionInfo::Coordinate> border;
 	this->LineBresenham({ 0,0 }, { 0, hh },

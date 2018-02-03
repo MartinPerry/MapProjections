@@ -29,9 +29,7 @@ IProjectionInfo::IProjectionInfo(IProjectionInfo::PROJECTION curProjection)
 	frame.wPadding = 0;
 	frame.hPadding = 0;
 	frame.wAR = 1;
-	frame.hAR = 1;
-	frame.stepLat = 0.0_deg;
-	frame.stepLon = 0.0_deg;
+	frame.hAR = 1;	
 }
 
 /// <summary>
@@ -106,9 +104,7 @@ void IProjectionInfo::SetFrame(const ProjectionFrame & frame)
 	this->frame.wAR = frame.wAR;
 	this->frame.hPadding = frame.hPadding;
 	this->frame.wPadding = frame.wPadding;
-	this->frame.minPixelOffset = frame.minPixelOffset;
-	this->frame.stepLat = frame.stepLat;
-	this->frame.stepLon = frame.stepLon;	
+	this->frame.minPixelOffset = frame.minPixelOffset;	
 }
 
 /// <summary>
@@ -143,6 +139,47 @@ void IProjectionInfo::SetFrame(IProjectionInfo * proj,
 	proj->ComputeAABB(cMin, cMax);
 
 	this->SetFrame(cMin, cMax, w, h, keepAR);
+}
+
+/// <summary>
+/// Set current data active frame based on AABB that si calculatef from set of points
+/// </summary>
+/// <param name="coord">set of GPS points</param>
+/// <param name="w">frame width</param>
+/// <param name="h">frame height</param>
+/// <param name="keepAR">keep AR of data (default: true) 
+/// if yes, data are enlarged beyond AABB to keep AR
+/// </param>
+void IProjectionInfo::SetFrame(std::vector<Coordinate> coord,
+	double w, double h, bool keepAR)
+{
+	Coordinate minCoord = coord[0];
+	Coordinate maxCoord = coord[0];
+	
+
+	for (Coordinate & c : coord)
+	{
+		if (c.lat.rad() > maxCoord.lat.rad())
+		{
+			maxCoord.lat = c.lat;
+		}
+		if (c.lon.rad() > maxCoord.lon.rad())
+		{
+			maxCoord.lon = c.lon;
+		}
+
+
+		if (c.lat.rad() < minCoord.lat.rad())
+		{
+			minCoord.lat = c.lat;
+		}
+		if (c.lon.rad() < minCoord.lon.rad())
+		{
+			minCoord.lon = c.lon;
+		}
+	}
+
+	this->SetFrame(minCoord, maxCoord, w, h, keepAR);
 }
 
 /// <summary>
@@ -193,6 +230,9 @@ void IProjectionInfo::SetFrame(Coordinate minCoord, Coordinate maxCoord,
 
 	//----------------------------------------------------------
 	
+	this->frame.min = minCoord;
+	this->frame.max = maxCoord;
+
 	this->frame.w = w;
 	this->frame.h = h;
 
@@ -217,9 +257,34 @@ void IProjectionInfo::SetFrame(Coordinate minCoord, Coordinate maxCoord,
 		this->frame.hPadding = (this->frame.h - (this->frame.hAR * maxPixel.y)) * 0.5;
 	}
 	
-	//calculate how many "degrees" is for one "pixel" in lat / lon
-	this->frame.stepLat = GeoCoordinate::rad((maxCoord.lat.rad() - minCoord.lat.rad()) / h);
-	this->frame.stepLon = GeoCoordinate::rad((maxCoord.lon.rad() - minCoord.lon.rad()) / w);
+	
+}
+
+/// <summary>
+/// calculate how many "degrees" is for one "pixel" in lat / lon
+/// cordinates are boundaries of pixels :
+/// 
+/// Eg:
+/// Image is 2x2 px
+///    -180  +180
+///  +90 -------
+///      |  |  |
+///      -------
+///      |  |  |
+///  -90 -------
+/// Step latitude : (90 - (-90)) / 2 = 90
+/// Step longitude : (180 - (-180)) / 2 = 180
+/// </summary>
+/// <returns></returns>
+IProjectionInfo::Coordinate IProjectionInfo::CalcStep(STEP_TYPE type) const
+{
+	int dif = (type == STEP_TYPE::PIXEL_BORDER) ? 0 : 1;
+	
+	IProjectionInfo::Coordinate step;
+	step.lat = GeoCoordinate::rad((this->frame.max.lat.rad() - this->frame.min.lat.rad()) / (this->frame.h - dif));
+	step.lon = GeoCoordinate::rad((this->frame.max.lon.rad() - this->frame.min.lon.rad()) / (this->frame.w - dif));
+
+	return step;
 }
 
 /// <summary>

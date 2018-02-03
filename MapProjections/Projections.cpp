@@ -166,3 +166,55 @@ IProjectionInfo::ProjectedValueInverse Equirectangular::ProjectInverseInternal(d
 	return c;
 }
 
+//=======================================================================
+// PolarSteregographic 
+//
+// Full computation:
+// https://web.archive.org/web/20150723100408/http://www.knmi.nl/~beekhuis/rad_proj.html
+// with Eccentricity is 1.0 => Based on:
+// https://www.dwd.de/DE/leistungen/radolan/radolan_info/radolan_radvor_op_komposit_format_pdf.pdf?__blob=publicationFile&v=8
+// 
+//=======================================================================
+
+PolarSteregographic::PolarSteregographic()
+	: PolarSteregographic(10.0_deg, 60.0_deg)
+{
+
+}
+
+PolarSteregographic::PolarSteregographic(GeoCoordinate lonCentralMeridian, GeoCoordinate latCentral)
+	: IProjectionInfo(IProjectionInfo::PROJECTION::POLAR_STEREOGRAPHICS),
+	lonCentralMeridian(lonCentralMeridian), latCentral(latCentral)
+{
+}
+
+IProjectionInfo::ProjectedValue PolarSteregographic::ProjectInternal(Coordinate c) const
+{
+	double m = (1.0 + std::sin(latCentral.rad())) / (1.0 + std::sin(c.lat.rad()));
+	double cosLat = std::cos(c.lat.rad());
+
+	IProjectionInfo::ProjectedValue p;
+	p.x = +earthRadius * m * cosLat * std::sin(c.lon.rad() - lonCentralMeridian.rad());
+	p.y = -earthRadius * m * cosLat * std::cos(c.lon.rad() - lonCentralMeridian.rad());
+
+	return p;
+}
+
+
+IProjectionInfo::ProjectedValueInverse PolarSteregographic::ProjectInverseInternal(double x, double y) const
+{
+
+	IProjectionInfo::ProjectedValueInverse c;
+
+	c.lon = GeoCoordinate::rad(std::atan (-x / y) + lonCentralMeridian.rad());
+
+	double tmpSin = std::sin(latCentral.rad());
+	double tmp = earthRadius * earthRadius * (1.0 + tmpSin) * (1.0 + tmpSin);
+	double tmp1 = tmp - (x * x + y * y);
+	double tmp2 = tmp + (x * x + y * y);
+	c.lat = GeoCoordinate::rad(std::asin(tmp1 / tmp2));
+	
+
+	return c;
+}
+

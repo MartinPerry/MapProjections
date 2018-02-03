@@ -22,8 +22,15 @@ public:
 		MERCATOR = 0, 
 		LAMBERT_CONIC = 1, 
 		EQUIRECTANGULAR = 2,
-		WEB_MERCATOR = 3
+		WEB_MERCATOR = 3,
+		POLAR_STEREOGRAPHICS = 4
 	} PROJECTION;
+
+	typedef enum STEP_TYPE {
+		PIXEL_CENTER = 0,
+		PIXEL_BORDER = 1
+
+	} STEP_TYPE;
 
 	template <typename PixelType = int, 
 		typename = typename std::enable_if<std::is_arithmetic<PixelType>::value, PixelType>::type>
@@ -34,8 +41,7 @@ public:
 		GeoCoordinate lon;
 
 		Coordinate() {};
-		Coordinate(GeoCoordinate lon, GeoCoordinate lat) :
-			lon(lon), lat(lat) {};
+		Coordinate(GeoCoordinate lon, GeoCoordinate lat) : lon(lon), lat(lat) {};
 	};
 
 	struct Reprojection {
@@ -58,6 +64,9 @@ public:
 
 	struct ProjectionFrame 
 	{
+		Coordinate min;
+		Coordinate max;
+
 		ProjectedValue minPixelOffset; //offset to move min corner to [0,0] and other corners accordingly
 
 		double w; //current frame width
@@ -68,8 +77,8 @@ public:
 		double wAR; //width AR
 		double hAR; //height AR
 
-		Angle stepLat;
-		Angle stepLon;
+		//Angle stepLat;
+		//Angle stepLon;
 	};
 
 
@@ -89,21 +98,21 @@ public:
 	Project(Coordinate c) const;
 	
 
-
+	
 
 	template <typename PixelType = int>
 	IProjectionInfo::Coordinate ProjectInverse(Pixel<PixelType> p) const;
 
 	void SetFrame(const ProjectionFrame & frame);
 	void SetFrame(IProjectionInfo * proj, bool keepAR = true);
-	void SetFrame(IProjectionInfo * proj,
-		double w, double h, bool keepAR = true);
-	void SetFrame(Coordinate minCoord, Coordinate maxCoord,
-		double w, double h, bool keepAR = true);
+	void SetFrame(IProjectionInfo * proj, double w, double h, bool keepAR = true);
+	void SetFrame(std::vector<Coordinate> coord, double w, double h, bool keepAR = true);
+	void SetFrame(Coordinate minCoord, Coordinate maxCoord, double w, double h, bool keepAR = true);
 	
 	IProjectionInfo::Coordinate GetTopLeftCorner() const;
-
+	IProjectionInfo::Coordinate CalcStep(STEP_TYPE type) const;
 	const IProjectionInfo::ProjectionFrame & GetFrame() const;
+
 
 	template <typename T = int>
 	T GetFrameWidth() const { return static_cast<T>(this->frame.w); }

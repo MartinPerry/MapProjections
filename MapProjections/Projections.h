@@ -59,4 +59,22 @@ protected:
 };
 
 
+class PolarSteregographic : public IProjectionInfo
+{
+public:
+	PolarSteregographic();
+	PolarSteregographic(GeoCoordinate lonCentralMeridian, GeoCoordinate latCentral);
+	
+protected:
+	const double earthRadius = 6370.04;
+	
+	GeoCoordinate lonCentralMeridian;
+	GeoCoordinate latCentral;
+	
+	virtual IProjectionInfo::ProjectedValue ProjectInternal(Coordinate c) const;
+	virtual IProjectionInfo::ProjectedValueInverse ProjectInverseInternal(double x, double y) const;
+
+};
+
+
 #endif

@@ -31,17 +31,17 @@ namespace Projections
 		virtual ~IProjectionInfo() = default;
 
 		template <typename PixelType = int>
-		RET_VAL(PixelType, std::is_integral) Project(Coordinate c) const;
+		RET_VAL(PixelType, std::is_integral) Project(const Coordinate & c) const;
 
 
 		template <typename PixelType = float>
-		RET_VAL(PixelType, std::is_floating_point) Project(Coordinate c) const;
+		RET_VAL(PixelType, std::is_floating_point) Project(const Coordinate & c) const;
 
 
 
 
 		template <typename PixelType = int, bool Normalize = true>
-		Coordinate ProjectInverse(Pixel<PixelType> p) const;
+		Coordinate ProjectInverse(const Pixel<PixelType> & p) const;
 
 		template <typename InputProj>
 		void SetFrame(InputProj * proj, bool keepAR = true);
@@ -65,7 +65,8 @@ namespace Projections
 		Coordinate CalcEndPointShortest(Coordinate start, Angle bearing, double dist) const;
 		Coordinate CalcEndPointDirect(Coordinate start, Angle bearing, double dist) const;
 
-		void LineBresenham(Pixel<int> start, Pixel<int> end, std::function<void(int x, int y)> callback) const;
+		void LineBresenham(Pixel<int> start, Pixel<int> end, 
+			std::function<void(int x, int y)> callback) const;
 
 
 
@@ -158,7 +159,7 @@ namespace Projections
 	/// <returns></returns>
 	template <typename Proj>
 	template <typename PixelType>	
-	RET_VAL(PixelType, std::is_integral) IProjectionInfo<Proj>::Project(Coordinate c) const
+	RET_VAL(PixelType, std::is_integral) IProjectionInfo<Proj>::Project(const Coordinate & c) const
 	{
 
 		ProjectedValue raw = static_cast<const Proj*>(this)->ProjectInternal(c);
@@ -176,7 +177,7 @@ namespace Projections
 
 	template <typename Proj>
 	template <typename PixelType>	
-	RET_VAL(PixelType, std::is_floating_point) IProjectionInfo<Proj>::Project(Coordinate c) const
+	RET_VAL(PixelType, std::is_floating_point) IProjectionInfo<Proj>::Project(const Coordinate & c) const
 	{
 
 		//project value and get "pseudo" pixel coordinate
@@ -201,7 +202,7 @@ namespace Projections
 	/// <returns></returns>
 	template <typename Proj>
 	template <typename PixelType, bool Normalize>
-	Coordinate IProjectionInfo<Proj>::ProjectInverse(Pixel<PixelType> p) const
+	Coordinate IProjectionInfo<Proj>::ProjectInverse(const Pixel<PixelType> & p) const
 	{
 
 		//double xx = (static_cast<double>(p.x) - this->frame.wPadding + this->frame.wAR * this->frame.minPixelOffset.x);

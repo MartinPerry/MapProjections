@@ -17,7 +17,7 @@ Sample:
 
 	//render image in input projection - it should take input image and
 	//render it 1:1 based on ipImage frame
-	ProjectionRenderer<Equirectangular> pd(equirect);
+	ProjectionRenderer pd(equirect);
 	pd.AddBorders("E://hranice//ll.csv");
 	pd.DrawImage(&img.rawData[0], w, h, equirect);
 	pd.DrawBorders();
@@ -34,16 +34,15 @@ Sample:
 	
 	Mercator * mercator = new Mercator();	
 	mercator->SetFrame(bbMin, bbMax, w, h, false);
-			
-	ProjectionRenderer<Mercator> pd2(mercator);
-	pd2.AddBorders("E://hranice//ll.csv");	
+				
+	pd.SetProjection(mercator);	
 			
 	//compute mapping from input -> output projection
 	//newData[index] = oldData[reprojection[index]]
 	Reprojection reprojection = ProjectionUtils::CreateReprojection(equirect, mercator);
-	pd2.DrawImage(&img.rawData[0], reprojection);
+	pd.DrawImage(&img.rawData[0], reprojection);
 
-	pd2.DrawBorders();
-	pd2.SaveToFile("mercator.png");
+	pd.DrawBorders();
+	pd.SaveToFile("mercator.png");
 
 	

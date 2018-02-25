@@ -1,6 +1,6 @@
 #include "./Projections.h"
 
-
+using namespace Projections;
 
 //=======================================================================
 // Lambert-conic
@@ -12,7 +12,7 @@
 
 LambertConic::LambertConic(GeoCoordinate latProjOrigin, GeoCoordinate lonCentMeridian,
 	GeoCoordinate stanParallel)
-	: IProjectionInfo(IProjectionInfo::PROJECTION::LAMBERT_CONIC),
+	: IProjectionInfo(PROJECTION::LAMBERT_CONIC),
 	latProjectionOrigin(latProjOrigin),
 	lonCentralMeridian(lonCentMeridian),
 	standardParallel1(stanParallel),
@@ -40,7 +40,7 @@ LambertConic::LambertConic(GeoCoordinate latProjOrigin, GeoCoordinate lonCentMer
 
 }
 
-IProjectionInfo::ProjectedValue LambertConic::ProjectInternal(Coordinate c) const
+ProjectedValue LambertConic::ProjectInternal(Coordinate c) const
 {
 
 	double t = cot(PI_4 + 0.5 * c.lat.rad());
@@ -49,14 +49,14 @@ IProjectionInfo::ProjectedValue LambertConic::ProjectInternal(Coordinate c) cons
 	double x = phi * std::sin(n * (c.lon.rad() - lonCentralMeridian.rad()));
 	double y = phi0 - phi * std::cos(n * (c.lon.rad() - lonCentralMeridian.rad()));
 
-	IProjectionInfo::ProjectedValue p;
+	ProjectedValue p;
 	p.x = x;
 	p.y = y;
 	return p;
 }
 
 
-IProjectionInfo::ProjectedValueInverse LambertConic::ProjectInverseInternal(double x, double y) const
+IProjectionInfo<LambertConic>::ProjectedValueInverse LambertConic::ProjectInverseInternal(double x, double y) const
 {
 
 	double phi = sgn(n) * std::sqrt(x * x + (phi0 - y) * (phi0 - y));
@@ -82,14 +82,14 @@ IProjectionInfo::ProjectedValueInverse LambertConic::ProjectInverseInternal(doub
 //=======================================================================
 
 Mercator::Mercator()
-	: IProjectionInfo(IProjectionInfo::PROJECTION::MERCATOR)	
+	: IProjectionInfo(PROJECTION::MERCATOR)	
 {
 
 }
 
-IProjectionInfo::ProjectedValue Mercator::ProjectInternal(Coordinate c) const
+ProjectedValue Mercator::ProjectInternal(Coordinate c) const
 {	
-	IProjectionInfo::ProjectedValue p;
+	ProjectedValue p;
 	p.x = c.lon.rad();
 
 	/*
@@ -111,7 +111,7 @@ IProjectionInfo::ProjectedValue Mercator::ProjectInternal(Coordinate c) const
 }
 
 
-IProjectionInfo::ProjectedValueInverse Mercator::ProjectInverseInternal(double x, double y) const
+IProjectionInfo<Mercator>::ProjectedValueInverse Mercator::ProjectInverseInternal(double x, double y) const
 {
 
 	IProjectionInfo::ProjectedValueInverse c;
@@ -138,16 +138,16 @@ Equirectangular::Equirectangular()
 }
 
 Equirectangular::Equirectangular(GeoCoordinate lonCentralMeridian)
-	: IProjectionInfo(IProjectionInfo::PROJECTION::EQUIRECTANGULAR),
+	: IProjectionInfo(PROJECTION::EQUIRECTANGULAR),
 	lonCentralMeridian(lonCentralMeridian),
 	standardParallel(0.0_deg),
 	cosStandardParallel(std::cos(standardParallel.rad()))	
 {
 }
 
-IProjectionInfo::ProjectedValue Equirectangular::ProjectInternal(Coordinate c) const
+ProjectedValue Equirectangular::ProjectInternal(Coordinate c) const
 {
-	IProjectionInfo::ProjectedValue p;
+	ProjectedValue p;
 	p.x = (c.lon.rad() - lonCentralMeridian.rad()) * cosStandardParallel;
 	p.y = c.lat.rad() - standardParallel.rad();
 
@@ -155,7 +155,7 @@ IProjectionInfo::ProjectedValue Equirectangular::ProjectInternal(Coordinate c) c
 }
 
 
-IProjectionInfo::ProjectedValueInverse Equirectangular::ProjectInverseInternal(double x, double y) const
+IProjectionInfo<Equirectangular>::ProjectedValueInverse Equirectangular::ProjectInverseInternal(double x, double y) const
 {
 
 	IProjectionInfo::ProjectedValueInverse c;
@@ -183,17 +183,17 @@ PolarSteregographic::PolarSteregographic()
 }
 
 PolarSteregographic::PolarSteregographic(GeoCoordinate lonCentralMeridian, GeoCoordinate latCentral)
-	: IProjectionInfo(IProjectionInfo::PROJECTION::POLAR_STEREOGRAPHICS),
+	: IProjectionInfo(PROJECTION::POLAR_STEREOGRAPHICS),
 	lonCentralMeridian(lonCentralMeridian), latCentral(latCentral)
 {
 }
 
-IProjectionInfo::ProjectedValue PolarSteregographic::ProjectInternal(Coordinate c) const
+ProjectedValue PolarSteregographic::ProjectInternal(Coordinate c) const
 {
 	double m = (1.0 + std::sin(latCentral.rad())) / (1.0 + std::sin(c.lat.rad()));
 	double cosLat = std::cos(c.lat.rad());
 
-	IProjectionInfo::ProjectedValue p;
+	ProjectedValue p;
 	p.x = +earthRadius * m * cosLat * std::sin(c.lon.rad() - lonCentralMeridian.rad());
 	p.y = -earthRadius * m * cosLat * std::cos(c.lon.rad() - lonCentralMeridian.rad());
 
@@ -201,10 +201,10 @@ IProjectionInfo::ProjectedValue PolarSteregographic::ProjectInternal(Coordinate 
 }
 
 
-IProjectionInfo::ProjectedValueInverse PolarSteregographic::ProjectInverseInternal(double x, double y) const
+IProjectionInfo<PolarSteregographic>::ProjectedValueInverse PolarSteregographic::ProjectInverseInternal(double x, double y) const
 {
 
-	IProjectionInfo::ProjectedValueInverse c;
+	ProjectedValueInverse c;
 
 	c.lon = GeoCoordinate::rad(std::atan (-x / y) + lonCentralMeridian.rad());
 

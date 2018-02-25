@@ -152,6 +152,8 @@
     <ClInclude Include="GeoCoordinate.h" />
     <ClInclude Include="lodepng.h" />
     <ClInclude Include="MapProjection.h" />
+    <ClInclude Include="MapProjectionStructures.h" />
+    <ClInclude Include="MapProjectionUtils.h" />
     <ClInclude Include="ProjectionRenderer.h" />
     <ClInclude Include="Projections.h" />
   </ItemGroup>

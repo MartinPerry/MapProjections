@@ -4,77 +4,89 @@
 #include "GeoCoordinate.h"
 #include "MapProjection.h"
 
-class LambertConic : public IProjectionInfo
+namespace Projections
 {
-public:
-	LambertConic(GeoCoordinate latProjOrigin,
-		GeoCoordinate lonCentMeridian,
-		GeoCoordinate stanParallel);
+
+	class LambertConic : public IProjectionInfo<LambertConic>
+	{
+	public:
+		LambertConic(GeoCoordinate latProjOrigin,
+			GeoCoordinate lonCentMeridian,
+			GeoCoordinate stanParallel);
+
+		friend class IProjectionInfo<LambertConic>;
+
+	protected:
+		GeoCoordinate latProjectionOrigin;
+		GeoCoordinate lonCentralMeridian;
+		GeoCoordinate standardParallel1;
+		GeoCoordinate standardParallel2;
 
 
-protected:
-	GeoCoordinate latProjectionOrigin;
-	GeoCoordinate lonCentralMeridian;
-	GeoCoordinate standardParallel1;
-	GeoCoordinate standardParallel2;
+		double f;
+		double n;
+		double phi0;
+
+		ProjectedValue ProjectInternal(Coordinate c) const;
+		ProjectedValueInverse ProjectInverseInternal(double x, double y) const;
+
+	};
 
 
-	double f;
-	double n;
-	double phi0;
+	class Mercator : public IProjectionInfo<Mercator>
+	{
+	public:
+		Mercator();
 
-	virtual IProjectionInfo::ProjectedValue ProjectInternal(Coordinate c) const;
-	virtual IProjectionInfo::ProjectedValueInverse ProjectInverseInternal(double x, double y) const;
+		friend class IProjectionInfo<Mercator>;
+
+	protected:
+		ProjectedValue ProjectInternal(Coordinate c) const;
+		ProjectedValueInverse ProjectInverseInternal(double x, double y) const;
+
+	};
+
+
+
+	class Equirectangular : public IProjectionInfo<Equirectangular>
+	{
+	public:
+		Equirectangular();
+		Equirectangular(GeoCoordinate lonCentralMeridian);
+
+		friend class IProjectionInfo<Equirectangular>;
+
+	protected:
+
+		GeoCoordinate lonCentralMeridian;
+		GeoCoordinate standardParallel;
+		double cosStandardParallel;
+
+		ProjectedValue ProjectInternal(Coordinate c) const;
+		ProjectedValueInverse ProjectInverseInternal(double x, double y) const;
+
+	};
+
+
+	class PolarSteregographic : public IProjectionInfo<PolarSteregographic>
+	{
+	public:
+		PolarSteregographic();
+		PolarSteregographic(GeoCoordinate lonCentralMeridian, GeoCoordinate latCentral);
+
+		friend class IProjectionInfo<PolarSteregographic>;
+
+	protected:
+		const double earthRadius = 6370.04;
+
+		GeoCoordinate lonCentralMeridian;
+		GeoCoordinate latCentral;
+
+		ProjectedValue ProjectInternal(Coordinate c) const;
+		ProjectedValueInverse ProjectInverseInternal(double x, double y) const;
+
+	};
 
 };
-
-
-class Mercator : public IProjectionInfo
-{
-public:
-	Mercator();
-protected:
-	virtual IProjectionInfo::ProjectedValue ProjectInternal(Coordinate c) const;
-	virtual IProjectionInfo::ProjectedValueInverse ProjectInverseInternal(double x, double y) const;
-
-};
-
-
-
-class Equirectangular : public IProjectionInfo
-{
-public:
-	Equirectangular();
-	Equirectangular(GeoCoordinate lonCentralMeridian);
-
-protected:
-
-	GeoCoordinate lonCentralMeridian;
-	GeoCoordinate standardParallel;
-	double cosStandardParallel;
-
-	virtual IProjectionInfo::ProjectedValue ProjectInternal(Coordinate c) const;
-	virtual IProjectionInfo::ProjectedValueInverse ProjectInverseInternal(double x, double y) const;
-
-};
-
-
-class PolarSteregographic : public IProjectionInfo
-{
-public:
-	PolarSteregographic();
-	PolarSteregographic(GeoCoordinate lonCentralMeridian, GeoCoordinate latCentral);
-	
-protected:
-	const double earthRadius = 6370.04;
-	
-	GeoCoordinate lonCentralMeridian;
-	GeoCoordinate latCentral;
-	
-	virtual IProjectionInfo::ProjectedValue ProjectInternal(Coordinate c) const;
-	virtual IProjectionInfo::ProjectedValueInverse ProjectInverseInternal(double x, double y) const;
-
-};
-
 
 #endif

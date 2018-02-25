@@ -13,243 +13,226 @@
 #include <string>
 
 #include "GeoCoordinate.h"
+#include "MapProjectionStructures.h"
+#include "MapProjectionUtils.h"
 
+#define RET_VAL(PixelType, enable_cond) \
+	typename std::enable_if<enable_cond<PixelType>::value, Pixel<PixelType>>::type
 
-class IProjectionInfo
+namespace Projections
 {
-public:
-	typedef enum PROJECTION {
-		MERCATOR = 0, 
-		LAMBERT_CONIC = 1, 
-		EQUIRECTANGULAR = 2,
-		WEB_MERCATOR = 3,
-		POLAR_STEREOGRAPHICS = 4
-	} PROJECTION;
-
-	typedef enum STEP_TYPE {
-		PIXEL_CENTER = 0,
-		PIXEL_BORDER = 1
-
-	} STEP_TYPE;
-
-	template <typename PixelType = int, 
-		typename = typename std::enable_if<std::is_arithmetic<PixelType>::value, PixelType>::type>
-	struct Pixel { PixelType x; PixelType y; };
-
-	struct Coordinate {
-		GeoCoordinate lat;
-		GeoCoordinate lon;
-
-		Coordinate() {};
-		Coordinate(GeoCoordinate lon, GeoCoordinate lat) : lon(lon), lat(lat) {};
-	};
-
-	struct Reprojection {
-		int inW;
-		int inH;
-		int outW;
-		int outH;
-		std::vector<IProjectionInfo::Pixel<int>> pixels; //[to] = from
-
-		static Reprojection CreateFromFile(const std::string & fileName);
-		void SaveToFile(const std::string & fileName);
-
-	};
-
-	struct ProjectedValue
+	template <typename Proj>
+	class IProjectionInfo
 	{
-		double x;
-		double y;
-	};
+	public:
 
-	struct ProjectionFrame 
-	{
-		Coordinate min;
-		Coordinate max;
+		const PROJECTION curProjection;
 
-		ProjectedValue minPixelOffset; //offset to move min corner to [0,0] and other corners accordingly
+		virtual ~IProjectionInfo() = default;
 
-		double w; //current frame width
-		double h; //current frame height
-
-		double wPadding;
-		double hPadding;
-		double wAR; //width AR
-		double hAR; //height AR
-
-		//Angle stepLat;
-		//Angle stepLon;
-	};
+		template <typename PixelType = int>
+		RET_VAL(PixelType, std::is_integral) Project(Coordinate c) const;
 
 
-	const PROJECTION curProjection;
-
-	virtual ~IProjectionInfo() = default;
-
-	template <typename PixelType = int> 
-	typename std::enable_if<std::is_integral<PixelType>::value, 
-		IProjectionInfo::Pixel<PixelType>>::type
-	Project(Coordinate c) const;
+		template <typename PixelType = float>
+		RET_VAL(PixelType, std::is_floating_point) Project(Coordinate c) const;
 
 
-	template <typename PixelType = float>
-	typename std::enable_if<std::is_floating_point<PixelType>::value, 
-		IProjectionInfo::Pixel<PixelType>>::type
-	Project(Coordinate c) const;
-	
-
-	
-
-	template <typename PixelType = int>
-	IProjectionInfo::Coordinate ProjectInverse(Pixel<PixelType> p) const;
-
-	void SetFrame(const ProjectionFrame & frame);
-	void SetFrame(IProjectionInfo * proj, bool keepAR = true);
-	void SetFrame(IProjectionInfo * proj, double w, double h, bool keepAR = true);
-	void SetFrame(std::vector<Coordinate> coord, double w, double h, bool keepAR = true);
-	void SetFrame(Coordinate minCoord, Coordinate maxCoord, double w, double h, bool keepAR = true);
-	
-	IProjectionInfo::Coordinate GetTopLeftCorner() const;
-	IProjectionInfo::Coordinate CalcStep(STEP_TYPE type) const;
-	const IProjectionInfo::ProjectionFrame & GetFrame() const;
 
 
-	template <typename T = int>
-	T GetFrameWidth() const { return static_cast<T>(this->frame.w); }
-	template <typename T = int>
-	T GetFrameHeight() const { return static_cast<T>(this->frame.h); }
+		template <typename PixelType = int, bool Normalize = true>
+		Coordinate ProjectInverse(Pixel<PixelType> p) const;
 
-	IProjectionInfo::Coordinate CalcEndPointShortest(IProjectionInfo::Coordinate start, Angle bearing, double dist) const;
-	IProjectionInfo::Coordinate CalcEndPointDirect(IProjectionInfo::Coordinate start, Angle bearing, double dist) const;
+		template <typename InputProj>
+		void SetFrame(InputProj * proj, bool keepAR = true);
+		template <typename InputProj>
+		void SetFrame(InputProj * proj, double w, double h, bool keepAR = true);
 
-	void LineBresenham(Pixel<int> start, Pixel<int> end, std::function<void(int x, int y)> callback) const;
+		void SetFrame(const ProjectionFrame & frame);		
+		void SetFrame(std::vector<Coordinate> coord, double w, double h, bool keepAR = true);
+		void SetFrame(Coordinate minCoord, Coordinate maxCoord, double w, double h, bool keepAR = true);
 
-	
-	
-	void ComputeAABB(IProjectionInfo::Coordinate & min, IProjectionInfo::Coordinate & max) const;
-	
-	static Reprojection CreateReprojection(IProjectionInfo * from, IProjectionInfo * to);
+		Coordinate GetTopLeftCorner() const;
+		Coordinate CalcStep(STEP_TYPE type) const;
+		const ProjectionFrame & GetFrame() const;
 
-	static void ComputeAABB(const std::vector<IProjectionInfo::Coordinate> & c,
-		IProjectionInfo::Coordinate & min, IProjectionInfo::Coordinate & max);
 
-	static double NormalizeLon(double lonDeg);
-	static double NormalizeLat(double latDeg);
+		template <typename T = int>
+		T GetFrameWidth() const { return static_cast<T>(this->frame.w); }
+		template <typename T = int>
+		T GetFrameHeight() const { return static_cast<T>(this->frame.h); }
 
-    static double Distance(const Coordinate & from, const Coordinate & to);
-	
-protected:
+		Coordinate CalcEndPointShortest(Coordinate start, Angle bearing, double dist) const;
+		Coordinate CalcEndPointDirect(Coordinate start, Angle bearing, double dist) const;
 
-	
+		void LineBresenham(Pixel<int> start, Pixel<int> end, std::function<void(int x, int y)> callback) const;
 
-	struct ProjectedValueInverse
-	{
-		GeoCoordinate lat;
-		GeoCoordinate lon;
-	};
+
+
+		void ComputeAABB(Coordinate & min, Coordinate & max) const;
 
 		
-	static const double PI;
-	static const double PI_4;
-	static const double PI_2;
-	static const double E;
-	static const double EARTH_RADIUS;
 
-	inline static double cot(double x) { return 1.0 / std::tan(x); };
-	inline static double sec(double x) { return 1.0 / std::cos(x); };
-	inline static double sinc(double x) { return std::sin(x) / x; };
-	inline static double sgn(double x) { return (x < 0) ? -1 : (x > 0); };
+	protected:
+
+
+
+		struct ProjectedValueInverse
+		{
+			GeoCoordinate lat;
+			GeoCoordinate lon;
+		};
+
+
+		static const double PI;
+		static const double PI_4;
+		static const double PI_2;
+		static const double E;
+		static const double EARTH_RADIUS;
+
+		inline static double cot(double x) { return 1.0 / std::tan(x); };
+		inline static double sec(double x) { return 1.0 / std::cos(x); };
+		inline static double sinc(double x) { return std::sin(x) / x; };
+		inline static double sgn(double x) { return (x < 0) ? -1 : (x > 0); };
+
+		inline static double degToRad(double x) { return x * 0.0174532925; }
+		inline static double radToDeg(double x) { return x * 57.2957795; }
+
+
+
+		ProjectionFrame frame;
+
+		IProjectionInfo(PROJECTION curProjection);
+
+		//virtual ProjectedValue ProjectInternal(Coordinate c) const = 0;
+		//virtual ProjectedValueInverse ProjectInverseInternal(double x, double y) const = 0;
+
+
+	};
+
+
+
+	/// <summary>
+	/// Set current data active frame based on existing projection
+	/// </summary>
+	/// <param name="proj">existing projection</param>
+	/// <param name="keepAR">keep AR of data (default: true) 
+	/// if yes, data are enlarged and not 1:1 to bounding box to keep AR
+	/// </param>
+	template <typename Proj>
+	template <typename InputProj>
+	void IProjectionInfo<Proj>::SetFrame(InputProj * proj, bool keepAR)
+	{
+		Coordinate cMin, cMax;
+		proj->ComputeAABB(cMin, cMax);
+
+		this->SetFrame(cMin, cMax, proj->GetFrameWidth(), proj->GetFrameHeight(), keepAR);
+	};
+
+
+	/// <summary>
+	/// Set current data active frame based on existing projection
+	/// </summary>
+	/// <param name="proj">existing projection</param>
+	/// <param name="w">frame width</param>
+	/// <param name="h">frame height</param>
+	/// <param name="keepAR">keep AR of data (default: true) 
+	/// if yes, data are enlarged and not 1:1 to bounding box to keep AR
+	/// </param>
+	template <typename Proj>
+	template <typename InputProj>
+	void IProjectionInfo<Proj>::SetFrame(InputProj * proj, double w, double h, bool keepAR)
+	{
+		Coordinate cMin, cMax;
+		proj->ComputeAABB(cMin, cMax);
+
+		this->SetFrame(cMin, cMax, w, h, keepAR);
+	};
+
+
+
+	/// <summary>
+	/// Project Coordinate point to pixel
+	/// </summary>
+	/// <param name="c"></param>
+	/// <returns></returns>
+	template <typename Proj>
+	template <typename PixelType>	
+	RET_VAL(PixelType, std::is_integral) IProjectionInfo<Proj>::Project(Coordinate c) const
+	{
+
+		ProjectedValue raw = static_cast<const Proj*>(this)->ProjectInternal(c);
+
+
+		raw.x = raw.x - this->frame.minPixelOffset.x;
+		raw.y = raw.y - this->frame.minPixelOffset.y;
+
+		Pixel<PixelType> p;
+		p.x = static_cast<PixelType>(std::round(this->frame.wPadding + (raw.x * this->frame.wAR)));
+		p.y = static_cast<PixelType>(std::round(this->frame.h - this->frame.hPadding - (raw.y * this->frame.hAR)));
+
+		return p;
+	};
+
+	template <typename Proj>
+	template <typename PixelType>	
+	RET_VAL(PixelType, std::is_floating_point) IProjectionInfo<Proj>::Project(Coordinate c) const
+	{
+
+		//project value and get "pseudo" pixel coordinate
+		ProjectedValue rawPixel = static_cast<const Proj*>(this)->ProjectInternal(c);
+
+		//move our pseoude pixel to "origin"
+		rawPixel.x = rawPixel.x - this->frame.minPixelOffset.x;
+		rawPixel.y = rawPixel.y - this->frame.minPixelOffset.y;
+
+		//calculate pixel in final frame
+		Pixel<PixelType> p;
+		p.x = static_cast<PixelType>(this->frame.wPadding + (rawPixel.x * this->frame.wAR));
+		p.y = static_cast<PixelType>(this->frame.h - this->frame.hPadding - (rawPixel.y * this->frame.hAR));
+
+		return p;
+	};
+
+	/// <summary>
+	/// Project pixel to coordinate
+	/// </summary>
+	/// <param name="p"></param>
+	/// <returns></returns>
+	template <typename Proj>
+	template <typename PixelType, bool Normalize>
+	Coordinate IProjectionInfo<Proj>::ProjectInverse(Pixel<PixelType> p) const
+	{
+
+		//double xx = (static_cast<double>(p.x) - this->frame.wPadding + this->frame.wAR * this->frame.minPixelOffset.x);
+		double xx = (static_cast<double>(p.x) + this->frame.projInvPrecomW);
+		xx /= this->frame.wAR;
+
+		//double yy = (static_cast<double>(p.y) - this->frame.h + this->frame.hPadding - this->frame.hAR * this->frame.minPixelOffset.y);
+		double yy = (static_cast<double>(p.y) + this->frame.projInvPrecomH);
+		yy /= -this->frame.hAR;
+
+
+		
+		ProjectedValueInverse pi = static_cast<const Proj*>(this)->ProjectInverseInternal(xx, yy);
+
+		Coordinate c;
+		if (Normalize)
+		{
+			c.lat = GeoCoordinate::deg(ProjectionUtils::NormalizeLat(pi.lat.deg()));
+			c.lon = GeoCoordinate::deg(ProjectionUtils::NormalizeLon(pi.lon.deg()));
+		}
+		else
+		{
+			c.lat = pi.lat;
+			c.lon = pi.lon;
+		}
+		return c;
+	};
+
 	
-	inline static double degToRad(double x) { return x * 0.0174532925;}
-	inline static double radToDeg(double x) { return x * 57.2957795; }
-
-
 	
-	ProjectionFrame frame;
 
-	IProjectionInfo(PROJECTION curProjection);
-
-	virtual ProjectedValue ProjectInternal(Coordinate c) const = 0;
-	virtual ProjectedValueInverse ProjectInverseInternal(double x, double y) const = 0;
-	
-	
 };
-
-
-
-/// <summary>
-/// Project Coordinate point to pixel
-/// </summary>
-/// <param name="c"></param>
-/// <returns></returns>
-template <typename PixelType>
-typename std::enable_if<std::is_integral<PixelType>::value, 
-	IProjectionInfo::Pixel<PixelType>>::type
-IProjectionInfo::Project(Coordinate c) const
-{
-
-	ProjectedValue raw = this->ProjectInternal(c);
-
-
-	raw.x = raw.x - this->frame.minPixelOffset.x;
-	raw.y = raw.y - this->frame.minPixelOffset.y;
-
-	IProjectionInfo::Pixel<PixelType> p;
-	p.x = static_cast<PixelType>(std::round(this->frame.wPadding + (raw.x * this->frame.wAR)));
-	p.y = static_cast<PixelType>(std::round(this->frame.h - this->frame.hPadding - (raw.y * this->frame.hAR)));
-
-	return p;
-}
-
-template <typename PixelType>
-typename std::enable_if<std::is_floating_point<PixelType>::value, 
-	IProjectionInfo::Pixel<PixelType>>::type
-IProjectionInfo::Project(Coordinate c) const
-{
-
-	//project value and get "pseudo" pixel coordinate
-	ProjectedValue rawPixel = this->ProjectInternal(c);
-
-	//move our pseoude pixel to "origin"
-	rawPixel.x = rawPixel.x - this->frame.minPixelOffset.x;
-	rawPixel.y = rawPixel.y - this->frame.minPixelOffset.y;
-
-	//calculate pixel in final frame
-	IProjectionInfo::Pixel<PixelType> p;
-	p.x = static_cast<PixelType>(this->frame.wPadding + (rawPixel.x * this->frame.wAR));
-	p.y = static_cast<PixelType>(this->frame.h - this->frame.hPadding - (rawPixel.y * this->frame.hAR));
-
-	return p;
-}
-
-/// <summary>
-/// Project pixel to coordinate
-/// </summary>
-/// <param name="p"></param>
-/// <returns></returns>
-template <typename PixelType>
-IProjectionInfo::Coordinate IProjectionInfo::ProjectInverse(Pixel<PixelType> p) const
-{
-
-	double xx = (static_cast<double>(p.x) - this->frame.wPadding + this->frame.wAR * this->frame.minPixelOffset.x);
-	xx /= this->frame.wAR;
-
-	double yy = (static_cast<double>(p.y) - this->frame.h + this->frame.hPadding - this->frame.hAR * this->frame.minPixelOffset.y);
-	yy /= -this->frame.hAR;
-
-
-	ProjectedValueInverse pi = this->ProjectInverseInternal(xx, yy);
-
-	Coordinate c;
-	c.lat = GeoCoordinate::deg(NormalizeLat(pi.lat.deg()));
-	c.lon = GeoCoordinate::deg(NormalizeLon(pi.lon.deg()));
-	return c;
-}
-
-
-
-
-
-
 
 #endif

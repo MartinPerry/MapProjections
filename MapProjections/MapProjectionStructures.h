@@ -6,6 +6,16 @@
 
 #include "GeoCoordinate.h"
 
+#ifdef _MSC_VER
+#ifndef my_fopen 
+#define my_fopen(a, b, c) fopen_s(a, b, c)	
+#endif
+#else
+#ifndef my_fopen 
+#define my_fopen(a, b, c) (*a = fopen(b, c))
+#endif
+#endif
+
 namespace Projections
 {
 
@@ -72,6 +82,15 @@ namespace Projections
 		double projInvPrecomH;
 	};
 
+    struct ProjectionConstants
+    {
+        static const double PI;
+        static const double PI_4;
+        static const double PI_2;
+        static const double E;
+        static const double EARTH_RADIUS;
+    };
+    
 };
 
 #endif

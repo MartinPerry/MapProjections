@@ -16,19 +16,74 @@
 #include "MapProjectionStructures.h"
 #include "MapProjectionUtils.h"
 
+//#define USE_VIRTUAL_INTERFACE
+
+#ifdef USE_VIRTUAL_INTERFACE
+#define OVERRIDE override
+#else
+#define OVERRIDE
+#endif
+
+
 #define RET_VAL(PixelType, enable_cond) \
 	typename std::enable_if<enable_cond<PixelType>::value, Pixel<PixelType>>::type
 
 namespace Projections
 {
-	template <typename Proj>
-	class IProjectionInfo
+	class IProjectionInfo 
 	{
 	public:
-
+		
 		const PROJECTION curProjection;
 
 		virtual ~IProjectionInfo() = default;
+
+#ifdef USE_VIRTUAL_INTERFACE
+		/*
+		template <typename PixelType = int>
+		virtual RET_VAL(PixelType, std::is_integral) Project(const Coordinate & c) const = 0;
+
+
+		template <typename PixelType = float>
+		virtual RET_VAL(PixelType, std::is_floating_point) Project(const Coordinate & c) const = 0;
+
+
+		template <typename PixelType = int, bool Normalize = true>
+		virtual Coordinate ProjectInverse(const Pixel<PixelType> & p) const = 0;
+
+		template <typename InputProj>
+		virtual void SetFrame(InputProj * proj, bool keepAR = true) = 0;
+		
+		template <typename InputProj>
+		virtual void SetFrame(InputProj * proj, double w, double h, bool keepAR = true) = 0;
+		*/
+
+		virtual void SetFrame(const ProjectionFrame & frame) = 0;
+		virtual void SetFrame(std::vector<Coordinate> coord, double w, double h, bool keepAR = true) = 0;
+		virtual void SetFrame(Coordinate minCoord, Coordinate maxCoord, double w, double h, bool keepAR = true) = 0;
+
+		virtual Coordinate GetTopLeftCorner() const = 0;
+		virtual Coordinate CalcStep(STEP_TYPE type) const = 0;
+		virtual const ProjectionFrame & GetFrame() const = 0;
+		
+		virtual Coordinate CalcEndPointShortest(Coordinate start, Angle bearing, double dist) const = 0;
+		virtual Coordinate CalcEndPointDirect(Coordinate start, Angle bearing, double dist) const = 0;
+
+		virtual void LineBresenham(Pixel<int> start, Pixel<int> end,
+			std::function<void(int x, int y)> callback) const = 0;
+
+		virtual void ComputeAABB(Coordinate & min, Coordinate & max) const = 0;
+#endif
+	protected:
+		IProjectionInfo(PROJECTION curProjection) : curProjection(curProjection) {};
+	};
+
+
+	template <typename Proj>
+	class ProjectionInfo : public IProjectionInfo
+	{
+	public:				
+		virtual ~ProjectionInfo() = default;
 
 		template <typename PixelType = int>
 		RET_VAL(PixelType, std::is_integral) Project(const Coordinate & c) const;
@@ -45,16 +100,17 @@ namespace Projections
 
 		template <typename InputProj>
 		void SetFrame(InputProj * proj, bool keepAR = true);
+
 		template <typename InputProj>
 		void SetFrame(InputProj * proj, double w, double h, bool keepAR = true);
 
-		void SetFrame(const ProjectionFrame & frame);		
-		void SetFrame(std::vector<Coordinate> coord, double w, double h, bool keepAR = true);
-		void SetFrame(Coordinate minCoord, Coordinate maxCoord, double w, double h, bool keepAR = true);
+		void SetFrame(const ProjectionFrame & frame) OVERRIDE;
+		void SetFrame(std::vector<Coordinate> coord, double w, double h, bool keepAR = true) OVERRIDE;
+		void SetFrame(Coordinate minCoord, Coordinate maxCoord, double w, double h, bool keepAR = true) OVERRIDE;
 
-		Coordinate GetTopLeftCorner() const;
-		Coordinate CalcStep(STEP_TYPE type) const;
-		const ProjectionFrame & GetFrame() const;
+		Coordinate GetTopLeftCorner() const OVERRIDE;
+		Coordinate CalcStep(STEP_TYPE type) const OVERRIDE;
+		const ProjectionFrame & GetFrame() const OVERRIDE;
 
 
 		template <typename T = int>
@@ -62,15 +118,15 @@ namespace Projections
 		template <typename T = int>
 		T GetFrameHeight() const { return static_cast<T>(this->frame.h); }
 
-		Coordinate CalcEndPointShortest(Coordinate start, Angle bearing, double dist) const;
-		Coordinate CalcEndPointDirect(Coordinate start, Angle bearing, double dist) const;
+		Coordinate CalcEndPointShortest(Coordinate start, Angle bearing, double dist) const OVERRIDE;
+		Coordinate CalcEndPointDirect(Coordinate start, Angle bearing, double dist) const OVERRIDE;
 
 		void LineBresenham(Pixel<int> start, Pixel<int> end, 
-			std::function<void(int x, int y)> callback) const;
+			std::function<void(int x, int y)> callback) const OVERRIDE;
 
 
 
-		void ComputeAABB(Coordinate & min, Coordinate & max) const;
+		void ComputeAABB(Coordinate & min, Coordinate & max) const OVERRIDE;
 
 		
 
@@ -83,27 +139,21 @@ namespace Projections
 			GeoCoordinate lat;
 			GeoCoordinate lon;
 		};
+		
 
+		//inline static double cot(double x) { return 1.0 / std::tan(x); };
+		//inline static double sec(double x) { return 1.0 / std::cos(x); };
+		//inline static double sinc(double x) { return std::sin(x) / x; };
+		//inline static double sgn(double x) { return (x < 0) ? -1 : (x > 0); };
 
-		static const double PI;
-		static const double PI_4;
-		static const double PI_2;
-		static const double E;
-		static const double EARTH_RADIUS;
+		//inline static double degToRad(double x) { return x * 0.0174532925; }
+		//inline static double radToDeg(double x) { return x * 57.2957795; }
 
-		inline static double cot(double x) { return 1.0 / std::tan(x); };
-		inline static double sec(double x) { return 1.0 / std::cos(x); };
-		inline static double sinc(double x) { return std::sin(x) / x; };
-		inline static double sgn(double x) { return (x < 0) ? -1 : (x > 0); };
-
-		inline static double degToRad(double x) { return x * 0.0174532925; }
-		inline static double radToDeg(double x) { return x * 57.2957795; }
-
-
+		
 
 		ProjectionFrame frame;
 
-		IProjectionInfo(PROJECTION curProjection);
+		ProjectionInfo(PROJECTION curProjection);
 
 		//virtual ProjectedValue ProjectInternal(Coordinate c) const = 0;
 		//virtual ProjectedValueInverse ProjectInverseInternal(double x, double y) const = 0;
@@ -122,7 +172,7 @@ namespace Projections
 	/// </param>
 	template <typename Proj>
 	template <typename InputProj>
-	void IProjectionInfo<Proj>::SetFrame(InputProj * proj, bool keepAR)
+	void ProjectionInfo<Proj>::SetFrame(InputProj * proj, bool keepAR)
 	{
 		Coordinate cMin, cMax;
 		proj->ComputeAABB(cMin, cMax);
@@ -142,7 +192,7 @@ namespace Projections
 	/// </param>
 	template <typename Proj>
 	template <typename InputProj>
-	void IProjectionInfo<Proj>::SetFrame(InputProj * proj, double w, double h, bool keepAR)
+	void ProjectionInfo<Proj>::SetFrame(InputProj * proj, double w, double h, bool keepAR)
 	{
 		Coordinate cMin, cMax;
 		proj->ComputeAABB(cMin, cMax);
@@ -159,7 +209,7 @@ namespace Projections
 	/// <returns></returns>
 	template <typename Proj>
 	template <typename PixelType>	
-	RET_VAL(PixelType, std::is_integral) IProjectionInfo<Proj>::Project(const Coordinate & c) const
+	RET_VAL(PixelType, std::is_integral) ProjectionInfo<Proj>::Project(const Coordinate & c) const
 	{
 
 		ProjectedValue raw = static_cast<const Proj*>(this)->ProjectInternal(c);
@@ -177,7 +227,7 @@ namespace Projections
 
 	template <typename Proj>
 	template <typename PixelType>	
-	RET_VAL(PixelType, std::is_floating_point) IProjectionInfo<Proj>::Project(const Coordinate & c) const
+	RET_VAL(PixelType, std::is_floating_point) ProjectionInfo<Proj>::Project(const Coordinate & c) const
 	{
 
 		//project value and get "pseudo" pixel coordinate
@@ -202,7 +252,7 @@ namespace Projections
 	/// <returns></returns>
 	template <typename Proj>
 	template <typename PixelType, bool Normalize>
-	Coordinate IProjectionInfo<Proj>::ProjectInverse(const Pixel<PixelType> & p) const
+	Coordinate ProjectionInfo<Proj>::ProjectInverse(const Pixel<PixelType> & p) const
 	{
 
 		//double xx = (static_cast<double>(p.x) - this->frame.wPadding + this->frame.wAR * this->frame.minPixelOffset.x);

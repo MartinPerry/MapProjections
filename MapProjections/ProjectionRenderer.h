@@ -96,7 +96,7 @@ namespace Projections
 	{
 		frame = proj->GetFrame();
 		projectCallback = [proj](const Coordinate & c) -> Pixel<int> {
-			return proj->Project<int>(c);
+            return proj->template Project<int>(c);
 		};
 		projectInverseCallback = [proj](const Pixel<int> & p) -> Coordinate {
 			return proj->ProjectInverse(p);
@@ -136,7 +136,7 @@ namespace Projections
 			{
 
 				Coordinate cc = this->projectInverseCallback({ x,y });
-				Pixel<int> p = imProj->Project<int>(cc);
+                Pixel<int> p = imProj->template Project<int>(cc);
 
 				if (p.x < 0) continue;
 				if (p.y < 0) continue;

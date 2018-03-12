@@ -58,8 +58,8 @@ namespace Projections
 			static Pixel<OutPixelType> ReProject(Pixel<InPixelType> p,
 				const FromProjection * from, const ToProjection * to)
 		{
-			Coordinate cc = to->ProjectInverse<InPixelType, false>(p);
-			return from->Project<OutPixelType>(cc);
+            Coordinate cc = to->template ProjectInverse<InPixelType, false>(p);
+            return from->template Project<OutPixelType>(cc);
 		};
 
 		/*
@@ -110,6 +110,14 @@ namespace Projections
 
 			return d;
 		};
+        
+        inline static double cot(double x) { return 1.0 / std::tan(x); };
+        inline static double sec(double x) { return 1.0 / std::cos(x); };
+        inline static double sinc(double x) { return std::sin(x) / x; };
+        inline static double sgn(double x) { return (x < 0) ? -1 : (x > 0); };
+      
+        inline static double degToRad(double x) { return x * 0.0174532925; }
+        inline static double radToDeg(double x) { return x * 57.2957795; }
 	};
 
 };

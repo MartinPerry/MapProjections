@@ -6,7 +6,7 @@
 
 #include <limits>
 #include <algorithm>
-#include <string>
+#include <string.h>
 #include <errno.h>
 
 

@@ -31,15 +31,20 @@ ProjectionRenderer::~ProjectionRenderer()
 /// </summary>
 void ProjectionRenderer::Clear()
 {
-	memset(rawData, 0, static_cast<int>(frame.w) * static_cast<int>(frame.h) * sizeof(uint8_t));
+	memset(rawData, 0, static_cast<int>(frame.w) * static_cast<int>(frame.h) * static_cast<int>(type));
 }
 
-void ProjectionRenderer::SetRawDataTarget(uint8_t * target)
+void ProjectionRenderer::SetRawDataTarget(uint8_t * target, RenderImageType targetType)
 {
+	if (targetType != this->type)
+	{
+		return;
+	}
+
 	if (target == nullptr)
 	{
 		this->rawData = nullptr;
-		this->rawData = new uint8_t[static_cast<int>(frame.w) * static_cast<int>(frame.h)];
+		this->rawData = new uint8_t[static_cast<int>(frame.w) * static_cast<int>(frame.h) * static_cast<int>(type)];
 
 		this->externalData = false;
 		return;
@@ -58,29 +63,29 @@ void ProjectionRenderer::SetRawDataTarget(uint8_t * target)
 /// <param name="fileName"></param>
 void ProjectionRenderer::SaveToFile(const char * fileName)
 {
-
-	lodepng::encode(fileName, this->rawData, 
-		static_cast<int>(frame.w), static_cast<int>(frame.h), 
-		LodePNGColorType::LCT_GREY);
-
-	/*
-	FILE * f = NULL;
-	//my_fopen(&f, fileName.GetConstString(), "wb");
-	f = fopen(fileName, "wb");
-
-	if (f == NULL)
+	if (type == RenderImageType::GREY)
 	{
-	printf("Failed to open file %s (%s)", fileName, strerror(errno));
-	return;
+		lodepng::encode(fileName, this->rawData,
+			static_cast<int>(frame.w), static_cast<int>(frame.h),
+			LodePNGColorType::LCT_GREY);
 	}
-	fwrite(rawData, sizeof(uint8_t), proj->GetFrameWidth() * proj->GetFrameHeight(), f);
-	fclose(f);
-	*/
+	else if (type == RenderImageType::RGB)
+	{
+		lodepng::encode(fileName, this->rawData,
+			static_cast<int>(frame.w), static_cast<int>(frame.h),
+			LodePNGColorType::LCT_RGB);
+	}
+	else if (type == RenderImageType::RGBA)
+	{
+		lodepng::encode(fileName, this->rawData,
+			static_cast<int>(frame.w), static_cast<int>(frame.h),
+			LodePNGColorType::LCT_RGBA);
+	}
 }
 
 void ProjectionRenderer::FillData(std::vector<uint8_t> & output)
 {
-	output.resize(static_cast<int>(frame.w) * static_cast<int>(frame.h));
+	output.resize(static_cast<int>(frame.w) * static_cast<int>(frame.h) * static_cast<int>(type));
 	memcpy(&output[0], this->rawData, output.size());
 }
 
@@ -187,9 +192,9 @@ void ProjectionRenderer::AddBorders(const char * fileName, int useEveryNthPoint)
 void ProjectionRenderer::DrawBorders()
 {
 
-	for (auto it = this->debugBorder.begin(); it != this->debugBorder.end(); it++)
+	for (auto it : this->debugBorder)
 	{
-		std::vector<Coordinate> & b = it->second;
+		std::vector<Coordinate> & b = it.second;
 
 		for (size_t i = 0; i < b.size(); i++)
 		{
@@ -320,27 +325,40 @@ void ProjectionRenderer::DrawLines(const std::vector<Coordinate> & points)
 /// e.g.: currentData[index] = imData[reprojection[index]]
 /// </summary>
 /// <param name="imData"></param>
+/// <param name="imType"></param>
 /// <param name="reproj"></param>
-void ProjectionRenderer::DrawImage(uint8_t * imData, const Reprojection & reproj)
-{	
-	ProjectionRenderer::ReprojectImage(imData, this->rawData, reproj);
+void ProjectionRenderer::DrawImage(uint8_t * imData, RenderImageType imType, const Reprojection & reproj)
+{		
+	ProjectionRenderer::ReprojectImage(imData, imType, this->rawData, this->type, reproj);
 }
 
-void ProjectionRenderer::ReprojectImage(uint8_t * fromData, uint8_t * toData, const Reprojection & reproj)
+void ProjectionRenderer::ReprojectImage(uint8_t * fromData, RenderImageType fromType, 
+	uint8_t * toData, RenderImageType toType, const Reprojection & reproj)
 {
+
+	if (fromType != toType)
+	{
+		return;
+	}
+
 	for (int y = 0; y < reproj.outH; y++)
 	{
 		for (int x = 0; x < reproj.outW; x++)
 		{
 			int index = x + y * reproj.outW;
-			if ((reproj.pixels[index].x == -1) && (reproj.pixels[index].y == -1))
+			if ((reproj.pixels[index].x == -1) || (reproj.pixels[index].y == -1))
 			{
 				continue;
 			}
 
 
-			int origIndex = reproj.pixels[index].x + reproj.pixels[index].y * reproj.inW;
-			toData[index] = fromData[origIndex];
+			int origIndex = (reproj.pixels[index].x + reproj.pixels[index].y * reproj.inW) * static_cast<int>(fromType);
+			int outIndex = index * static_cast<int>(toType);
+
+			for (int k = 0; k < static_cast<int>(toType); k++)
+			{
+				toData[outIndex + k] = fromData[origIndex + k];
+			}			
 		}
 	}
 }
@@ -352,7 +370,11 @@ void ProjectionRenderer::ReprojectImage(uint8_t * fromData, uint8_t * toData, co
 /// <param name="val"></param>
 void ProjectionRenderer::SetPixel(const Pixel<int> & p, uint8_t val)
 {	
-	this->rawData[p.x + p.y * static_cast<int>(frame.w)] = val;
+	int index = (p.x + p.y * static_cast<int>(frame.w)) * static_cast<int>(type);
+	for (int k = 0; k < static_cast<int>(type); k++)
+	{
+		this->rawData[index + k] = val;
+	}	
 }
 
 /// <summary>
@@ -456,8 +478,8 @@ void ProjectionRenderer::CohenSutherlandLineClipAndDraw(double x0, double y0, do
 		end.x = static_cast<int>(x1); end.y = static_cast<int>(y1);
 
 		lineBresenhamCallback(start, end,
-			[&](int x, int y) -> void {
-			this->rawData[x + y * static_cast<int>(frame.w)] = 255;
+			[&](int x, int y) -> void {			
+			this->SetPixel({ x, y }, 255);
 		});
 	}
 }

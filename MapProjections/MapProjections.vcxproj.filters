@@ -56,5 +56,8 @@
     <ClInclude Include="MapProjectionUtils.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="IProjectionInfo.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

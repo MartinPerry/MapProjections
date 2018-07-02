@@ -16,17 +16,26 @@ namespace Projections
 	{
 	public:
 
-		static void ReprojectImage(uint8_t * fromData, uint8_t * toData, const Reprojection & reproj);
+		typedef enum RenderImageType 
+		{
+			GREY = 1,
+			RGB = 3,
+			RGBA = 4
+
+		} RenderImageType;
+
+		static void ReprojectImage(uint8_t * fromData, RenderImageType fromType, 
+			uint8_t * toData, RenderImageType toType, const Reprojection & reproj);
 
 		template <typename Proj>
-		ProjectionRenderer(Proj * proj);
+		ProjectionRenderer(Proj * proj, RenderImageType type = GREY);
 		~ProjectionRenderer();
 
 		template <typename Proj>
 		void SetProjection(Proj * proj);
 		void Clear();
 
-		void SetRawDataTarget(uint8_t * target);
+		void SetRawDataTarget(uint8_t * target, RenderImageType targetType);
 
 		void AddBorders(const char * fileName, int useEveryNthPoint = 1);
 		void DrawBorders();
@@ -39,8 +48,8 @@ namespace Projections
 		void DrawLines(const std::vector<Coordinate> & points);
 
 		template <typename Proj>
-		void DrawImage(uint8_t * imData, int w, int h, Proj * imProj);
-		void DrawImage(uint8_t * imData, const Reprojection & reproj);
+		void DrawImage(uint8_t * imData, RenderImageType imType, int w, int h, Proj * imProj);
+		void DrawImage(uint8_t * imData, RenderImageType imType, const Reprojection & reproj);
 
 		void SetPixel(const Pixel<int> & p, uint8_t val);
 
@@ -56,6 +65,7 @@ namespace Projections
 
 
 		uint8_t * rawData;
+		RenderImageType type;
 		bool externalData;
 
 		ProjectionFrame frame;
@@ -79,8 +89,8 @@ namespace Projections
 	/// </summary>
 	/// <param name="proj"></param>
 	template <typename Proj>
-	ProjectionRenderer::ProjectionRenderer(Proj * proj)
-		: rawData(nullptr), externalData(false)
+	ProjectionRenderer::ProjectionRenderer(Proj * proj, RenderImageType type)
+		: rawData(nullptr), externalData(false), type(type)
 	{
 		this->SetProjection(proj);
 	};
@@ -112,7 +122,7 @@ namespace Projections
 		if (!externalData)
 		{
 			delete[] rawData;
-			rawData = new uint8_t[static_cast<int>(frame.w) * static_cast<int>(frame.h)];
+			rawData = new uint8_t[static_cast<int>(frame.w) * static_cast<int>(frame.h) * static_cast<int>(type)];
 		}
 		this->Clear();
 	};
@@ -124,12 +134,18 @@ namespace Projections
 	/// Map imData[xx, yy] to currentData[x, y]
 	/// </summary>
 	/// <param name="imData"></param>
+	/// <param name="imType></param>
 	/// <param name="w"></param>
 	/// <param name="h"></param>
 	/// <param name="imProj"></param>
 	template <typename Proj>
-	void ProjectionRenderer::DrawImage(uint8_t * imData, int w, int h, Proj * imProj)
+	void ProjectionRenderer::DrawImage(uint8_t * imData, RenderImageType imType, int w, int h, Proj * imProj)
 	{
+		if (imType != this->type)
+		{
+			return;
+		}
+
 		for (int y = 0; y < static_cast<int>(frame.h); y++)
 		{
 			for (int x = 0; x < static_cast<int>(frame.w); x++)
@@ -143,7 +159,13 @@ namespace Projections
 				if (p.x >= w) continue;
 				if (p.y >= h) continue;
 
-				this->rawData[x + y * static_cast<int>(frame.w)] = imData[p.x + p.y * w];
+				int inIndex = (p.x + p.y * w) * static_cast<int>(type);
+				int outIndex = x + y * static_cast<int>(frame.w) * static_cast<int>(type);
+
+				for (int k = 0; k < static_cast<int>(type); k++)
+				{					
+					this->rawData[outIndex + k] = imData[inIndex + k];
+				}
 
 			}
 		}

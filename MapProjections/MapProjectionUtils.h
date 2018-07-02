@@ -1,18 +1,35 @@
 #ifndef _MAP_PROJECTION_UTILS_H_
 #define _MAP_PROJECTION_UTILS_H_
 
+
+namespace Projections
+{
+	class IProjectionInfo;
+}
+
 #include <vector>
 
 
-#include "MapProjectionStructures.h"
-
+#include "./MapProjectionStructures.h"
+#include "./MapProjection.h"
 
 namespace Projections
 {
 
 	struct ProjectionUtils
 	{
+		
+		static Reprojection CreateReprojection(IProjectionInfo * from, IProjectionInfo * to)
+		{	
+			//dynamic_cast<typeid(Mercator) *>(from);
 
+			//TO DO !!!!!!
+
+			
+			Reprojection reprojection;
+			return reprojection;
+		};
+		
 		/// <summary>
 		/// Re-project data from -> to
 		/// Calculates mapping: toData[index] = fromData[reprojection[index]]
@@ -22,6 +39,7 @@ namespace Projections
 		template <typename FromProjection, typename ToProjection>
 		static Reprojection CreateReprojection(FromProjection * from, ToProjection * to)
 		{
+			
 			Reprojection reprojection;
 			reprojection.pixels.resize(to->GetFrameHeight() * to->GetFrameWidth(), { -1, -1 });
 

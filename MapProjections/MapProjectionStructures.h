@@ -38,9 +38,9 @@ namespace Projections
 		typename = typename std::enable_if<std::is_arithmetic<PixelType>::value, PixelType>::type>
 		struct Pixel { PixelType x; PixelType y; };
 
-	struct Coordinate {
-		GeoCoordinate lat;
+	struct Coordinate {		
 		GeoCoordinate lon;
+		GeoCoordinate lat;
 
 		Coordinate() {};
 		Coordinate(GeoCoordinate lon, GeoCoordinate lat) : lon(lon), lat(lat) {};

@@ -24,7 +24,7 @@ namespace Projections
 			//dynamic_cast<typeid(Mercator) *>(from);
 
 			//TO DO !!!!!!
-
+        
 			
 			Reprojection reprojection;
 			return reprojection;

@@ -25,7 +25,8 @@ namespace Projections
 		LAMBERT_CONIC = 1,
 		EQUIRECTANGULAR = 2,
 		WEB_MERCATOR = 3,
-		POLAR_STEREOGRAPHICS = 4
+		POLAR_STEREOGRAPHICS = 4,
+        MILLER = 5
 	} PROJECTION;
 
 	typedef enum STEP_TYPE {

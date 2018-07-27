@@ -54,6 +54,19 @@ Mercator::Mercator()
 
 }
 
+//=======================================================================
+// Miller
+//
+// Based on:
+// https://en.wikipedia.org/wiki/Miller_cylindrical_projection
+//=======================================================================
+
+Miller::Miller()
+    : ProjectionInfo(PROJECTION::MILLER)
+{
+    
+}
+
 
 
 //=======================================================================

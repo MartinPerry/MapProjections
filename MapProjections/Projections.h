@@ -49,7 +49,7 @@ namespace Projections
             
             double t = std::pow(f / phi, (1.0 / n));
             
-            double lat = 2 * std::atan(t) - ProjectionConstants::PI_2;
+            double lat = 2.0 * std::atan(t) - ProjectionConstants::PI_2;
             double lon = lonCentralMeridian.rad() + delta / n;
             
 			ProjectedValueInverse c;
@@ -92,6 +92,36 @@ namespace Projections
 
 	};
 
+//============================================================================================================================
+//============================================================================================================================
+//============================================================================================================================
+    
+    class Miller : public ProjectionInfo<Miller>
+    {
+    public:
+        Miller();
+        
+        friend class ProjectionInfo<Miller>;
+        
+    protected:
+        ProjectedValue ProjectInternal(Coordinate c) const
+        {
+            ProjectedValue p;
+            p.x = c.lon.rad();
+            p.y = 1.25 * std::log(std::tan(ProjectionConstants::PI_4 + 0.4 * c.lat.rad()));
+            
+            return p;
+        };
+        
+        ProjectedValueInverse ProjectInverseInternal(double x, double y) const
+        {
+            ProjectedValueInverse c;
+            c.lon = GeoCoordinate::rad(x);
+            c.lat = GeoCoordinate::rad(2.5 * std::atan(std::pow(ProjectionConstants::E, 0.8 * y)) - 0.625 * ProjectionConstants::PI);
+            return c;
+        };
+        
+    };
 
 //============================================================================================================================
 //============================================================================================================================

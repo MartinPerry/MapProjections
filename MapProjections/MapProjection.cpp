@@ -405,5 +405,6 @@ void ProjectionInfo<Proj>::ComputeAABB(Coordinate & min, Coordinate & max) const
 
 template class Projections::ProjectionInfo<LambertConic>;
 template class Projections::ProjectionInfo<Mercator>;
+template class Projections::ProjectionInfo<Miller>;
 template class Projections::ProjectionInfo<Equirectangular>;
 template class Projections::ProjectionInfo<PolarSteregographic>;

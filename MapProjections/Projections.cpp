@@ -1,6 +1,6 @@
 #include "./Projections.h"
 
-
+using namespace Projections;
 
 //=======================================================================
 // Lambert-conic
@@ -12,7 +12,7 @@
 
 LambertConic::LambertConic(GeoCoordinate latProjOrigin, GeoCoordinate lonCentMeridian,
 	GeoCoordinate stanParallel)
-	: IProjectionInfo(IProjectionInfo::PROJECTION::LAMBERT_CONIC),
+	: ProjectionInfo(PROJECTION::LAMBERT_CONIC),
 	latProjectionOrigin(latProjOrigin),
 	lonCentralMeridian(lonCentMeridian),
 	standardParallel1(stanParallel),
@@ -26,53 +26,20 @@ LambertConic::LambertConic(GeoCoordinate latProjOrigin, GeoCoordinate lonCentMer
 	}
 	else
 	{
-		double t1 = std::cos(standardParallel1.rad()) * sec(standardParallel2.rad());
-		double t2 = std::tan(PI_4 + 0.5 * standardParallel2.rad());
-		double t3 = cot(PI_4 + 0.5 * standardParallel1.rad());
+        double t1 = std::cos(standardParallel1.rad()) * ProjectionUtils::sec(standardParallel2.rad());
+		double t2 = std::tan(ProjectionConstants::PI_4 + 0.5 * standardParallel2.rad());
+        double t3 = ProjectionUtils::cot(ProjectionConstants::PI_4 + 0.5 * standardParallel1.rad());
 		n = std::log(t1) / std::log(t2 * t3);
 	}
 
-	double t4 = std::tan(PI_4 + 0.5 * standardParallel1.rad());
-	double t5 = cot(PI_4 + 0.5 * latProjectionOrigin.rad());
+	double t4 = std::tan(ProjectionConstants::PI_4 + 0.5 * standardParallel1.rad());
+    double t5 = ProjectionUtils::cot(ProjectionConstants::PI_4 + 0.5 * latProjectionOrigin.rad());
 
 	f = std::cos(standardParallel1.rad()) * std::pow(t4, n) / n;
 	phi0 = f * std::pow(t5, n);
 
 }
 
-IProjectionInfo::ProjectedValue LambertConic::ProjectInternal(Coordinate c) const
-{
-
-	double t = cot(PI_4 + 0.5 * c.lat.rad());
-	double phi = f * std::pow(t, n);
-
-	double x = phi * std::sin(n * (c.lon.rad() - lonCentralMeridian.rad()));
-	double y = phi0 - phi * std::cos(n * (c.lon.rad() - lonCentralMeridian.rad()));
-
-	IProjectionInfo::ProjectedValue p;
-	p.x = x;
-	p.y = y;
-	return p;
-}
-
-
-IProjectionInfo::ProjectedValueInverse LambertConic::ProjectInverseInternal(double x, double y) const
-{
-
-	double phi = sgn(n) * std::sqrt(x * x + (phi0 - y) * (phi0 - y));
-	double delta = std::atan(x / (phi0 - y));
-
-	double t = std::pow(f / phi, (1.0 / n));
-
-	double lat = 2 * std::atan(t) - PI_2;
-	double lon = lonCentralMeridian.rad() + delta / n;
-
-	IProjectionInfo::ProjectedValueInverse c;
-	c.latDeg = radToDeg(lat);
-	c.lonDeg = radToDeg(lon);
-
-	return c;
-}
 
 //=======================================================================
 // Mercator
@@ -82,30 +49,22 @@ IProjectionInfo::ProjectedValueInverse LambertConic::ProjectInverseInternal(doub
 //=======================================================================
 
 Mercator::Mercator()
-	: IProjectionInfo(IProjectionInfo::PROJECTION::MERCATOR)	
+	: ProjectionInfo(PROJECTION::MERCATOR)
 {
 
 }
 
-IProjectionInfo::ProjectedValue Mercator::ProjectInternal(Coordinate c) const
+//=======================================================================
+// Miller
+//
+// Based on:
+// https://en.wikipedia.org/wiki/Miller_cylindrical_projection
+//=======================================================================
+
+Miller::Miller()
+    : ProjectionInfo(PROJECTION::MILLER)
 {
-	IProjectionInfo::ProjectedValue p;
-	p.x = c.lon.rad();
-	p.y = std::log(std::tan(PI_4 + 0.5 * c.lat.rad()));
-
-	return p;
-}
-
-
-IProjectionInfo::ProjectedValueInverse Mercator::ProjectInverseInternal(double x, double y) const
-{
-
-	IProjectionInfo::ProjectedValueInverse c;
-
-	c.latDeg = radToDeg(2 * std::atan(std::pow(E, y)) - PI_2);
-	c.lonDeg = radToDeg(x);
-
-	return c;
+    
 }
 
 
@@ -124,31 +83,35 @@ Equirectangular::Equirectangular()
 }
 
 Equirectangular::Equirectangular(GeoCoordinate lonCentralMeridian)
-	: IProjectionInfo(IProjectionInfo::PROJECTION::EQUIRECTANGULAR),
+	: ProjectionInfo(PROJECTION::EQUIRECTANGULAR),
 	lonCentralMeridian(lonCentralMeridian),
 	standardParallel(0.0_deg),
 	cosStandardParallel(std::cos(standardParallel.rad()))	
 {
 }
 
-IProjectionInfo::ProjectedValue Equirectangular::ProjectInternal(Coordinate c) const
-{
-	IProjectionInfo::ProjectedValue p;
-	p.x = (c.lon.rad() - lonCentralMeridian.rad()) * cosStandardParallel;
-	p.y = c.lat.rad() - standardParallel.rad();
 
-	return p;
+
+//=======================================================================
+// PolarSteregographic 
+//
+// Full computation:
+// https://web.archive.org/web/20150723100408/http://www.knmi.nl/~beekhuis/rad_proj.html
+// with Eccentricity is 1.0 => Based on:
+// https://www.dwd.de/DE/leistungen/radolan/radolan_info/radolan_radvor_op_komposit_format_pdf.pdf?__blob=publicationFile&v=8
+// 
+//=======================================================================
+
+PolarSteregographic::PolarSteregographic()
+	: PolarSteregographic(10.0_deg, 60.0_deg)
+{
+
 }
 
-
-IProjectionInfo::ProjectedValueInverse Equirectangular::ProjectInverseInternal(double x, double y) const
+PolarSteregographic::PolarSteregographic(GeoCoordinate lonCentralMeridian, GeoCoordinate latCentral)
+	: ProjectionInfo(PROJECTION::POLAR_STEREOGRAPHICS),
+	lonCentralMeridian(lonCentralMeridian), latCentral(latCentral)
 {
-
-	IProjectionInfo::ProjectedValueInverse c;
-
-	c.latDeg = radToDeg(y / cosStandardParallel + lonCentralMeridian.rad());
-	c.lonDeg = radToDeg(x + standardParallel.rad());
-
-	return c;
 }
+
 

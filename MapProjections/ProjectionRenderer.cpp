@@ -1,21 +1,16 @@
 #include "ProjectionRenderer.h"
 
 #include "./lodepng.h"
+#include "Projections.h"
+#include "MapProjectionStructures.h"
+
+using namespace Projections;
 
 //=======================================================================
 // Debug renderer
 //
 //=======================================================================
 
-/// <summary>
-/// ctor
-/// </summary>
-/// <param name="proj"></param>
-ProjectionRenderer::ProjectionRenderer(IProjectionInfo * proj)
-	: rawData(nullptr), externalData(false), proj(nullptr)
-{
-	this->SetProjection(proj);
-}
 
 /// <summary>
 /// dtor
@@ -29,37 +24,27 @@ ProjectionRenderer::~ProjectionRenderer()
 	}
 }
 
-/// <summary>
-/// Set current projection - rewrites projection from ctor
-/// It also clears current data, because new projection can have
-/// different frame size
-/// </summary>
-/// <param name="proj"></param>
-void ProjectionRenderer::SetProjection(IProjectionInfo * proj)
-{
-	this->proj = proj;
-	if (!externalData)
-	{
-		delete[] rawData;
-		rawData = new uint8_t[proj->GetFrameWidth() * proj->GetFrameHeight()];
-	}
-	this->Clear();
-}
+
 
 /// <summary>
 /// Clear data
 /// </summary>
 void ProjectionRenderer::Clear()
 {
-	memset(rawData, 0, proj->GetFrameWidth() * proj->GetFrameHeight() * sizeof(uint8_t));
+	memset(rawData, 0, static_cast<int>(frame.w) * static_cast<int>(frame.h) * static_cast<int>(type));
 }
 
-void ProjectionRenderer::SetRawDataTarget(uint8_t * target)
+void ProjectionRenderer::SetRawDataTarget(uint8_t * target, RenderImageType targetType)
 {
+	if (targetType != this->type)
+	{
+		return;
+	}
+
 	if (target == nullptr)
 	{
 		this->rawData = nullptr;
-		this->rawData = new uint8_t[proj->GetFrameWidth() * proj->GetFrameHeight()];
+		this->rawData = new uint8_t[static_cast<int>(frame.w) * static_cast<int>(frame.h) * static_cast<int>(type)];
 
 		this->externalData = false;
 		return;
@@ -78,28 +63,29 @@ void ProjectionRenderer::SetRawDataTarget(uint8_t * target)
 /// <param name="fileName"></param>
 void ProjectionRenderer::SaveToFile(const char * fileName)
 {
-
-	lodepng::encode(fileName, this->rawData, proj->GetFrameWidth(), proj->GetFrameHeight(),
-		LodePNGColorType::LCT_GREY);
-
-	/*
-	FILE * f = NULL;
-	//my_fopen(&f, fileName.GetConstString(), "wb");
-	f = fopen(fileName, "wb");
-
-	if (f == NULL)
+	if (type == RenderImageType::GREY)
 	{
-	printf("Failed to open file %s (%s)", fileName, strerror(errno));
-	return;
+		lodepng::encode(fileName, this->rawData,
+			static_cast<int>(frame.w), static_cast<int>(frame.h),
+			LodePNGColorType::LCT_GREY);
 	}
-	fwrite(rawData, sizeof(uint8_t), proj->GetFrameWidth() * proj->GetFrameHeight(), f);
-	fclose(f);
-	*/
+	else if (type == RenderImageType::RGB)
+	{
+		lodepng::encode(fileName, this->rawData,
+			static_cast<int>(frame.w), static_cast<int>(frame.h),
+			LodePNGColorType::LCT_RGB);
+	}
+	else if (type == RenderImageType::RGBA)
+	{
+		lodepng::encode(fileName, this->rawData,
+			static_cast<int>(frame.w), static_cast<int>(frame.h),
+			LodePNGColorType::LCT_RGBA);
+	}
 }
 
 void ProjectionRenderer::FillData(std::vector<uint8_t> & output)
 {
-	output.resize(proj->GetFrameWidth() * proj->GetFrameHeight());
+	output.resize(static_cast<int>(frame.w) * static_cast<int>(frame.h) * static_cast<int>(type));
 	memcpy(&output[0], this->rawData, output.size());
 }
 
@@ -187,7 +173,7 @@ void ProjectionRenderer::AddBorders(const char * fileName, int useEveryNthPoint)
 			key += line[3];
 
 
-			IProjectionInfo::Coordinate point;
+			Coordinate point;
 			point.lon = GeoCoordinate::deg(atof(line[0].c_str()));
 			point.lat = GeoCoordinate::deg(atof(line[1].c_str()));
 			this->debugBorder[key].push_back(point);
@@ -206,19 +192,19 @@ void ProjectionRenderer::AddBorders(const char * fileName, int useEveryNthPoint)
 void ProjectionRenderer::DrawBorders()
 {
 
-	for (auto it = this->debugBorder.begin(); it != this->debugBorder.end(); it++)
+	for (auto it : this->debugBorder)
 	{
-		std::vector<IProjectionInfo::Coordinate> & b = it->second;
+		std::vector<Coordinate> & b = it.second;
 
 		for (size_t i = 0; i < b.size(); i++)
 		{
-			IProjectionInfo::Coordinate p = b[i % b.size()];
-			IProjectionInfo::Coordinate p1 = b[(i + 1) % b.size()];
+			Coordinate p = b[i % b.size()];
+			Coordinate p1 = b[(i + 1) % b.size()];
 
 
 
-			IProjectionInfo::Pixel<int> pp1 = proj->Project<int>(p);
-			IProjectionInfo::Pixel<int> pp2 = proj->Project<int>(p1);
+			Pixel<int> pp1 = this->projectCallback(p);
+			Pixel<int> pp2 = this->projectCallback(p1);
 
 
 			this->CohenSutherlandLineClipAndDraw(pp1.x, pp1.y, pp2.x, pp2.y);
@@ -239,16 +225,16 @@ void ProjectionRenderer::DrawParalells()
 	{
 		for (double lon = -180; lon <= 180 - lonStep; lon += lonStep)
 		{
-			IProjectionInfo::Coordinate p;
+			Coordinate p;
 			p.lat = GeoCoordinate::deg(lat);
 			p.lon = GeoCoordinate::deg(lon);
 
-			IProjectionInfo::Coordinate p1;
+			Coordinate p1;
 			p1.lat = GeoCoordinate::deg(lat);
 			p1.lon = GeoCoordinate::deg(lon + lonStep);
-
-			IProjectionInfo::Pixel<int> pp1 = proj->Project<int>(p);
-			IProjectionInfo::Pixel<int> pp2 = proj->Project<int>(p1);
+			
+			Pixel<int> pp1 = this->projectCallback(p);
+			Pixel<int> pp2 = this->projectCallback(p1);
 
 
 			this->CohenSutherlandLineClipAndDraw(pp1.x, pp1.y, pp2.x, pp2.y);
@@ -263,8 +249,7 @@ void ProjectionRenderer::DrawParalells()
 /// <param name="start"></param>
 /// <param name="end"></param>
 /// <param name="stepCount"></param>
-void ProjectionRenderer::DrawLine(IProjectionInfo::Coordinate start,
-	IProjectionInfo::Coordinate end, int stepCount)
+void ProjectionRenderer::DrawLine(Coordinate start, Coordinate end, int stepCount)
 {
 	double difLat = (end.lat.rad() - start.lat.rad());
 	double difLon = (end.lon.rad() - start.lon.rad());
@@ -273,16 +258,16 @@ void ProjectionRenderer::DrawLine(IProjectionInfo::Coordinate start,
 	double latStep = difLat / stepCount;
 
 
-	IProjectionInfo::Coordinate p = start;
+	Coordinate p = start;
 
 	for (int i = 0; i < stepCount; i++)
 	{
-		IProjectionInfo::Coordinate p1 = p;
+		Coordinate p1 = p;
 		p1.lat = GeoCoordinate::rad(p1.lat.rad() + latStep);
 		p1.lon = GeoCoordinate::rad(p1.lon.rad() + lonStep);
 
-		IProjectionInfo::Pixel<int> pp1 = proj->Project<int>(p);
-		IProjectionInfo::Pixel<int> pp2 = proj->Project<int>(p1);
+		Pixel<int> pp1 = this->projectCallback(p);
+		Pixel<int> pp2 = this->projectCallback(p1);
 
 		this->CohenSutherlandLineClipAndDraw(pp1.x, pp1.y, pp2.x, pp2.y);
 
@@ -294,15 +279,15 @@ void ProjectionRenderer::DrawLine(IProjectionInfo::Coordinate start,
 /// Draw point - point is represented by small square
 /// </summary>
 /// <param name="p"></param>
-void ProjectionRenderer::DrawPoint(IProjectionInfo::Coordinate p)
+void ProjectionRenderer::DrawPoint(Coordinate p)
 {
 	int size = 5;
-	IProjectionInfo::Pixel<int> center = proj->Project<int>(p);
+	Pixel<int> center = this->projectCallback(p);
 
-	IProjectionInfo::Pixel<int> a = center;
-	IProjectionInfo::Pixel<int> b = center;
-	IProjectionInfo::Pixel<int> c = center;
-	IProjectionInfo::Pixel<int> d = center;
+	Pixel<int> a = center;
+	Pixel<int> b = center;
+	Pixel<int> c = center;
+	Pixel<int> d = center;
 
 	a.x -= size; a.y -= size;
 	b.x += size; b.y -= size;
@@ -320,7 +305,7 @@ void ProjectionRenderer::DrawPoint(IProjectionInfo::Coordinate p)
 /// Draw lines created by points
 /// </summary>
 /// <param name="points"></param>
-void ProjectionRenderer::DrawLines(const std::vector<IProjectionInfo::Coordinate> & points)
+void ProjectionRenderer::DrawLines(const std::vector<Coordinate> & points)
 {
 	if (points.size() <= 1)
 	{
@@ -334,59 +319,46 @@ void ProjectionRenderer::DrawLines(const std::vector<IProjectionInfo::Coordinate
 
 }
 
-/// <summary>
-/// Draw image based on input projection
-/// For each pixel [x, y] -> calculate inverse based on this projection -> [lat, lon]
-/// Use [lat, lon] on imProj to get pixel coordinates [xx, yy]
-/// Map imData[xx, yy] to currentData[x, y]
-/// </summary>
-/// <param name="imData"></param>
-/// <param name="w"></param>
-/// <param name="h"></param>
-/// <param name="imProj"></param>
-void ProjectionRenderer::DrawImage(uint8_t * imData, int w, int h, IProjectionInfo * imProj)
-{
-	for (int y = 0; y < this->proj->GetFrameHeight(); y++)
-	{
-		for (int x = 0; x < this->proj->GetFrameWidth(); x++)
-		{			
-						
-			IProjectionInfo::Coordinate cc = this->proj->ProjectInverse({ x,y });
-			IProjectionInfo::Pixel<int> p = imProj->Project<int>(cc);
-
-			if (p.x < 0) continue;
-			if (p.y < 0) continue;
-			if (p.x >= w) continue;
-			if (p.y >= h) continue;
-
-			this->rawData[x + y * this->proj->GetFrameWidth()] = imData[p.x + p.y * w];
-
-		}
-	}
-
-}
 
 /// <summary>
 /// Draw image based on re-projection pixels
 /// e.g.: currentData[index] = imData[reprojection[index]]
 /// </summary>
 /// <param name="imData"></param>
+/// <param name="imType"></param>
 /// <param name="reproj"></param>
-void ProjectionRenderer::DrawImage(uint8_t * imData, const IProjectionInfo::Reprojection & reproj)
-{	
+void ProjectionRenderer::DrawImage(uint8_t * imData, RenderImageType imType, const Reprojection & reproj)
+{		
+	ProjectionRenderer::ReprojectImage(imData, imType, this->rawData, this->type, reproj);
+}
+
+void ProjectionRenderer::ReprojectImage(uint8_t * fromData, RenderImageType fromType, 
+	uint8_t * toData, RenderImageType toType, const Reprojection & reproj)
+{
+
+	if (fromType != toType)
+	{
+		return;
+	}
+
 	for (int y = 0; y < reproj.outH; y++)
 	{
 		for (int x = 0; x < reproj.outW; x++)
 		{
 			int index = x + y * reproj.outW;
-			if ((reproj.pixels[index].x == -1) && (reproj.pixels[index].y == -1))
+			if ((reproj.pixels[index].x == -1) || (reproj.pixels[index].y == -1))
 			{
 				continue;
 			}
 
 
-			int origIndex = reproj.pixels[index].x + reproj.pixels[index].y * reproj.inW;
-			this->rawData[index] =  imData[origIndex];
+			int origIndex = (reproj.pixels[index].x + reproj.pixels[index].y * reproj.inW) * static_cast<int>(fromType);
+			int outIndex = index * static_cast<int>(toType);
+
+			for (int k = 0; k < static_cast<int>(toType); k++)
+			{
+				toData[outIndex + k] = fromData[origIndex + k];
+			}			
 		}
 	}
 }
@@ -396,9 +368,13 @@ void ProjectionRenderer::DrawImage(uint8_t * imData, const IProjectionInfo::Repr
 /// </summary>
 /// <param name="p"></param>
 /// <param name="val"></param>
-void ProjectionRenderer::SetPixel(const IProjectionInfo::Pixel<int> & p, uint8_t val)
-{
-	this->rawData[p.x + p.y * this->proj->GetFrameWidth()] = val;
+void ProjectionRenderer::SetPixel(const Pixel<int> & p, uint8_t val)
+{	
+	int index = (p.x + p.y * static_cast<int>(frame.w)) * static_cast<int>(type);
+	for (int k = 0; k < static_cast<int>(type); k++)
+	{
+		this->rawData[index + k] = val;
+	}	
 }
 
 /// <summary>
@@ -412,10 +388,10 @@ int ProjectionRenderer::ComputeOutCode(double x, double y)
 	int code = INSIDE;
 
 	if (x < 0) code |= LEFT;
-	else if (x >= proj->GetFrameWidth()) code |= RIGHT;
+	else if (x >= static_cast<int>(frame.w)) code |= RIGHT;
 
 	if (y < 0) code |= BOTTOM;
-	else if (y >= proj->GetFrameHeight()) code |= TOP;
+	else if (y >= static_cast<int>(frame.h)) code |= TOP;
 
 	return code;
 }
@@ -435,10 +411,10 @@ void ProjectionRenderer::CohenSutherlandLineClipAndDraw(double x0, double y0, do
 	bool accept = false;
 
 	double xmin = 0;
-	double xmax = proj->GetFrameWidth() - 1;
+	double xmax = static_cast<int>(frame.w) - 1;
 
 	double ymin = 0;
-	double ymax = proj->GetFrameHeight() - 1;
+	double ymax = static_cast<int>(frame.h) - 1;
 
 	while (true) {
 		if (!(outcode0 | outcode1)) { // Bitwise OR is 0. Trivially accept and get out of loop
@@ -451,7 +427,8 @@ void ProjectionRenderer::CohenSutherlandLineClipAndDraw(double x0, double y0, do
 		else {
 			// failed both tests, so calculate the line segment to clip
 			// from an outside point to an intersection with clip edge
-			double x, y;
+			double x = 0;
+			double y = 0;
 
 			// At least one endpoint is outside the clip rectangle; pick it.
 			int outcodeOut = outcode0 ? outcode0 : outcode1;
@@ -496,13 +473,17 @@ void ProjectionRenderer::CohenSutherlandLineClipAndDraw(double x0, double y0, do
 		//DrawRectangle(xmin, ymin, xmax, ymax);
 		//LineSegment(x0, y0, x1, y1);
 		//DrawLine(x0, y0, x1, y1);
-		IProjectionInfo::Pixel<int> start, end;
+		Pixel<int> start, end;
 		start.x = static_cast<int>(x0); start.y = static_cast<int>(y0);
 		end.x = static_cast<int>(x1); end.y = static_cast<int>(y1);
 
-		proj->LineBresenham(start, end,
-			[&](int x, int y) -> void {
-			this->rawData[x + y * proj->GetFrameWidth()] = 255;
+		lineBresenhamCallback(start, end,
+			[&](int x, int y) -> void {			
+			this->SetPixel({ x, y }, 255);
 		});
 	}
 }
+
+
+//=====
+

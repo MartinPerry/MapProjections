@@ -39,6 +39,16 @@ Rename this file to lodepng.cpp to use it for C++, or to lodepng.c to use it for
 
 #define VERSION_STRING "20120528"
 
+#ifdef _MSC_VER
+#ifndef my_fopen 
+#define my_fopen(a, b, c) fopen_s(a, b, c)	
+#endif
+#else
+#ifndef my_fopen 
+#define my_fopen(a, b, c) (*a = fopen(b, c))
+#endif
+#endif
+
 /*
 This source file is built up in the following large parts. The code sections
 with the "LODEPNG_COMPILE_" #defines divide this up further in an intermixed way.
@@ -378,7 +388,7 @@ unsigned lodepng_load_file(unsigned char** out, size_t* outsize, const char* fil
   *out = 0;
   *outsize = 0;
 
-  file = fopen(filename, "rb");
+  my_fopen(&file, filename, "rb");
   if(!file) return 78;
 
   /*get filesize:*/
@@ -400,7 +410,7 @@ unsigned lodepng_load_file(unsigned char** out, size_t* outsize, const char* fil
 unsigned lodepng_save_file(const unsigned char* buffer, size_t buffersize, const char* filename)
 {
   FILE* file;
-  file = fopen(filename, "wb" );
+  my_fopen(&file, filename, "wb" );
   if(!file) return 79;
   fwrite((char*)buffer , 1 , buffersize, file);
   fclose(file);

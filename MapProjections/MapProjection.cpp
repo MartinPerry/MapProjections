@@ -5,13 +5,11 @@
 #include <cstring>
 #include <cassert>
 
-const double IProjectionInfo::PI = std::acos(-1);
-const double IProjectionInfo::PI_4 = 0.25 * IProjectionInfo::PI;
-const double IProjectionInfo::PI_2 = 0.5 * IProjectionInfo::PI;
+#include "Projections.h"
+#include "MapProjectionUtils.h"
 
-const double IProjectionInfo::E = std::exp(1.0);
+using namespace Projections;
 
-const double IProjectionInfo::EARTH_RADIUS = 6371;
 
 //=======================================================================
 //
@@ -19,97 +17,79 @@ const double IProjectionInfo::EARTH_RADIUS = 6371;
 //
 //=======================================================================
 
-IProjectionInfo::IProjectionInfo(IProjectionInfo::PROJECTION curProjection)
-	: curProjection(curProjection),
-	minOffset({ std::numeric_limits<double>::max(), std::numeric_limits<double>::max() }),
-	//max({ std::numeric_limits<double>::min(), std::numeric_limits<double>::min() }),
-	w(0), h(0),
-	wPadding(0), hPadding(0),
-	wAR(1), hAR(1),
-	stepLat(0.0_deg), stepLon(0.0_deg)
+template <typename Proj>
+ProjectionInfo<Proj>::ProjectionInfo(PROJECTION curProjection)
+	: IProjectionInfo(curProjection)		
 {
-}
-
-/// <summary>
-/// [Static] 
-/// Normalize lon to be [-180, 180]
-/// </summary>
-/// <param name="lonDeg"></param>
-/// <returns></returns>
-double IProjectionInfo::NormalizeLon(double lonDeg)
-{
-	return std::fmod(lonDeg + 540, 360) - 180;
-}
-
-/// <summary>
-/// [Static]
-/// Normalize lat to be [-90, 90]
-/// </summary>
-/// <param name="latDeg"></param>
-/// <returns></returns>
-double IProjectionInfo::NormalizeLat(double latDeg)
-{
-	return (latDeg > 90) ? (latDeg - 180) : latDeg;
-}
-
-/// <summary>
-/// [Static] 
-/// Compute AABB from coordinates 
-/// </summary>
-/// <param name="c">input coordinates</param>
-/// <param name="min">output AABB min</param>
-/// <param name="max">output AABB max</param>
-void IProjectionInfo::ComputeAABB(const std::vector<IProjectionInfo::Coordinate> & c,
-	IProjectionInfo::Coordinate & min, IProjectionInfo::Coordinate & max)
-{
-	min = c[0];
-	max = c[0];
-	for (size_t i = 1; i < c.size(); i++)
-	{
-		if (c[i].lat.rad() < min.lat.rad()) min.lat = c[i].lat;
-		if (c[i].lon.rad() < min.lon.rad()) min.lon = c[i].lon;
-
-
-		if (c[i].lat.rad() > max.lat.rad()) max.lat = c[i].lat;
-		if (c[i].lon.rad() > max.lon.rad()) max.lon = c[i].lon;
-
-	}
-
+	frame.minPixelOffset = { std::numeric_limits<double>::max(), std::numeric_limits<double>::max() };
+	frame.w = 0;
+	frame.h = 0;
+	frame.wPadding = 0;
+	frame.hPadding = 0;
+	frame.wAR = 1;
+	frame.hAR = 1;	
+	this->frame.projInvPrecomW = 0.0;
+	this->frame.projInvPrecomH = 0.0;
 }
 
 
-/// <summary>
-/// Set current data active frame based on existing projection
-/// </summary>
-/// <param name="proj">existing projection</param>
-/// <param name="keepAR">keep AR of data (default: true) 
-/// if yes, data are enlarged and not 1:1 to bounding box to keep AR
-/// </param>
-void IProjectionInfo::SetFrame(IProjectionInfo * proj, bool keepAR)
-{
-	IProjectionInfo::Coordinate cMin, cMax;
-	proj->ComputeAABB(cMin, cMax);
 
-	this->SetFrame(cMin, cMax, proj->GetFrameWidth(), proj->GetFrameHeight(), keepAR);
+template <typename Proj>
+void ProjectionInfo<Proj>::SetFrame(const ProjectionFrame & frame)
+{
+	this->frame.h = frame.h;
+	this->frame.w = frame.w;
+	this->frame.hAR = frame.hAR;
+	this->frame.wAR = frame.wAR;
+	this->frame.hPadding = frame.hPadding;
+	this->frame.wPadding = frame.wPadding;
+	this->frame.minPixelOffset = frame.minPixelOffset;	
+	this->frame.projInvPrecomW = frame.projInvPrecomW;
+	this->frame.projInvPrecomH = frame.projInvPrecomH;
 }
 
 
+
 /// <summary>
-/// Set current data active frame based on existing projection
+/// Set current data active frame based on AABB that si calculatef from set of points
 /// </summary>
-/// <param name="proj">existing projection</param>
+/// <param name="coord">set of GPS points</param>
 /// <param name="w">frame width</param>
 /// <param name="h">frame height</param>
 /// <param name="keepAR">keep AR of data (default: true) 
-/// if yes, data are enlarged and not 1:1 to bounding box to keep AR
+/// if yes, data are enlarged beyond AABB to keep AR
 /// </param>
-void IProjectionInfo::SetFrame(IProjectionInfo * proj,
+template <typename Proj>
+void ProjectionInfo<Proj>::SetFrame(std::vector<Coordinate> coord,
 	double w, double h, bool keepAR)
 {
-	IProjectionInfo::Coordinate cMin, cMax;
-	proj->ComputeAABB(cMin, cMax);
+	Coordinate minCoord = coord[0];
+	Coordinate maxCoord = coord[0];
+	
 
-	this->SetFrame(cMin, cMax, w, h, keepAR);
+	for (Coordinate & c : coord)
+	{
+		if (c.lat.rad() > maxCoord.lat.rad())
+		{
+			maxCoord.lat = c.lat;
+		}
+		if (c.lon.rad() > maxCoord.lon.rad())
+		{
+			maxCoord.lon = c.lon;
+		}
+
+
+		if (c.lat.rad() < minCoord.lat.rad())
+		{
+			minCoord.lat = c.lat;
+		}
+		if (c.lon.rad() < minCoord.lon.rad())
+		{
+			minCoord.lon = c.lon;
+		}
+	}
+
+	this->SetFrame(minCoord, maxCoord, w, h, keepAR);
 }
 
 /// <summary>
@@ -122,53 +102,57 @@ void IProjectionInfo::SetFrame(IProjectionInfo * proj,
 /// <param name="keepAR">keep AR of data (default: true) 
 /// if yes, data are enlarged beyond AABB to keep AR
 /// </param>
-void IProjectionInfo::SetFrame(Coordinate minCoord, Coordinate maxCoord, 
+template <typename Proj>
+void ProjectionInfo<Proj>::SetFrame(Coordinate minCoord, Coordinate maxCoord,
 	double w, double h, bool keepAR)
 {
 		
 	//calculate minimum internal projection value
-	ProjectedValue  min = { std::numeric_limits<double>::max(), std::numeric_limits<double>::max() };
+	ProjectedValue  minPixel = { std::numeric_limits<double>::max(), std::numeric_limits<double>::max() };
 	
-	ProjectedValue minPixel = this->ProjectInternal(minCoord);
-	ProjectedValue maxPixel = this->ProjectInternal(maxCoord);
+	ProjectedValue tmpMinPixel = static_cast<Proj*>(this)->ProjectInternal(minCoord);
+	ProjectedValue tmpMaxPixel = static_cast<Proj*>(this)->ProjectInternal(maxCoord);
 	
-	min.x = std::min(std::min(min.x, minPixel.x), maxPixel.x);
-	min.y = std::min(std::min(min.y, minPixel.y), maxPixel.y);
+	minPixel.x = std::min(tmpMinPixel.x, tmpMaxPixel.x);
+	minPixel.y = std::min(tmpMinPixel.y, tmpMaxPixel.y);
 
-	this->minOffset = min;
+	frame.minPixelOffset = minPixel;
 
 	//-----------------------------------------------------------
 	//calculate maximum internal projection value
 
 	//move origin to [0, 0]
-	minPixel.x = minPixel.x - min.x;
-	minPixel.y = minPixel.y - min.y;
+	tmpMinPixel.x = tmpMinPixel.x - minPixel.x;
+	tmpMinPixel.y = tmpMinPixel.y - minPixel.y;
 
 	//now, minPixel should be [0,0]
-	assert(minPixel.x == 0);
-	assert(minPixel.y == 0);
+	assert(tmpMinPixel.x == 0);
+	assert(tmpMinPixel.y == 0);
 
 	//move max accordingly
-	maxPixel.x = maxPixel.x - min.x;
-	maxPixel.y = maxPixel.y - min.y;
+	tmpMaxPixel.x = tmpMaxPixel.x - minPixel.x;
+	tmpMaxPixel.y = tmpMaxPixel.y - minPixel.y;
 
 	//calculate moved maximum
-	ProjectedValue max = { std::numeric_limits<double>::min(), std::numeric_limits<double>::min() };
+	ProjectedValue maxPixel = { std::numeric_limits<double>::min(), std::numeric_limits<double>::min() };
 
-	max.x = std::max(std::max(max.x, minPixel.x), maxPixel.x);
-	max.y = std::max(std::max(max.y, minPixel.y), maxPixel.y);
+	maxPixel.x = std::max(tmpMinPixel.x, tmpMaxPixel.x);
+	maxPixel.y = std::max(tmpMinPixel.y, tmpMaxPixel.y);
 
 	//----------------------------------------------------------
 	
-	this->w = w;
-	this->h = h;
+	this->frame.min = minCoord;
+	this->frame.max = maxCoord;
+
+	this->frame.w = w;
+	this->frame.h = h;
 
 	//calculate scale in width and height
-	this->wAR = this->w / max.x;
-	this->hAR = this->h / max.y;
+	this->frame.wAR = this->frame.w / maxPixel.x; //minPixel.x == 0 => no need to calc difference abs(min - max)
+	this->frame.hAR = this->frame.h / maxPixel.y; //minPixel.y == 0 => no need to calc difference abs(min - max)
 	
-	this->wPadding = 0;
-	this->hPadding = 0;
+	this->frame.wPadding = 0;
+	this->frame.hPadding = 0;
 
 	// Using different ratios for width and height will cause the map to be stretched,
 	// but fitting the desired region
@@ -176,29 +160,61 @@ void IProjectionInfo::SetFrame(Coordinate minCoord, Coordinate maxCoord,
 	// be the one, we have set. One dimmension will be changed to keep AR	
 	if (keepAR)
 	{
-		double globalAR = std::min(this->wAR, this->hAR);
-		this->wAR = globalAR;
-		this->hAR = globalAR;
+		double globalAR = std::min(this->frame.wAR, this->frame.hAR);
+		this->frame.wAR = globalAR;
+		this->frame.hAR = globalAR;
 
-		this->wPadding = (this->w - (this->wAR * max.x)) * 0.5;
-		this->hPadding = (this->h - (this->hAR * max.y)) * 0.5;
+		this->frame.wPadding = (this->frame.w - (this->frame.wAR * maxPixel.x)) * 0.5;
+		this->frame.hPadding = (this->frame.h - (this->frame.hAR * maxPixel.y)) * 0.5;
 	}
 	
+	this->frame.projInvPrecomW = -this->frame.wPadding + this->frame.wAR * this->frame.minPixelOffset.x;
+	this->frame.projInvPrecomH = -this->frame.h + this->frame.hPadding - this->frame.hAR * this->frame.minPixelOffset.y;
+}
+
+/// <summary>
+/// calculate how many "degrees" is for one "pixel" in lat / lon
+/// cordinates are boundaries of pixels :
+/// 
+/// Eg:
+/// Image is 2x2 px
+///    -180  +180
+///  +90 -------
+///      |  |  |
+///      -------
+///      |  |  |
+///  -90 -------
+/// Step latitude : (90 - (-90)) / 2 = 90
+/// Step longitude : (180 - (-180)) / 2 = 180
+/// </summary>
+/// <returns></returns>
+template <typename Proj>
+Coordinate ProjectionInfo<Proj>::CalcStep(STEP_TYPE type) const
+{
+	int dif = (type == STEP_TYPE::PIXEL_BORDER) ? 0 : 1;
 	
-	this->stepLat = GeoCoordinate::rad((maxCoord.lat.rad() - minCoord.lat.rad()) / h);
-	this->stepLon = GeoCoordinate::rad((maxCoord.lon.rad() - minCoord.lon.rad()) / w);
+	Coordinate step;
+	step.lat = GeoCoordinate::rad((this->frame.max.lat.rad() - this->frame.min.lat.rad()) / (this->frame.h - dif));
+	step.lon = GeoCoordinate::rad((this->frame.max.lon.rad() - this->frame.min.lon.rad()) / (this->frame.w - dif));
+
+	return step;
 }
 
 /// <summary>
 /// Get projection top left corner
 /// </summary>
 /// <returns></returns>
-IProjectionInfo::Coordinate IProjectionInfo::GetTopLeftCorner() const
+template <typename Proj>
+Coordinate ProjectionInfo<Proj>::GetTopLeftCorner() const
 {
 	return this->ProjectInverse({ 0, 0 });
 }
 
-
+template <typename Proj>
+const ProjectionFrame & ProjectionInfo<Proj>::GetFrame() const
+{
+	return this->frame;
+}
 
 /// <summary>
 /// Calculate end point based on shortest path (on real earth surface)
@@ -208,11 +224,12 @@ IProjectionInfo::Coordinate IProjectionInfo::GetTopLeftCorner() const
 /// <param name="bearing"></param>
 /// <param name="dist"></param>
 /// <returns></returns>
-IProjectionInfo::Coordinate IProjectionInfo::CalcEndPointShortest(IProjectionInfo::Coordinate start,
+template <typename Proj>
+Coordinate ProjectionInfo<Proj>::CalcEndPointShortest(Coordinate start,
 	Angle bearing, double dist) const
 {
 	
-	double dr = dist / EARTH_RADIUS;
+    double dr = dist / ProjectionConstants::EARTH_RADIUS;
 	
 	double sinLat = std::sin(start.lat.rad());
 	double cosLat = std::cos(start.lat.rad());
@@ -228,9 +245,9 @@ IProjectionInfo::Coordinate IProjectionInfo::CalcEndPointShortest(IProjectionInf
 	double endLon = start.lon.rad() + std::atan2(y, x);
 
 	
-	IProjectionInfo::Coordinate end;
+	Coordinate end;
 	end.lat = GeoCoordinate::rad(endLat);
-	end.lon = GeoCoordinate::deg(NormalizeLon(radToDeg(endLon)));
+    end.lon = GeoCoordinate::deg(ProjectionUtils::NormalizeLon(ProjectionUtils::radToDeg(endLon)));
 
 	return end;
 
@@ -244,20 +261,20 @@ IProjectionInfo::Coordinate IProjectionInfo::CalcEndPointShortest(IProjectionInf
 /// <param name="bearing"></param>
 /// <param name="dist"></param>
 /// <returns></returns>
-IProjectionInfo::Coordinate IProjectionInfo::CalcEndPointDirect(
-	IProjectionInfo::Coordinate start,
-	Angle bearing, double dist) const
+template <typename Proj>
+Coordinate ProjectionInfo<Proj>::CalcEndPointDirect(
+	Coordinate start, Angle bearing, double dist) const
 {	
-	double dr = dist / EARTH_RADIUS;
+	double dr = dist / ProjectionConstants::EARTH_RADIUS;
 
 	double difDr = dr * std::cos(bearing.rad());
 	double endLat = start.lat.rad() + difDr;
 
 	// check for some daft bugger going past the pole, normalise latitude if so
-	if (std::abs(endLat) > PI_2) endLat = endLat > 0 ? PI - endLat : -PI - endLat;
+	if (std::abs(endLat) > ProjectionConstants::PI_2) endLat = endLat > 0 ? ProjectionConstants::PI - endLat : -ProjectionConstants::PI - endLat;
 
 
-	double projLatDif = std::log(std::tan(endLat / 2 + PI_4) / std::tan(start.lat.rad() / 2 + PI_4));
+	double projLatDif = std::log(std::tan(endLat / 2 + ProjectionConstants::PI_4) / std::tan(start.lat.rad() / 2 + ProjectionConstants::PI_4));
 	double q = std::abs(projLatDif) > 10e-12 ? difDr / projLatDif : std::cos(start.lat.rad()); // E-W course becomes ill-conditioned with 0/0
 
 	double difDrQ = dr * std::sin(bearing.rad()) / q;
@@ -265,9 +282,9 @@ IProjectionInfo::Coordinate IProjectionInfo::CalcEndPointDirect(
 
 	
 
-	IProjectionInfo::Coordinate end;
+	Coordinate end;
 	end.lat = GeoCoordinate::rad(endLat);
-	end.lon = GeoCoordinate::deg(NormalizeLon(radToDeg(endLon)));
+	end.lon = GeoCoordinate::deg(ProjectionUtils::NormalizeLon(ProjectionUtils::radToDeg(endLon)));
 
 	return end;
 }
@@ -278,7 +295,8 @@ IProjectionInfo::Coordinate IProjectionInfo::CalcEndPointDirect(
 /// <param name="start"></param>
 /// <param name="end"></param>
 /// <param name="callback"></param>
-void IProjectionInfo::LineBresenham(Pixel<int> start, Pixel<int> end,
+template <typename Proj>
+void ProjectionInfo<Proj>::LineBresenham(Pixel<int> start, Pixel<int> end,
 	std::function<void(int x, int y)> callback) const
 {
 	if ((start.x >= static_cast<int>(this->GetFrameWidth()))
@@ -338,42 +356,7 @@ void IProjectionInfo::LineBresenham(Pixel<int> start, Pixel<int> end,
 	}
 }
 
-/// <summary>
-/// Re-project data from -> to
-/// Calculates mapping: toData[index] = fromData[reprojection[index]]
-/// </summary>
-/// <param name="imProj"></param>
-/// <returns></returns>
-IProjectionInfo::Reprojection IProjectionInfo::CreateReprojection(IProjectionInfo * from, IProjectionInfo * to)
-{
-	Reprojection reprojection;
-	reprojection.pixels.resize(to->GetFrameHeight() * to->GetFrameWidth(), { -1, -1 });
 
-	for (int y = 0; y < to->GetFrameHeight(); y++)
-	{
-		for (int x = 0; x < to->GetFrameWidth(); x++)
-		{
-
-			IProjectionInfo::Coordinate cc = to->ProjectInverse({ x,y });
-			IProjectionInfo::Pixel<int> p = from->Project<int>(cc);
-
-			if (p.x < 0) continue;
-			if (p.y < 0) continue;
-			if (p.x >= from->GetFrameWidth()) continue;
-			if (p.y >= from->GetFrameHeight()) continue;
-
-			reprojection.pixels[x + y * to->GetFrameWidth()] = p;
-
-		}
-	}
-
-	reprojection.inW = from->GetFrameWidth();
-	reprojection.inH = from->GetFrameHeight();
-	reprojection.outW = to->GetFrameWidth();
-	reprojection.outH = to->GetFrameHeight();
-
-	return reprojection;
-}
 
 /// <summary>
 /// Compute AABB for current active frame
@@ -382,90 +365,45 @@ IProjectionInfo::Reprojection IProjectionInfo::CreateReprojection(IProjectionInf
 /// </summary>
 /// <param name="min"></param>
 /// <param name="max"></param>
-void IProjectionInfo::ComputeAABB(IProjectionInfo::Coordinate & min, IProjectionInfo::Coordinate & max) const
+template <typename Proj>
+void ProjectionInfo<Proj>::ComputeAABB(Coordinate & min, Coordinate & max) const
 {
-	int ww = static_cast<int>(this->w - 1);
-	int hh = static_cast<int>(this->h - 1);
+	int ww = static_cast<int>(this->frame.w - 1);
+	int hh = static_cast<int>(this->frame.h - 1);
 
-	std::vector<IProjectionInfo::Coordinate> border;
+	std::vector<Coordinate> border;
 	this->LineBresenham({ 0,0 }, { 0, hh },
 		[&](int x, int y) -> void {
-		IProjectionInfo::Coordinate c = this->ProjectInverse({ x, y });
+		Coordinate c = this->ProjectInverse({ x, y });
 		border.push_back(c);
 	});
 	this->LineBresenham({ 0,0 }, { ww, 0 },
 		[&](int x, int y) -> void {
-		IProjectionInfo::Coordinate c = this->ProjectInverse({ x, y });
+		Coordinate c = this->ProjectInverse({ x, y });
 		border.push_back(c);
 	});
 	this->LineBresenham({ ww, hh }, { 0, hh },
 		[&](int x, int y) -> void {
-		IProjectionInfo::Coordinate c = this->ProjectInverse({ x, y });
+		Coordinate c = this->ProjectInverse({ x, y });
 		border.push_back(c);
 	});
 	this->LineBresenham({ ww, hh }, { 0, hh },
 		[&](int x, int y) -> void {
-		IProjectionInfo::Coordinate c = this->ProjectInverse({ x, y });
+		Coordinate c = this->ProjectInverse({ x, y });
 		border.push_back(c);
 	});
 
 	
-	IProjectionInfo::ComputeAABB(border, min, max);
+	ProjectionUtils::ComputeAABB(border, min, max);
 }
 
 
 
-IProjectionInfo::Reprojection IProjectionInfo::Reprojection::CreateFromFile(const std::string & fileName)
-{
-	Reprojection r;
-	r.inH = 0;
-	r.inW = 0;
-	r.outW = 0;
-	r.outH = 0;
 
-	FILE *f = nullptr;  //pointer to file we will read in
-	f = fopen(fileName.c_str(), "rb");
-	if (f == nullptr)
-	{
-		printf("Failed to open file: \"%s\"\n", fileName.c_str());
-		return r;
-	}
+//=====
 
-	fseek(f, 0L, SEEK_END);
-	long size = ftell(f);
-	fseek(f, 0L, SEEK_SET);
-
-	long dataSize = size - 4 * sizeof(int);
-
-	fread(&(r.inW), sizeof(int), 1, f);
-	fread(&(r.inH), sizeof(int), 1, f);
-	fread(&(r.outW), sizeof(int), 1, f);
-	fread(&(r.outH), sizeof(int), 1, f);
-
-	r.pixels.resize(dataSize / sizeof(IProjectionInfo::Pixel<int>));
-	fread(&r.pixels[0], sizeof(IProjectionInfo::Pixel<int>), r.pixels.size(), f);
-
-	fclose(f);	
-
-	return r;
-}
-
-void IProjectionInfo::Reprojection::SaveToFile(const std::string & fileName)
-{
-	FILE * f = nullptr;
-	//my_fopen(&f, fileName.GetConstString(), "wb");
-	f = fopen(fileName.c_str(), "wb");
-
-	if (f == nullptr)
-	{
-		printf("Failed to open file %s (%s)", fileName.c_str(), strerror(errno));
-		return;
-	}
-	fwrite(&this->inW, sizeof(int), 1, f);
-	fwrite(&this->inH, sizeof(int), 1, f);
-	fwrite(&this->outW, sizeof(int), 1, f);
-	fwrite(&this->outH, sizeof(int), 1, f);
-	fwrite(this->pixels.data(), sizeof(IProjectionInfo::Pixel<int>), this->pixels.size(), f);
-	fclose(f);
-
-}
+template class Projections::ProjectionInfo<LambertConic>;
+template class Projections::ProjectionInfo<Mercator>;
+template class Projections::ProjectionInfo<Miller>;
+template class Projections::ProjectionInfo<Equirectangular>;
+template class Projections::ProjectionInfo<PolarSteregographic>;

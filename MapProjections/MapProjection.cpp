@@ -19,8 +19,7 @@ using namespace Projections;
 
 template <typename Proj>
 ProjectionInfo<Proj>::ProjectionInfo(PROJECTION curProjection)
-	: IProjectionInfo(curProjection)	
-	//max({ std::numeric_limits<double>::min(), std::numeric_limits<double>::min() }),
+	: IProjectionInfo(curProjection)		
 {
 	frame.minPixelOffset = { std::numeric_limits<double>::max(), std::numeric_limits<double>::max() };
 	frame.w = 0;

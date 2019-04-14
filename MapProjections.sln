@@ -1,28 +1,43 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 14
-VisualStudioVersion = 14.0.25420.1
+# Visual Studio 15
+VisualStudioVersion = 15.0.28307.438
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MapProjections", "MapProjections\MapProjections.vcxproj", "{84F93B60-9E01-4792-B74B-81AFE8FC88BF}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
-		Debug|x64 = Debug|x64
-		Debug|x86 = Debug|x86
-		Release|x64 = Release|x64
-		Release|x86 = Release|x86
+		Debug_lib|x64 = Debug_lib|x64
+		Debug_lib|x86 = Debug_lib|x86
+		Debug_test|x64 = Debug_test|x64
+		Debug_test|x86 = Debug_test|x86
+		Release_lib|x64 = Release_lib|x64
+		Release_lib|x86 = Release_lib|x86
+		Release_test|x64 = Release_test|x64
+		Release_test|x86 = Release_test|x86
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{84F93B60-9E01-4792-B74B-81AFE8FC88BF}.Debug|x64.ActiveCfg = Debug|x64
-		{84F93B60-9E01-4792-B74B-81AFE8FC88BF}.Debug|x64.Build.0 = Debug|x64
-		{84F93B60-9E01-4792-B74B-81AFE8FC88BF}.Debug|x86.ActiveCfg = Debug|Win32
-		{84F93B60-9E01-4792-B74B-81AFE8FC88BF}.Debug|x86.Build.0 = Debug|Win32
-		{84F93B60-9E01-4792-B74B-81AFE8FC88BF}.Release|x64.ActiveCfg = Release|x64
-		{84F93B60-9E01-4792-B74B-81AFE8FC88BF}.Release|x64.Build.0 = Release|x64
-		{84F93B60-9E01-4792-B74B-81AFE8FC88BF}.Release|x86.ActiveCfg = Release|Win32
-		{84F93B60-9E01-4792-B74B-81AFE8FC88BF}.Release|x86.Build.0 = Release|Win32
+		{84F93B60-9E01-4792-B74B-81AFE8FC88BF}.Debug_lib|x64.ActiveCfg = Debug_lib|x64
+		{84F93B60-9E01-4792-B74B-81AFE8FC88BF}.Debug_lib|x64.Build.0 = Debug_lib|x64
+		{84F93B60-9E01-4792-B74B-81AFE8FC88BF}.Debug_lib|x86.ActiveCfg = Debug_lib|Win32
+		{84F93B60-9E01-4792-B74B-81AFE8FC88BF}.Debug_lib|x86.Build.0 = Debug_lib|Win32
+		{84F93B60-9E01-4792-B74B-81AFE8FC88BF}.Debug_test|x64.ActiveCfg = Debug_test|x64
+		{84F93B60-9E01-4792-B74B-81AFE8FC88BF}.Debug_test|x64.Build.0 = Debug_test|x64
+		{84F93B60-9E01-4792-B74B-81AFE8FC88BF}.Debug_test|x86.ActiveCfg = Debug_test|Win32
+		{84F93B60-9E01-4792-B74B-81AFE8FC88BF}.Debug_test|x86.Build.0 = Debug_test|Win32
+		{84F93B60-9E01-4792-B74B-81AFE8FC88BF}.Release_lib|x64.ActiveCfg = Release_lib|x64
+		{84F93B60-9E01-4792-B74B-81AFE8FC88BF}.Release_lib|x64.Build.0 = Release_lib|x64
+		{84F93B60-9E01-4792-B74B-81AFE8FC88BF}.Release_lib|x86.ActiveCfg = Release_lib|Win32
+		{84F93B60-9E01-4792-B74B-81AFE8FC88BF}.Release_lib|x86.Build.0 = Release_lib|Win32
+		{84F93B60-9E01-4792-B74B-81AFE8FC88BF}.Release_test|x64.ActiveCfg = Release_test|x64
+		{84F93B60-9E01-4792-B74B-81AFE8FC88BF}.Release_test|x64.Build.0 = Release_test|x64
+		{84F93B60-9E01-4792-B74B-81AFE8FC88BF}.Release_test|x86.ActiveCfg = Release_test|Win32
+		{84F93B60-9E01-4792-B74B-81AFE8FC88BF}.Release_test|x86.Build.0 = Release_test|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {ADF509C7-061C-4734-8D48-FF33C2568B69}
 	EndGlobalSection
 EndGlobal

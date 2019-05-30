@@ -194,8 +194,8 @@ Coordinate ProjectionInfo<Proj>::CalcStep(STEP_TYPE type) const
 	int dif = (type == STEP_TYPE::PIXEL_BORDER) ? 0 : 1;
 	
 	Coordinate step;
-	step.lat = GeoCoordinate::rad((this->frame.max.lat.rad() - this->frame.min.lat.rad()) / (this->frame.h - dif));
-	step.lon = GeoCoordinate::rad((this->frame.max.lon.rad() - this->frame.min.lon.rad()) / (this->frame.w - dif));
+	step.lat = Latitude::rad((this->frame.max.lat.rad() - this->frame.min.lat.rad()) / (this->frame.h - dif));
+	step.lon = Longitude::rad((this->frame.max.lon.rad() - this->frame.min.lon.rad()) / (this->frame.w - dif));
 
 	return step;
 }
@@ -246,8 +246,8 @@ Coordinate ProjectionInfo<Proj>::CalcEndPointShortest(Coordinate start,
 
 	
 	Coordinate end;
-	end.lat = GeoCoordinate::rad(endLat);
-    end.lon = GeoCoordinate::deg(ProjectionUtils::NormalizeLon(ProjectionUtils::radToDeg(endLon)));
+	end.lat = Latitude::rad(endLat);
+    end.lon = Longitude::deg(ProjectionUtils::NormalizeLon(ProjectionUtils::radToDeg(endLon)));
 
 	return end;
 
@@ -283,8 +283,8 @@ Coordinate ProjectionInfo<Proj>::CalcEndPointDirect(
 	
 
 	Coordinate end;
-	end.lat = GeoCoordinate::rad(endLat);
-	end.lon = GeoCoordinate::deg(ProjectionUtils::NormalizeLon(ProjectionUtils::radToDeg(endLon)));
+	end.lat = Latitude::rad(endLat);
+	end.lon = Longitude::deg(ProjectionUtils::NormalizeLon(ProjectionUtils::radToDeg(endLon)));
 
 	return end;
 }

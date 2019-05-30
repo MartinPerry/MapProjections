@@ -84,8 +84,8 @@ namespace Projections
 
 		struct ProjectedValueInverse
 		{
-			GeoCoordinate lat;
-			GeoCoordinate lon;
+			Latitude lat;
+			Longitude lon;
 		};
 		
 
@@ -218,8 +218,8 @@ namespace Projections
 		Coordinate c;
 		if (Normalize)
 		{
-			c.lat = GeoCoordinate::deg(ProjectionUtils::NormalizeLat(pi.lat.deg()));
-			c.lon = GeoCoordinate::deg(ProjectionUtils::NormalizeLon(pi.lon.deg()));
+			c.lat = Latitude::deg(ProjectionUtils::NormalizeLat(pi.lat.deg()));
+			c.lon = Longitude::deg(ProjectionUtils::NormalizeLon(pi.lon.deg()));
 		}
 		else
 		{

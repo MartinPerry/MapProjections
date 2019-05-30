@@ -174,8 +174,8 @@ void ProjectionRenderer::AddBorders(const char * fileName, int useEveryNthPoint)
 
 
 			Coordinate point;
-			point.lon = GeoCoordinate::deg(atof(line[0].c_str()));
-			point.lat = GeoCoordinate::deg(atof(line[1].c_str()));
+			point.lon = Longitude::deg(atof(line[0].c_str()));
+			point.lat = Latitude::deg(atof(line[1].c_str()));
 			this->debugBorder[key].push_back(point);
 
 			tmp++;
@@ -226,12 +226,12 @@ void ProjectionRenderer::DrawParalells()
 		for (double lon = -180; lon <= 180 - lonStep; lon += lonStep)
 		{
 			Coordinate p;
-			p.lat = GeoCoordinate::deg(lat);
-			p.lon = GeoCoordinate::deg(lon);
+			p.lat = Latitude::deg(lat);
+			p.lon = Longitude::deg(lon);
 
 			Coordinate p1;
-			p1.lat = GeoCoordinate::deg(lat);
-			p1.lon = GeoCoordinate::deg(lon + lonStep);
+			p1.lat = Latitude::deg(lat);
+			p1.lon = Longitude::deg(lon + lonStep);
 			
 			Pixel<int> pp1 = this->projectCallback(p);
 			Pixel<int> pp2 = this->projectCallback(p1);
@@ -263,8 +263,8 @@ void ProjectionRenderer::DrawLine(Coordinate start, Coordinate end, int stepCoun
 	for (int i = 0; i < stepCount; i++)
 	{
 		Coordinate p1 = p;
-		p1.lat = GeoCoordinate::rad(p1.lat.rad() + latStep);
-		p1.lon = GeoCoordinate::rad(p1.lon.rad() + lonStep);
+		p1.lat = Latitude::rad(p1.lat.rad() + latStep);
+		p1.lon = Longitude::rad(p1.lon.rad() + lonStep);
 
 		Pixel<int> pp1 = this->projectCallback(p);
 		Pixel<int> pp2 = this->projectCallback(p1);

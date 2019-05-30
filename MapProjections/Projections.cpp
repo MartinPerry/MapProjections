@@ -10,8 +10,7 @@ using namespace Projections;
 // https://en.wikipedia.org/wiki/Lambert_conformal_conic_projection (see only one standard parallel)
 //=======================================================================
 
-LambertConic::LambertConic(GeoCoordinate latProjOrigin, GeoCoordinate lonCentMeridian,
-	GeoCoordinate stanParallel)
+LambertConic::LambertConic(Latitude latProjOrigin, Longitude lonCentMeridian, Latitude stanParallel)
 	: ProjectionInfo(PROJECTION::LAMBERT_CONIC),
 	latProjectionOrigin(latProjOrigin),
 	lonCentralMeridian(lonCentMeridian),
@@ -82,7 +81,7 @@ Equirectangular::Equirectangular()
 
 }
 
-Equirectangular::Equirectangular(GeoCoordinate lonCentralMeridian)
+Equirectangular::Equirectangular(Longitude lonCentralMeridian)
 	: ProjectionInfo(PROJECTION::EQUIRECTANGULAR),
 	lonCentralMeridian(lonCentralMeridian),
 	standardParallel(0.0_deg),
@@ -108,7 +107,7 @@ PolarSteregographic::PolarSteregographic()
 
 }
 
-PolarSteregographic::PolarSteregographic(GeoCoordinate lonCentralMeridian, GeoCoordinate latCentral)
+PolarSteregographic::PolarSteregographic(Longitude lonCentralMeridian, Latitude latCentral)
 	: ProjectionInfo(PROJECTION::POLAR_STEREOGRAPHICS),
 	lonCentralMeridian(lonCentralMeridian), latCentral(latCentral)
 {

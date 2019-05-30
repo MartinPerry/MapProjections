@@ -40,11 +40,11 @@ namespace Projections
 		struct Pixel { PixelType x; PixelType y; };
 
 	struct Coordinate {		
-		GeoCoordinate lon;
-		GeoCoordinate lat;
+		Longitude lon;
+		Latitude lat;
 
 		Coordinate() {};
-		Coordinate(GeoCoordinate lon, GeoCoordinate lat) : lon(lon), lat(lat) {};
+		Coordinate(Longitude lon, Latitude lat) : lon(lon), lat(lat) {};
 	};
 
 	struct Reprojection {

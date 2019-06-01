@@ -4,32 +4,22 @@
 template <typename T>
 struct IAngle
 {
-	IAngle() : valRad(0) {};
-	static T deg(double val) { return T(val * 0.0174532925); };
-	static T rad(double val) { return T(val); };
+	IAngle() : valRad(0), valDeg(0) {};
+	static T deg(double val) { return T(val, val * 0.0174532925); };
+	static T rad(double val) { return T(val * 57.2957795, val); };
+	
+	inline double deg() const { return valDeg; };
+	inline double rad() const { return valRad; };
 
-	inline double deg() const
-	{
-		return valRad * 57.2957795;
-	}
-
-	inline double rad() const
-	{
-		return valRad;
-	}
-
-
-	inline T operator -()
-	{
-		return T(-valRad);
-	};
-
+	inline T operator -() { return T(-valRad, -valDeg); };
 
 protected:
-	IAngle(double val) : valRad(val) {};	
+	IAngle(double valRad, double valDeg) : valRad(valRad), valDeg(valDeg) {};
 	double valRad;
+	double valDeg;
 
 };
+
 
 struct Angle : public IAngle<Angle>
 {
@@ -38,27 +28,27 @@ struct Angle : public IAngle<Angle>
 	friend struct IAngle<Angle>;
 
 protected:
-	Angle(double val) : IAngle(val) {};
+	Angle(double valRad, double valDeg) : IAngle(valRad, valDeg) {};
 };
 
 struct Latitude : public IAngle<Latitude>
 {
 	Latitude() : IAngle() {};
-	Latitude(const Angle & a) : IAngle(a.rad()) {};
+	Latitude(const Angle & a) : IAngle(a.rad(), a.deg()) {};
 
 	friend struct IAngle<Latitude>;
 protected:
-	Latitude(double val) : IAngle(val) {};
+	Latitude(double valRad, double valDeg) : IAngle(valRad, valDeg) {};
 };
 
 struct Longitude : public IAngle<Longitude>
 {
 	Longitude() : IAngle() {};
-	Longitude(const Angle & a) : IAngle(a.rad()) {};
+	Longitude(const Angle & a) : IAngle(a.rad(), a.deg()) {};
 
 	friend struct IAngle<Longitude>;
 protected:
-	Longitude(double val) : IAngle(val) {};
+	Longitude(double valRad, double valDeg) : IAngle(valRad, valDeg) {};
 };
 
 

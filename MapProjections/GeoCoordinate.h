@@ -5,8 +5,8 @@ template <typename T>
 struct IAngle
 {
 	IAngle() : valRad(0), valDeg(0) {};
-	static T deg(double val) { return T(val, val * 0.0174532925); };
-	static T rad(double val) { return T(val * 57.2957795, val); };
+	static T deg(double val) { return T(val * 0.0174532925, val); };
+	static T rad(double val) { return T(val, val * 57.2957795); };
 	
 	inline double deg() const { return valDeg; };
 	inline double rad() const { return valRad; };

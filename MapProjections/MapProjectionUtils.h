@@ -126,6 +126,17 @@ namespace Projections
 			double c = 2 * std::atan2(std::sqrt(a), std::sqrt(1 - a));
 			double d = 6367 * c;
 
+			if (dlong >= 3.14159265358979323846)
+			{
+				//we are going over 0deg meridian
+				//distance meaby wrapped around the word - shortest path
+
+				//split computation to [-lon, 0] & [0, lon]
+				//which basically mean, subtract equator length => 40075km
+
+				d = 40075.0 - d;
+			}
+
 			return d;
 		};
         

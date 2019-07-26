@@ -1,22 +1,24 @@
 #ifndef GEOCORDINATE_H
 #define GEOCORDINATE_H
 
+typedef float MyRealType;
+
 template <typename T>
 struct IAngle
 {
 	IAngle() : valRad(0), valDeg(0) {};
-	static T deg(double val) { return T(val * 0.0174532925, val); };
-	static T rad(double val) { return T(val, val * 57.2957795); };
+	static T deg(MyRealType val) { return T(val * 0.0174532925, val); };
+	static T rad(MyRealType val) { return T(val, val * 57.2957795); };
 	
-	inline double deg() const { return valDeg; };
-	inline double rad() const { return valRad; };
+	inline MyRealType deg() const { return valDeg; };
+	inline MyRealType rad() const { return valRad; };
 
 	inline T operator -() { return T(-valRad, -valDeg); };
 
 protected:
-	IAngle(double valRad, double valDeg) : valRad(valRad), valDeg(valDeg) {};
-	double valRad;
-	double valDeg;
+	IAngle(MyRealType valRad, MyRealType valDeg) : valRad(valRad), valDeg(valDeg) {};
+	MyRealType valRad;
+	MyRealType valDeg;
 
 };
 
@@ -28,7 +30,7 @@ struct Angle : public IAngle<Angle>
 	friend struct IAngle<Angle>;
 
 protected:
-	Angle(double valRad, double valDeg) : IAngle(valRad, valDeg) {};
+	Angle(MyRealType valRad, MyRealType valDeg) : IAngle(valRad, valDeg) {};
 };
 
 struct Latitude : public IAngle<Latitude>
@@ -38,7 +40,7 @@ struct Latitude : public IAngle<Latitude>
 
 	friend struct IAngle<Latitude>;
 protected:
-	Latitude(double valRad, double valDeg) : IAngle(valRad, valDeg) {};
+	Latitude(MyRealType valRad, MyRealType valDeg) : IAngle(valRad, valDeg) {};
 };
 
 struct Longitude : public IAngle<Longitude>
@@ -48,7 +50,7 @@ struct Longitude : public IAngle<Longitude>
 
 	friend struct IAngle<Longitude>;
 protected:
-	Longitude(double valRad, double valDeg) : IAngle(valRad, valDeg) {};
+	Longitude(MyRealType valRad, MyRealType valDeg) : IAngle(valRad, valDeg) {};
 };
 
 

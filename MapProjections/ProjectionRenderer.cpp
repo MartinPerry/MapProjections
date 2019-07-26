@@ -383,7 +383,7 @@ void ProjectionRenderer::SetPixel(const Pixel<int> & p, uint8_t val)
 /// <param name="x"></param>
 /// <param name="y"></param>
 /// <returns></returns>
-int ProjectionRenderer::ComputeOutCode(double x, double y)
+int ProjectionRenderer::ComputeOutCode(MyRealType x, MyRealType y)
 {
 	int code = INSIDE;
 
@@ -403,18 +403,18 @@ int ProjectionRenderer::ComputeOutCode(double x, double y)
 /// <param name="y0"></param>
 /// <param name="x1"></param>
 /// <param name="y1"></param>
-void ProjectionRenderer::CohenSutherlandLineClipAndDraw(double x0, double y0, double x1, double y1)
+void ProjectionRenderer::CohenSutherlandLineClipAndDraw(MyRealType x0, MyRealType y0, MyRealType x1, MyRealType y1)
 {
 	// compute outcodes for P0, P1, and whatever point lies outside the clip rectangle
 	int outcode0 = ComputeOutCode(x0, y0);
 	int outcode1 = ComputeOutCode(x1, y1);
 	bool accept = false;
 
-	double xmin = 0;
-	double xmax = static_cast<int>(frame.w) - 1;
+	MyRealType xmin = 0;
+	MyRealType xmax = static_cast<int>(frame.w) - 1;
 
-	double ymin = 0;
-	double ymax = static_cast<int>(frame.h) - 1;
+	MyRealType ymin = 0;
+	MyRealType ymax = static_cast<int>(frame.h) - 1;
 
 	while (true) {
 		if (!(outcode0 | outcode1)) { // Bitwise OR is 0. Trivially accept and get out of loop
@@ -427,8 +427,8 @@ void ProjectionRenderer::CohenSutherlandLineClipAndDraw(double x0, double y0, do
 		else {
 			// failed both tests, so calculate the line segment to clip
 			// from an outside point to an intersection with clip edge
-			double x = 0;
-			double y = 0;
+			MyRealType x = 0;
+			MyRealType y = 0;
 
 			// At least one endpoint is outside the clip rectangle; pick it.
 			int outcodeOut = outcode0 ? outcode0 : outcode1;

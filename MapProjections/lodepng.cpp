@@ -5285,6 +5285,7 @@ static unsigned getPaletteTranslucency(const unsigned char* palette, size_t pale
 {
   size_t i, key = 0;
   unsigned r, g, b; /*the value of the color with alpha 0, so long as color keying is possible*/
+    r = g = b = 0;
   for(i = 0; i < palettesize; i++)
   {
     if(!key && palette[4 * i + 3] == 0)

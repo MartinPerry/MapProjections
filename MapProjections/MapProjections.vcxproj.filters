@@ -13,15 +13,12 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Header Files\SIMD">
+      <UniqueIdentifier>{34c5c28a-f0a7-405a-b65f-5c8b39162eab}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="MapProjection.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="lodepng.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Projections.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="ProjectionRenderer.cpp">
@@ -33,11 +30,11 @@
     <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ProjectionInfo.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="MapProjection.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="lodepng.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -57,6 +54,24 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="IProjectionInfo.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="simd\avx_math_float.h">
+      <Filter>Header Files\SIMD</Filter>
+    </ClInclude>
+    <ClInclude Include="simd\MapProjectionStructures_simd.h">
+      <Filter>Header Files\SIMD</Filter>
+    </ClInclude>
+    <ClInclude Include="simd\MapProjectionUtils_simd.h">
+      <Filter>Header Files\SIMD</Filter>
+    </ClInclude>
+    <ClInclude Include="simd\ProjectionInfo_simd.h">
+      <Filter>Header Files\SIMD</Filter>
+    </ClInclude>
+    <ClInclude Include="simd\Projections_simd.h">
+      <Filter>Header Files\SIMD</Filter>
+    </ClInclude>
+    <ClInclude Include="ProjectionInfo.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

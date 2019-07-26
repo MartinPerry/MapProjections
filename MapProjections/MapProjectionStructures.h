@@ -1,5 +1,5 @@
-#ifndef _MAP_PROJECTION_STRUCTURES_H_
-#define _MAP_PROJECTION_STRUCTURES_H_
+#ifndef MAP_PROJECTION_STRUCTURES_H
+#define MAP_PROJECTION_STRUCTURES_H
 
 
 #include <vector>
@@ -20,7 +20,8 @@
 namespace Projections
 {
 
-	typedef enum PROJECTION {
+	typedef enum PROJECTION
+    {
 		MERCATOR = 0,
 		LAMBERT_CONIC = 1,
 		EQUIRECTANGULAR = 2,
@@ -29,17 +30,23 @@ namespace Projections
         MILLER = 5
 	} PROJECTION;
 
-	typedef enum STEP_TYPE {
+	typedef enum STEP_TYPE
+    {
 		PIXEL_CENTER = 0,
 		PIXEL_BORDER = 1
 
 	} STEP_TYPE;
 
 	template <typename PixelType = int,
-		typename = typename std::enable_if<std::is_arithmetic<PixelType>::value, PixelType>::type>
-		struct Pixel { PixelType x; PixelType y; };
+    typename = typename std::enable_if<std::is_arithmetic<PixelType>::value, PixelType>::type>
+    struct Pixel
+    {
+        PixelType x;
+        PixelType y;
+    };
 
-	struct Coordinate {		
+	struct Coordinate
+    {
 		Longitude lon;
 		Latitude lat;
 
@@ -47,7 +54,8 @@ namespace Projections
 		Coordinate(Longitude lon, Latitude lat) : lon(lon), lat(lat) {};
 	};
 
-	struct Reprojection {
+	struct Reprojection
+    {
 		int inW;
 		int inH;
 		int outW;
@@ -59,38 +67,33 @@ namespace Projections
 
 	};
 
-	struct ProjectedValue
-	{
-		double x;
-		double y;
-	};
-
 	struct ProjectionFrame
 	{
 		Coordinate min;
 		Coordinate max;
 
-		ProjectedValue minPixelOffset; //offset to move min corner to [0,0] and other corners accordingly
+		MyRealType minPixelOffsetX; //offset to move min corner to [0,0] and other corners accordingly
+        MyRealType minPixelOffsetY;
+        
+		MyRealType w; //current frame width
+		MyRealType h; //current frame height
 
-		double w; //current frame width
-		double h; //current frame height
+		MyRealType wPadding;
+		MyRealType hPadding;
+		MyRealType wAR; //width AR
+		MyRealType hAR; //height AR
 
-		double wPadding;
-		double hPadding;
-		double wAR; //width AR
-		double hAR; //height AR
-
-		double projInvPrecomW;
-		double projInvPrecomH;
+		MyRealType projInvPrecomW;
+		MyRealType projInvPrecomH;
 	};
 
     struct ProjectionConstants
     {
-        static const double PI;
-        static const double PI_4;
-        static const double PI_2;
-        static const double E;
-        static const double EARTH_RADIUS;
+        static const MyRealType PI;
+        static const MyRealType PI_4;
+        static const MyRealType PI_2;
+        static const MyRealType E;
+        static const MyRealType EARTH_RADIUS;
     };
     
 };

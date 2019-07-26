@@ -1,34 +1,17 @@
-#ifndef _MAP_PROJECTION_UTILS_H_
-#define _MAP_PROJECTION_UTILS_H_
-
-
-namespace Projections
-{
-	class IProjectionInfo;
-}
+#ifndef MAP_PROJECTION_UTILS_H
+#define MAP_PROJECTION_UTILS_H
 
 #include <vector>
 
 
 #include "./MapProjectionStructures.h"
-#include "./MapProjection.h"
+#include "./ProjectionInfo.h"
 
 namespace Projections
 {
 
 	struct ProjectionUtils
 	{
-		
-		static Reprojection CreateReprojection(IProjectionInfo * from, IProjectionInfo * to)
-		{	
-			//dynamic_cast<typeid(Mercator) *>(from);
-
-			//TO DO !!!!!!
-        
-			
-			Reprojection reprojection;
-			return reprojection;
-		};
 		
 		/// <summary>
 		/// Re-project data from -> to
@@ -43,22 +26,61 @@ namespace Projections
 			Reprojection reprojection;
 			reprojection.pixels.resize(to->GetFrameHeight() * to->GetFrameWidth(), { -1, -1 });
 
-			for (int y = 0; y < to->GetFrameHeight(); y++)
+			//if x and y are independent, simplify
+			if ((from->INDEPENDENT_LAT_LON) && (to->INDEPENDENT_LAT_LON))
 			{
+				std::vector<int> cacheX;
+				cacheX.resize(to->GetFrameWidth());
+				std::vector<int> cacheY;
+				cacheY.resize(to->GetFrameHeight());
+				
 				for (int x = 0; x < to->GetFrameWidth(); x++)
 				{
-					Pixel<int> p = ProjectionUtils::ReProject<int, int>({ x, y }, from, to);
+					Projections::Pixel<int> p = Projections::ProjectionUtils::ReProject<int, int>({ x, 0 }, from, to);
+					cacheX[x] = p.x;
+				}
+				
+				for (int y = 0; y < to->GetFrameHeight(); y++)
+				{
+					Projections::Pixel<int> p = Projections::ProjectionUtils::ReProject<int, int>({ 0, y }, from, to);
+					cacheY[y] = p.y;
 
-					//IProjectionInfo<Proj>::Coordinate cc = to->ProjectInverse({ x,y });
-					//IProjectionInfo<Proj>::Pixel<int> p = from->Project<int>(cc);
+				}
 
-					if (p.x < 0) continue;
-					if (p.y < 0) continue;
-					if (p.x >= from->GetFrameWidth()) continue;
-					if (p.y >= from->GetFrameHeight()) continue;
+				for (int y = 0; y < to->GetFrameHeight(); y++)
+				{
+					for (int x = 0; x < to->GetFrameWidth(); x++)
+					{
+						Pixel<int> p;
+						p.x = cacheX[x];
+						p.y = cacheY[y];
 
-					reprojection.pixels[x + y * to->GetFrameWidth()] = p;
+						if (p.x < 0) continue;
+						if (p.y < 0) continue;
+						if (p.x >= from->GetFrameWidth()) continue;
+						if (p.y >= from->GetFrameHeight()) continue;
 
+						reprojection.pixels[x + y * to->GetFrameWidth()] = p;
+
+					}
+				}
+			}
+			else
+			{
+				for (int y = 0; y < to->GetFrameHeight(); y++)
+				{
+					for (int x = 0; x < to->GetFrameWidth(); x++)
+					{
+						Pixel<int> p = ProjectionUtils::ReProject<int, int>({ x, y }, from, to);
+
+						if (p.x < 0) continue;
+						if (p.y < 0) continue;
+						if (p.x >= from->GetFrameWidth()) continue;
+						if (p.y >= from->GetFrameHeight()) continue;
+
+						reprojection.pixels[x + y * to->GetFrameWidth()] = p;
+
+					}
 				}
 			}
 
@@ -104,12 +126,12 @@ namespace Projections
 			}
 		};
 
-		static double NormalizeLon(double lonDeg)
+		static double NormalizeLon(MyRealType lonDeg)
 		{
 			return std::fmod(lonDeg + 540, 360) - 180;
 		};
 
-		static double NormalizeLat(double latDeg)
+		static double NormalizeLat(MyRealType latDeg)
 		{
 			return (latDeg > 90) ? (latDeg - 180) : latDeg;
 		};
@@ -119,12 +141,12 @@ namespace Projections
 			//haversine distance in km
 			//http://stackoverflow.com/questions/365826/calculate-distance-between-2-gps-coordinates
 
-			double dlong = to.lon.rad() - from.lon.rad();
-			double dlat = to.lat.rad() - from.lat.rad();
+			MyRealType dlong = to.lon.rad() - from.lon.rad();
+			MyRealType dlat = to.lat.rad() - from.lat.rad();
 
-			double a = std::pow(std::sin(dlat / 2.0), 2) + std::cos(from.lat.rad()) * std::cos(to.lat.rad()) * std::pow(std::sin(dlong / 2.0), 2);
-			double c = 2 * std::atan2(std::sqrt(a), std::sqrt(1 - a));
-			double d = 6367 * c;
+			MyRealType a = std::pow(std::sin(dlat / 2.0), 2) + std::cos(from.lat.rad()) * std::cos(to.lat.rad()) * std::pow(std::sin(dlong / 2.0), 2);
+			MyRealType c = 2 * std::atan2(std::sqrt(a), std::sqrt(1 - a));
+			MyRealType d = 6367 * c;
 
 			if (dlong >= 3.14159265358979323846)
 			{
@@ -140,13 +162,13 @@ namespace Projections
 			return d;
 		};
         
-        inline static double cot(double x) { return 1.0 / std::tan(x); };
-        inline static double sec(double x) { return 1.0 / std::cos(x); };
-        inline static double sinc(double x) { return std::sin(x) / x; };
-        inline static double sgn(double x) { return (x < 0) ? -1 : (x > 0); };
+        inline static MyRealType cot(MyRealType x) { return 1.0 / std::tan(x); };
+        inline static MyRealType sec(MyRealType x) { return 1.0 / std::cos(x); };
+        inline static MyRealType sinc(MyRealType x) { return std::sin(x) / x; };
+        inline static MyRealType sgn(MyRealType x) { return (x < 0) ? -1 : (x > 0); };
       
-        inline static double degToRad(double x) { return x * 0.0174532925; }
-        inline static double radToDeg(double x) { return x * 57.2957795; }
+        inline static MyRealType degToRad(MyRealType x) { return x * 0.0174532925; }
+        inline static MyRealType radToDeg(MyRealType x) { return x * 57.2957795; }
 	};
 
 };

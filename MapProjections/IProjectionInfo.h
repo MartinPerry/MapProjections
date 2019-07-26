@@ -1,5 +1,5 @@
-#ifndef _IPROJECTION_INFO_
-#define _IPROJECTION_INFO_
+#ifndef IPROJECTION_INFO_H
+#define IPROJECTION_INFO_H
 
 #include "MapProjectionStructures.h"
 
@@ -42,15 +42,15 @@ namespace Projections
 		*/
 
 		virtual void SetFrame(const ProjectionFrame & frame) = 0;
-		virtual void SetFrame(std::vector<Coordinate> coord, double w, double h, bool keepAR = true) = 0;
-		virtual void SetFrame(Coordinate minCoord, Coordinate maxCoord, double w, double h, bool keepAR = true) = 0;
+		virtual void SetFrame(std::vector<Coordinate> coord, MyRealType w, MyRealType h, bool keepAR = true) = 0;
+		virtual void SetFrame(Coordinate minCoord, Coordinate maxCoord, MyRealType w, MyRealType h, bool keepAR = true) = 0;
 
 		virtual Coordinate GetTopLeftCorner() const = 0;
 		virtual Coordinate CalcStep(STEP_TYPE type) const = 0;
 		virtual const ProjectionFrame & GetFrame() const = 0;
 
-		virtual Coordinate CalcEndPointShortest(Coordinate start, Angle bearing, double dist) const = 0;
-		virtual Coordinate CalcEndPointDirect(Coordinate start, Angle bearing, double dist) const = 0;
+		virtual Coordinate CalcEndPointShortest(Coordinate start, Angle bearing, MyRealType dist) const = 0;
+		virtual Coordinate CalcEndPointDirect(Coordinate start, Angle bearing, MyRealType dist) const = 0;
 
 		virtual void LineBresenham(Pixel<int> start, Pixel<int> end,
 			std::function<void(int x, int y)> callback) const = 0;

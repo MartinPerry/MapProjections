@@ -12,11 +12,11 @@
 
 using namespace Projections;
 
-const double ProjectionConstants::PI = std::acos(-1);
-const double ProjectionConstants::PI_4 = 0.25 * ProjectionConstants::PI;
-const double ProjectionConstants::PI_2 = 0.5 * ProjectionConstants::PI;
-const double ProjectionConstants::E = std::exp(1.0);
-const double ProjectionConstants::EARTH_RADIUS = 6371;
+const MyRealType ProjectionConstants::PI = std::acos(-1);
+const MyRealType ProjectionConstants::PI_4 = MyRealType(0.25) * ProjectionConstants::PI;
+const MyRealType ProjectionConstants::PI_2 = MyRealType(0.5) * ProjectionConstants::PI;
+const MyRealType ProjectionConstants::E = std::exp(1.0);
+const MyRealType ProjectionConstants::EARTH_RADIUS = 6371;
 
 
 

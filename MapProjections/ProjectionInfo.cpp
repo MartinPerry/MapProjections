@@ -1,4 +1,4 @@
-#include "./MapProjection.h"
+#include "./ProjectionInfo.h"
 
 #include <limits>
 #include <algorithm>
@@ -21,7 +21,8 @@ template <typename Proj>
 ProjectionInfo<Proj>::ProjectionInfo(PROJECTION curProjection)
 	: IProjectionInfo(curProjection)		
 {
-	frame.minPixelOffset = { std::numeric_limits<double>::max(), std::numeric_limits<double>::max() };
+    frame.minPixelOffsetX = std::numeric_limits<MyRealType>::max();
+    frame.minPixelOffsetY = std::numeric_limits<MyRealType>::max();
 	frame.w = 0;
 	frame.h = 0;
 	frame.wPadding = 0;
@@ -43,7 +44,8 @@ void ProjectionInfo<Proj>::SetFrame(const ProjectionFrame & frame)
 	this->frame.wAR = frame.wAR;
 	this->frame.hPadding = frame.hPadding;
 	this->frame.wPadding = frame.wPadding;
-	this->frame.minPixelOffset = frame.minPixelOffset;	
+	this->frame.minPixelOffsetX = frame.minPixelOffsetX;
+    this->frame.minPixelOffsetY = frame.minPixelOffsetY;
 	this->frame.projInvPrecomW = frame.projInvPrecomW;
 	this->frame.projInvPrecomH = frame.projInvPrecomH;
 }
@@ -61,7 +63,7 @@ void ProjectionInfo<Proj>::SetFrame(const ProjectionFrame & frame)
 /// </param>
 template <typename Proj>
 void ProjectionInfo<Proj>::SetFrame(std::vector<Coordinate> coord,
-	double w, double h, bool keepAR)
+	MyRealType w, MyRealType h, bool keepAR)
 {
 	Coordinate minCoord = coord[0];
 	Coordinate maxCoord = coord[0];
@@ -104,11 +106,11 @@ void ProjectionInfo<Proj>::SetFrame(std::vector<Coordinate> coord,
 /// </param>
 template <typename Proj>
 void ProjectionInfo<Proj>::SetFrame(Coordinate minCoord, Coordinate maxCoord,
-	double w, double h, bool keepAR)
+	MyRealType w, MyRealType h, bool keepAR)
 {
 		
 	//calculate minimum internal projection value
-	ProjectedValue  minPixel = { std::numeric_limits<double>::max(), std::numeric_limits<double>::max() };
+	ProjectedValue  minPixel = { std::numeric_limits<MyRealType>::max(), std::numeric_limits<MyRealType>::max() };
 	
 	ProjectedValue tmpMinPixel = static_cast<Proj*>(this)->ProjectInternal(minCoord);
 	ProjectedValue tmpMaxPixel = static_cast<Proj*>(this)->ProjectInternal(maxCoord);
@@ -116,7 +118,8 @@ void ProjectionInfo<Proj>::SetFrame(Coordinate minCoord, Coordinate maxCoord,
 	minPixel.x = std::min(tmpMinPixel.x, tmpMaxPixel.x);
 	minPixel.y = std::min(tmpMinPixel.y, tmpMaxPixel.y);
 
-	frame.minPixelOffset = minPixel;
+	frame.minPixelOffsetX = minPixel.x;
+    frame.minPixelOffsetY = minPixel.y;
 
 	//-----------------------------------------------------------
 	//calculate maximum internal projection value
@@ -134,7 +137,7 @@ void ProjectionInfo<Proj>::SetFrame(Coordinate minCoord, Coordinate maxCoord,
 	tmpMaxPixel.y = tmpMaxPixel.y - minPixel.y;
 
 	//calculate moved maximum
-	ProjectedValue maxPixel = { std::numeric_limits<double>::min(), std::numeric_limits<double>::min() };
+	ProjectedValue maxPixel = { std::numeric_limits<MyRealType>::min(), std::numeric_limits<MyRealType>::min() };
 
 	maxPixel.x = std::max(tmpMinPixel.x, tmpMaxPixel.x);
 	maxPixel.y = std::max(tmpMinPixel.y, tmpMaxPixel.y);
@@ -160,16 +163,16 @@ void ProjectionInfo<Proj>::SetFrame(Coordinate minCoord, Coordinate maxCoord,
 	// be the one, we have set. One dimmension will be changed to keep AR	
 	if (keepAR)
 	{
-		double globalAR = std::min(this->frame.wAR, this->frame.hAR);
+		MyRealType globalAR = std::min(this->frame.wAR, this->frame.hAR);
 		this->frame.wAR = globalAR;
 		this->frame.hAR = globalAR;
 
-		this->frame.wPadding = (this->frame.w - (this->frame.wAR * maxPixel.x)) * 0.5;
-		this->frame.hPadding = (this->frame.h - (this->frame.hAR * maxPixel.y)) * 0.5;
+		this->frame.wPadding = (this->frame.w - (this->frame.wAR * maxPixel.x)) * MyRealType(0.5);
+		this->frame.hPadding = (this->frame.h - (this->frame.hAR * maxPixel.y)) * MyRealType(0.5);
 	}
 	
-	this->frame.projInvPrecomW = -this->frame.wPadding + this->frame.wAR * this->frame.minPixelOffset.x;
-	this->frame.projInvPrecomH = -this->frame.h + this->frame.hPadding - this->frame.hAR * this->frame.minPixelOffset.y;
+	this->frame.projInvPrecomW = -this->frame.wPadding + this->frame.wAR * this->frame.minPixelOffsetX;
+	this->frame.projInvPrecomH = -this->frame.h + this->frame.hPadding - this->frame.hAR * this->frame.minPixelOffsetY;
 }
 
 /// <summary>
@@ -226,23 +229,23 @@ const ProjectionFrame & ProjectionInfo<Proj>::GetFrame() const
 /// <returns></returns>
 template <typename Proj>
 Coordinate ProjectionInfo<Proj>::CalcEndPointShortest(Coordinate start,
-	Angle bearing, double dist) const
+	Angle bearing, MyRealType dist) const
 {
 	
-    double dr = dist / ProjectionConstants::EARTH_RADIUS;
+    MyRealType dr = dist / ProjectionConstants::EARTH_RADIUS;
 	
-	double sinLat = std::sin(start.lat.rad());
-	double cosLat = std::cos(start.lat.rad());
-	double sinDr = std::sin(dr);
-	double cosDr = std::cos(dr);
-	double sinBear = std::sin(bearing.rad());
-	double cosBear = std::cos(bearing.rad());
+	MyRealType sinLat = std::sin(start.lat.rad());
+	MyRealType cosLat = std::cos(start.lat.rad());
+	MyRealType sinDr = std::sin(dr);
+	MyRealType cosDr = std::cos(dr);
+	MyRealType sinBear = std::sin(bearing.rad());
+	MyRealType cosBear = std::cos(bearing.rad());
 
-	double sinEndLat = sinLat * cosDr + cosLat * sinDr * cosBear;
-	double endLat = std::asin(sinEndLat);
-	double y = sinBear * sinDr * cosLat;
-	double x = cosDr - sinLat * sinLat;
-	double endLon = start.lon.rad() + std::atan2(y, x);
+	MyRealType sinEndLat = sinLat * cosDr + cosLat * sinDr * cosBear;
+	MyRealType endLat = std::asin(sinEndLat);
+	MyRealType y = sinBear * sinDr * cosLat;
+	MyRealType x = cosDr - sinLat * sinLat;
+	MyRealType endLon = start.lon.rad() + std::atan2(y, x);
 
 	
 	Coordinate end;
@@ -263,22 +266,22 @@ Coordinate ProjectionInfo<Proj>::CalcEndPointShortest(Coordinate start,
 /// <returns></returns>
 template <typename Proj>
 Coordinate ProjectionInfo<Proj>::CalcEndPointDirect(
-	Coordinate start, Angle bearing, double dist) const
+	Coordinate start, Angle bearing, MyRealType dist) const
 {	
-	double dr = dist / ProjectionConstants::EARTH_RADIUS;
+	MyRealType dr = dist / ProjectionConstants::EARTH_RADIUS;
 
-	double difDr = dr * std::cos(bearing.rad());
-	double endLat = start.lat.rad() + difDr;
+	MyRealType difDr = dr * std::cos(bearing.rad());
+	MyRealType endLat = start.lat.rad() + difDr;
 
 	// check for some daft bugger going past the pole, normalise latitude if so
 	if (std::abs(endLat) > ProjectionConstants::PI_2) endLat = endLat > 0 ? ProjectionConstants::PI - endLat : -ProjectionConstants::PI - endLat;
 
 
-	double projLatDif = std::log(std::tan(endLat / 2 + ProjectionConstants::PI_4) / std::tan(start.lat.rad() / 2 + ProjectionConstants::PI_4));
-	double q = std::abs(projLatDif) > 10e-12 ? difDr / projLatDif : std::cos(start.lat.rad()); // E-W course becomes ill-conditioned with 0/0
+	MyRealType projLatDif = std::log(std::tan(endLat / 2 + ProjectionConstants::PI_4) / std::tan(start.lat.rad() / 2 + ProjectionConstants::PI_4));
+	MyRealType q = std::abs(projLatDif) > 10e-12 ? difDr / projLatDif : std::cos(start.lat.rad()); // E-W course becomes ill-conditioned with 0/0
 
-	double difDrQ = dr * std::sin(bearing.rad()) / q;
-	double endLon = start.lon.rad() + difDrQ;
+	MyRealType difDrQ = dr * std::sin(bearing.rad()) / q;
+	MyRealType endLon = start.lon.rad() + difDrQ;
 
 	
 

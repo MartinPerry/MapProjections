@@ -1,5 +1,5 @@
-#ifndef _MAP_PROJECTION_H_
-#define _MAP_PROJECTION_H_
+#ifndef PROJECTION_INFO_H
+#define PROJECTION_INFO_H
 
 
 
@@ -24,9 +24,6 @@
 
 namespace Projections
 {
-	
-	
-
 	template <typename Proj>
 	class ProjectionInfo : public IProjectionInfo
 	{
@@ -39,22 +36,21 @@ namespace Projections
 
 		template <typename PixelType = float>
 		RET_VAL(PixelType, std::is_floating_point) Project(const Coordinate & c) const;
-
-
-
-
+        
 		template <typename PixelType = int, bool Normalize = true>
 		Coordinate ProjectInverse(const Pixel<PixelType> & p) const;
 
+        
+        
 		template <typename InputProj>
 		void SetFrame(InputProj * proj, bool keepAR = true);
 
 		template <typename InputProj>
-		void SetFrame(InputProj * proj, double w, double h, bool keepAR = true);
+		void SetFrame(InputProj * proj, MyRealType w, MyRealType h, bool keepAR = true);
 
 		void SetFrame(const ProjectionFrame & frame) OVERRIDE;
-		void SetFrame(std::vector<Coordinate> coord, double w, double h, bool keepAR = true) OVERRIDE;
-		void SetFrame(Coordinate minCoord, Coordinate maxCoord, double w, double h, bool keepAR = true) OVERRIDE;
+		void SetFrame(std::vector<Coordinate> coord, MyRealType w, MyRealType h, bool keepAR = true) OVERRIDE;
+		void SetFrame(Coordinate minCoord, Coordinate maxCoord, MyRealType w, MyRealType h, bool keepAR = true) OVERRIDE;
 
 		Coordinate GetTopLeftCorner() const OVERRIDE;
 		Coordinate CalcStep(STEP_TYPE type) const OVERRIDE;
@@ -66,8 +62,8 @@ namespace Projections
 		template <typename T = int>
 		T GetFrameHeight() const { return static_cast<T>(this->frame.h); }
 
-		Coordinate CalcEndPointShortest(Coordinate start, Angle bearing, double dist) const OVERRIDE;
-		Coordinate CalcEndPointDirect(Coordinate start, Angle bearing, double dist) const OVERRIDE;
+		Coordinate CalcEndPointShortest(Coordinate start, Angle bearing, MyRealType dist) const OVERRIDE;
+		Coordinate CalcEndPointDirect(Coordinate start, Angle bearing, MyRealType dist) const OVERRIDE;
 
 		void LineBresenham(Pixel<int> start, Pixel<int> end, 
 			std::function<void(int x, int y)> callback) const OVERRIDE;
@@ -76,37 +72,31 @@ namespace Projections
 
 		void ComputeAABB(Coordinate & min, Coordinate & max) const OVERRIDE;
 
-		
 
 	protected:
 
-
-
+        ///<summary>
+        /// Helper struct for actual projections return types
+        ///</summary>
 		struct ProjectedValueInverse
 		{
 			Latitude lat;
 			Longitude lon;
 		};
-		
-
-		//inline static double cot(double x) { return 1.0 / std::tan(x); };
-		//inline static double sec(double x) { return 1.0 / std::cos(x); };
-		//inline static double sinc(double x) { return std::sin(x) / x; };
-		//inline static double sgn(double x) { return (x < 0) ? -1 : (x > 0); };
-
-		//inline static double degToRad(double x) { return x * 0.0174532925; }
-		//inline static double radToDeg(double x) { return x * 57.2957795; }
-
+        
+        ///<summary>
+        /// Helper struct for actual projections return types
+        ///</summary>
+        struct ProjectedValue
+        {
+            MyRealType x;
+            MyRealType y;
+        };
 		
 
 		ProjectionFrame frame;
 
 		ProjectionInfo(PROJECTION curProjection);
-
-		//virtual ProjectedValue ProjectInternal(Coordinate c) const = 0;
-		//virtual ProjectedValueInverse ProjectInverseInternal(double x, double y) const = 0;
-
-
 	};
 
 
@@ -140,7 +130,7 @@ namespace Projections
 	/// </param>
 	template <typename Proj>
 	template <typename InputProj>
-	void ProjectionInfo<Proj>::SetFrame(InputProj * proj, double w, double h, bool keepAR)
+	void ProjectionInfo<Proj>::SetFrame(InputProj * proj, MyRealType w, MyRealType h, bool keepAR)
 	{
 		Coordinate cMin, cMax;
 		proj->ComputeAABB(cMin, cMax);
@@ -163,8 +153,8 @@ namespace Projections
 		ProjectedValue raw = static_cast<const Proj*>(this)->ProjectInternal(c);
 
 
-		raw.x = raw.x - this->frame.minPixelOffset.x;
-		raw.y = raw.y - this->frame.minPixelOffset.y;
+		raw.x = raw.x - this->frame.minPixelOffsetX;
+		raw.y = raw.y - this->frame.minPixelOffsetY;
 
 		Pixel<PixelType> p;
 		p.x = static_cast<PixelType>(std::round(this->frame.wPadding + (raw.x * this->frame.wAR)));
@@ -182,8 +172,8 @@ namespace Projections
 		ProjectedValue rawPixel = static_cast<const Proj*>(this)->ProjectInternal(c);
 
 		//move our pseoude pixel to "origin"
-		rawPixel.x = rawPixel.x - this->frame.minPixelOffset.x;
-		rawPixel.y = rawPixel.y - this->frame.minPixelOffset.y;
+		rawPixel.x = rawPixel.x - this->frame.minPixelOffsetX;
+		rawPixel.y = rawPixel.y - this->frame.minPixelOffsetY;
 
 		//calculate pixel in final frame
 		Pixel<PixelType> p;
@@ -204,11 +194,11 @@ namespace Projections
 	{
 
 		//double xx = (static_cast<double>(p.x) - this->frame.wPadding + this->frame.wAR * this->frame.minPixelOffset.x);
-		double xx = (static_cast<double>(p.x) + this->frame.projInvPrecomW);
+		MyRealType xx = (static_cast<MyRealType>(p.x) + this->frame.projInvPrecomW);
 		xx /= this->frame.wAR;
 
 		//double yy = (static_cast<double>(p.y) - this->frame.h + this->frame.hPadding - this->frame.hAR * this->frame.minPixelOffset.y);
-		double yy = (static_cast<double>(p.y) + this->frame.projInvPrecomH);
+		MyRealType yy = (static_cast<MyRealType>(p.y) + this->frame.projInvPrecomH);
 		yy /= -this->frame.hAR;
 
 

@@ -154,6 +154,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -208,6 +209,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -275,20 +277,24 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_lib|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release_lib|x64'">true</ExcludedFromBuild>
     </ClCompile>
-    <ClCompile Include="MapProjection.cpp" />
     <ClCompile Include="MapProjectionStructures.cpp" />
+    <ClCompile Include="ProjectionInfo.cpp" />
     <ClCompile Include="ProjectionRenderer.cpp" />
-    <ClCompile Include="Projections.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="GeoCoordinate.h" />
     <ClInclude Include="IProjectionInfo.h" />
     <ClInclude Include="lodepng.h" />
-    <ClInclude Include="MapProjection.h" />
     <ClInclude Include="MapProjectionStructures.h" />
     <ClInclude Include="MapProjectionUtils.h" />
+    <ClInclude Include="ProjectionInfo.h" />
     <ClInclude Include="ProjectionRenderer.h" />
     <ClInclude Include="Projections.h" />
+    <ClInclude Include="simd\avx_math_float.h" />
+    <ClInclude Include="simd\MapProjectionStructures_simd.h" />
+    <ClInclude Include="simd\MapProjectionUtils_simd.h" />
+    <ClInclude Include="simd\ProjectionInfo_simd.h" />
+    <ClInclude Include="simd\Projections_simd.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -7,7 +7,7 @@
 #include <unordered_map>
 
 #include "Projections.h"
-#include "MapProjection.h"
+#include "ProjectionInfo.h"
 
 namespace Projections
 {
@@ -75,8 +75,8 @@ namespace Projections
 	
 		std::unordered_map<std::string, std::vector<Coordinate> > debugBorder;
 
-		int ComputeOutCode(double x, double y);
-		void CohenSutherlandLineClipAndDraw(double x0, double y0, double x1, double y1);
+		int ComputeOutCode(MyRealType x, MyRealType y);
+		void CohenSutherlandLineClipAndDraw(MyRealType x0, MyRealType y0, MyRealType x1, MyRealType y1);
 
 		std::vector<std::string> Split(const std::string &s, char delim);
 		std::string LoadFromFile(const char * filePath);

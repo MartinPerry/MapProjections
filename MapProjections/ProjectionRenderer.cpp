@@ -218,12 +218,12 @@ void ProjectionRenderer::DrawBorders()
 /// </summary>
 void ProjectionRenderer::DrawParalells()
 {
-	double lonStep = 10;
-	double latStep = 5;
+	MyRealType lonStep = 10;
+	MyRealType latStep = 5;
 
-	for (double lat = -90; lat <= 90; lat += latStep)
+	for (MyRealType lat = -90; lat <= 90; lat += latStep)
 	{
-		for (double lon = -180; lon <= 180 - lonStep; lon += lonStep)
+		for (MyRealType lon = -180; lon <= 180 - lonStep; lon += lonStep)
 		{
 			Coordinate p;
 			p.lat = Latitude::deg(lat);
@@ -251,11 +251,11 @@ void ProjectionRenderer::DrawParalells()
 /// <param name="stepCount"></param>
 void ProjectionRenderer::DrawLine(Coordinate start, Coordinate end, int stepCount)
 {
-	double difLat = (end.lat.rad() - start.lat.rad());
-	double difLon = (end.lon.rad() - start.lon.rad());
+	MyRealType difLat = (end.lat.rad() - start.lat.rad());
+	MyRealType difLon = (end.lon.rad() - start.lon.rad());
 
-	double lonStep = difLon / stepCount;
-	double latStep = difLat / stepCount;
+	MyRealType lonStep = difLon / stepCount;
+	MyRealType latStep = difLat / stepCount;
 
 
 	Coordinate p = start;

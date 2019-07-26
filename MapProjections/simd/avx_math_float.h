@@ -2,6 +2,8 @@
 #define AVX_MATH_FLOAT_H
 
 
+#ifdef ENABLE_SIMD
+
 //https ://software.intel.com/sites/landingpage/IntrinsicsGuide/#text=sqrt&expand=5352,5352&techs=MMX,SSE,SSE2,SSE3,SSSE3,SSE4_1,SSE4_2,AVX,AVX2
 
 #include <immintrin.h>     //AVX2
@@ -566,5 +568,7 @@ static __m256 _my_mm256_pow_ps(const __m256 & x, const __m256 & y)
     __m256 tmp = _my_mm256_log_ps(x);
     return _my_mm256_exp_ps(_mm256_mul_ps(y, tmp));
 }
+
+#endif //ENABLE_SIMD
 
 #endif

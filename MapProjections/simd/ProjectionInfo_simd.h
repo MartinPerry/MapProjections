@@ -1,6 +1,8 @@
 #ifndef PROJECTION_INFO_SIMD_H
 #define PROJECTION_INFO_SIMD_H
 
+#ifdef ENABLE_SIMD
+
 #include <array>
 #include <immintrin.h>     //AVX2
 
@@ -154,5 +156,6 @@ namespace Projections::Simd
 
 }
 
+#endif //ENABLE_SIMD
 
 #endif /* PROJECTION_INFO_SIMD_H */

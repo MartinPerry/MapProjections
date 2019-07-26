@@ -1,6 +1,8 @@
 #ifndef PROJECTIONS_SIMD_H
 #define PROJECTIONS_SIMD_H
 
+#ifdef ENABLE_SIMD
+
 #include <immintrin.h>     //AVX2
 
 #include "./avx_math_float.h"
@@ -123,5 +125,7 @@ namespace Projections::Simd
         
     };
 }
+
+#endif //ENABLE_SIMD
 
 #endif /* PROJECTIONS_SIMD_H */

@@ -1,6 +1,8 @@
 #ifndef MAP_PROJECTION_STRUCTURES_SIMD_H
 #define MAP_PROJECTION_STRUCTURES_SIMD_H
 
+#ifdef ENABLE_SIMD
+
 #include <array>
 
 #include <immintrin.h>     //AVX2
@@ -121,5 +123,7 @@ namespace Projections::Simd
         };
     };
 }
+
+#endif //ENABLE_SIMD
 
 #endif /* MAP_PROJECTION_STRUCTURES_SIMD_H */

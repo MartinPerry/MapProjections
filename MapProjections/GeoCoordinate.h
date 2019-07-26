@@ -7,8 +7,8 @@ template <typename T>
 struct IAngle
 {
 	IAngle() : valRad(0), valDeg(0) {};
-	static T deg(MyRealType val) { return T(val * 0.0174532925, val); };
-	static T rad(MyRealType val) { return T(val, val * 57.2957795); };
+	static T deg(MyRealType val) { return T(val * MyRealType(0.0174532925), val); };
+	static T rad(MyRealType val) { return T(val, val * MyRealType(57.2957795)); };
 	
 	inline MyRealType deg() const { return valDeg; };
 	inline MyRealType rad() const { return valRad; };

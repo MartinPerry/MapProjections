@@ -185,8 +185,8 @@ namespace Projections::Simd
         
         
         
-        inline static __m256 degToRad(const __m256 & x) { return _mm256_mul_ps(x, _mm256_set1_ps(0.0174532925)); }
-        inline static __m256 radToDeg(const __m256 & x) { return _mm256_mul_ps(x, _mm256_set1_ps(57.2957795)); }
+        inline static __m256 degToRad(const __m256 & x) { return _mm256_mul_ps(x, _mm256_set1_ps(0.0174532925f)); }
+        inline static __m256 radToDeg(const __m256 & x) { return _mm256_mul_ps(x, _mm256_set1_ps(57.2957795f)); }
     };
     
 };

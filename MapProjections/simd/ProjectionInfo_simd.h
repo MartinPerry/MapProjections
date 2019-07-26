@@ -74,16 +74,16 @@ namespace Projections::Simd
         
         //========
         //move our pseoude pixel to "origin"
-        raw.x = _mm256_sub_ps(raw.x, _mm256_set1_ps(frame.minPixelOffsetX));
-        raw.y = _mm256_sub_ps(raw.y, _mm256_set1_ps(frame.minPixelOffsetY));
+        raw.x = _mm256_sub_ps(raw.x, _mm256_set1_ps(static_cast<float>(frame.minPixelOffsetX)));
+        raw.y = _mm256_sub_ps(raw.y, _mm256_set1_ps(static_cast<float>(frame.minPixelOffsetY)));
         
         PixelSimd res;
         
-        res.x = _mm256_mul_ps(raw.x, _mm256_set1_ps(frame.wAR));
-        res.x = _mm256_add_ps(res.x, _mm256_set1_ps(frame.wPadding));
+        res.x = _mm256_mul_ps(raw.x, _mm256_set1_ps(static_cast<float>(frame.wAR)));
+        res.x = _mm256_add_ps(res.x, _mm256_set1_ps(static_cast<float>(frame.wPadding)));
         
-        res.y = _mm256_mul_ps(raw.y, _mm256_set1_ps(frame.hAR));
-        res.y = _mm256_sub_ps(_mm256_set1_ps(frame.h - frame.hPadding), res.y);
+        res.y = _mm256_mul_ps(raw.y, _mm256_set1_ps(static_cast<float>(frame.hAR)));
+        res.y = _mm256_sub_ps(_mm256_set1_ps(static_cast<float>(frame.h - frame.hPadding)), res.y);
         
         //move our pseoude pixel to "origin"
         //rawPixel.x = rawPixel.x - frame.minPixelOffset.x;
@@ -129,11 +129,11 @@ namespace Projections::Simd
         __m256 x = p.x;
         __m256 y = p.y;
         
-        x = _mm256_add_ps(x, _mm256_set1_ps(frame.projInvPrecomW));
-        x = _mm256_div_ps(x, _mm256_set1_ps(frame.wAR));
+        x = _mm256_add_ps(x, _mm256_set1_ps(static_cast<float>(frame.projInvPrecomW)));
+        x = _mm256_div_ps(x, _mm256_set1_ps(static_cast<float>(frame.wAR)));
         
-        y = _mm256_add_ps(y, _mm256_set1_ps(frame.projInvPrecomH));
-        y = _mm256_div_ps(y, _mm256_set1_ps(-frame.hAR));
+        y = _mm256_add_ps(y, _mm256_set1_ps(static_cast<float>(frame.projInvPrecomH)));
+        y = _mm256_div_ps(y, _mm256_set1_ps(static_cast<float>(-frame.hAR)));
         
         auto pi = tmp->ProjectInverseInternal(x, y);
         

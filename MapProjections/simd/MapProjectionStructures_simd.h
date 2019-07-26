@@ -32,8 +32,24 @@ namespace Projections::Simd
         static PixelSimd FromArray(const std::array<Projections::Pixel<PixelType>, 8> & p)
         {
             PixelSimd pSimd;
-            pSimd.x = _mm256_set_ps(p[7].x, p[6].x, p[5].x, p[4].x, p[3].x, p[2].x, p[1].x, p[0].x);
-            pSimd.y = _mm256_set_ps(p[7].y, p[6].y, p[5].y, p[4].y, p[3].y, p[2].y, p[1].y, p[0].y);
+            pSimd.x = _mm256_set_ps(static_cast<float>(p[7].x), 
+				static_cast<float>(p[6].x), 
+				static_cast<float>(p[5].x), 
+				static_cast<float>(p[4].x), 
+				static_cast<float>(p[3].x), 
+				static_cast<float>(p[2].x), 
+				static_cast<float>(p[1].x), 
+				static_cast<float>(p[0].x));
+
+            pSimd.y = _mm256_set_ps(static_cast<float>(p[7].y), 
+				static_cast<float>(p[6].y), 
+				static_cast<float>(p[5].y), 
+				static_cast<float>(p[4].y), 
+				static_cast<float>(p[3].y), 
+				static_cast<float>(p[2].y), 
+				static_cast<float>(p[1].y), 
+				static_cast<float>(p[0].y));
+
             return pSimd;
         };
         
@@ -89,8 +105,24 @@ namespace Projections::Simd
         static CoordinateSimd FromArray(const std::array<Projections::Coordinate, 8> & c)
         {
             CoordinateSimd cSimd;
-            cSimd.lonRad = _mm256_set_ps(c[7].lon.rad(), c[6].lon.rad(), c[5].lon.rad(), c[4].lon.rad(), c[3].lon.rad(), c[2].lon.rad(), c[1].lon.rad(), c[0].lon.rad());
-            cSimd.latRad = _mm256_set_ps(c[7].lat.rad(), c[6].lat.rad(), c[5].lat.rad(), c[4].lat.rad(), c[3].lat.rad(), c[2].lat.rad(), c[1].lat.rad(), c[0].lat.rad());
+            cSimd.lonRad = _mm256_set_ps(static_cast<float>(c[7].lon.rad()), 
+				static_cast<float>(c[6].lon.rad()), 
+				static_cast<float>(c[5].lon.rad()), 
+				static_cast<float>(c[4].lon.rad()), 
+				static_cast<float>(c[3].lon.rad()), 
+				static_cast<float>(c[2].lon.rad()), 
+				static_cast<float>(c[1].lon.rad()), 
+				static_cast<float>(c[0].lon.rad()));
+
+            cSimd.latRad = _mm256_set_ps(static_cast<float>(c[7].lat.rad()), 
+				static_cast<float>(c[6].lat.rad()), 
+				static_cast<float>(c[5].lat.rad()), 
+				static_cast<float>(c[4].lat.rad()), 
+				static_cast<float>(c[3].lat.rad()), 
+				static_cast<float>(c[2].lat.rad()), 
+				static_cast<float>(c[1].lat.rad()), 
+				static_cast<float>(c[0].lat.rad()));
+
             return cSimd;
         };
         

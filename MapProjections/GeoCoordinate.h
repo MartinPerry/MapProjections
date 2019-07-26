@@ -1,7 +1,7 @@
 #ifndef GEOCORDINATE_H
 #define GEOCORDINATE_H
 
-typedef float MyRealType;
+typedef double MyRealType;
 
 template <typename T>
 struct IAngle

@@ -46,8 +46,8 @@ namespace Projections::Simd
             ProjectedValueSimd p;
             p.x = lonRad;
         
-            p.y = _mm256_mul_ps(latRad, _mm256_set1_ps(0.5));
-            p.y = _mm256_add_ps(p.y, _mm256_set1_ps(ProjectionConstants::PI_4));
+            p.y = _mm256_mul_ps(latRad, _mm256_set1_ps(0.5f));
+            p.y = _mm256_add_ps(p.y, _mm256_set1_ps(static_cast<float>(ProjectionConstants::PI_4)));
             p.y = _my_mm256_tan_ps(p.y);
             p.y = _my_mm256_log_ps(p.y);
             
@@ -61,10 +61,10 @@ namespace Projections::Simd
 			ProjectedValueInverseSimd c;
             c.lonRad = x;
             
-            c.latRad = _my_mm256_pow_ps(_mm256_set1_ps(ProjectionConstants::E), y);
+            c.latRad = _my_mm256_pow_ps(_mm256_set1_ps(static_cast<float>(ProjectionConstants::E)), y);
             c.latRad = _my_mm256_atan_ps(c.latRad);
             c.latRad = _mm256_add_ps(c.latRad, c.latRad);
-            c.latRad = _mm256_sub_ps(c.latRad, _mm256_set1_ps(ProjectionConstants::PI_2));
+            c.latRad = _mm256_sub_ps(c.latRad, _mm256_set1_ps(static_cast<float>(ProjectionConstants::PI_2)));
             
 			
             //c.lon = Longitude::rad(x);
@@ -96,11 +96,11 @@ namespace Projections::Simd
             ProjectedValueSimd p;
             p.x = lonRad;
             
-            p.y = _mm256_mul_ps(latRad, _mm256_set1_ps(0.4));
-            p.y = _mm256_add_ps(p.y, _mm256_set1_ps(ProjectionConstants::PI_4));
+            p.y = _mm256_mul_ps(latRad, _mm256_set1_ps(0.4f));
+            p.y = _mm256_add_ps(p.y, _mm256_set1_ps(static_cast<float>(ProjectionConstants::PI_4)));
             p.y = _my_mm256_tan_ps(p.y);
             p.y = _my_mm256_log_ps(p.y);
-            p.y = _mm256_mul_ps(p.y, _mm256_set1_ps(1.25));
+            p.y = _mm256_mul_ps(p.y, _mm256_set1_ps(1.25f));
             
             //p.x = c.lon.rad();
             //p.y = 1.25 * std::log(std::tan(ProjectionConstants::PI_4 + 0.4 * c.lat.rad()));
@@ -113,10 +113,10 @@ namespace Projections::Simd
             ProjectedValueInverseSimd c;
             c.lonRad = x;
             
-            c.latRad = _my_mm256_pow_ps(_mm256_set1_ps(ProjectionConstants::E), _mm256_mul_ps(y, _mm256_set1_ps(0.8)));
+            c.latRad = _my_mm256_pow_ps(_mm256_set1_ps(static_cast<float>(ProjectionConstants::E)), _mm256_mul_ps(y, _mm256_set1_ps(0.8f)));
             c.latRad = _my_mm256_atan_ps(c.latRad);
-            c.latRad = _mm256_mul_ps(c.latRad, _mm256_set1_ps(2.5));
-            c.latRad = _mm256_sub_ps(c.latRad, _mm256_set1_ps(0.625 * ProjectionConstants::PI));
+            c.latRad = _mm256_mul_ps(c.latRad, _mm256_set1_ps(2.5f));
+            c.latRad = _mm256_sub_ps(c.latRad, _mm256_set1_ps(static_cast<float>(0.625 * ProjectionConstants::PI)));
             
             //c.lon = Longitude::rad(x);
             //c.lat = Latitude::rad(2.5 * std::atan(std::pow(ProjectionConstants::E, 0.8 * y)) - 0.625 * ProjectionConstants::PI);

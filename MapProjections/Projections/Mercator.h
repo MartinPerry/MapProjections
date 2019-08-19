@@ -1,6 +1,8 @@
 #ifndef MERCATOR_H
 #define MERCATOR_H
 
+#include <cmath>
+
 #include "../GeoCoordinate.h"
 #include "../ProjectionInfo.h"
 #include "../MapProjectionStructures.h"
@@ -23,7 +25,7 @@ namespace Projections
 		friend class ProjectionInfo<Mercator>;
 
 	protected:
-		ProjectedValue ProjectInternal(Coordinate c) const
+		ProjectedValue ProjectInternal(const Coordinate & c) const
 		{
 			ProjectedValue p;
 			p.x = c.lon.rad();

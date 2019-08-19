@@ -1,6 +1,8 @@
 #ifndef EQUIRECTANGULAR_H
 #define EQUIRECTANGULAR_H
 
+#include <cmath>
+
 #include "../GeoCoordinate.h"
 #include "../ProjectionInfo.h"
 #include "../MapProjectionStructures.h"
@@ -20,7 +22,7 @@ namespace Projections
 		static const bool INDEPENDENT_LAT_LON = true; //can Lat / Lon be computed separatly. To compute one, we dont need the other
 
 		Equirectangular() : Equirectangular(0.0_deg) {}
-		Equirectangular(Longitude lonCentralMeridian) :
+		Equirectangular(const Longitude & lonCentralMeridian) :
 			ProjectionInfo(PROJECTION::EQUIRECTANGULAR_PROJ),
 			lonCentralMeridian(lonCentralMeridian),
 			standardParallel(0.0_deg),
@@ -31,11 +33,11 @@ namespace Projections
 
 	protected:
 
-		Longitude lonCentralMeridian;
-		Latitude standardParallel;
-		double cosStandardParallel;
+		const Longitude lonCentralMeridian;
+		const Latitude standardParallel;
+		const double cosStandardParallel;
 
-		ProjectedValue ProjectInternal(Coordinate c) const
+		ProjectedValue ProjectInternal(const Coordinate & c) const
 		{
 			ProjectedValue p;
 			p.x = (c.lon.rad() - lonCentralMeridian.rad()) * cosStandardParallel;

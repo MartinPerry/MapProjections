@@ -1,11 +1,3 @@
-//
-//  main.cpp
-//  Projections
-//
-//  Created by Martin Prantl on 09/07/2018.
-//  Copyright © 2018 Martin Prantl. All rights reserved.
-//
-
 #include <chrono>
 #include <iostream>
 #include <array>
@@ -14,6 +6,8 @@
 #include "ProjectionInfo.h"
 #include "./Projections/Mercator.h"
 #include "./Projections/Miller.h"
+#include "./Projections/LambertConic.h"
+#include "./Projections/GOES.h"
 #include "ProjectionRenderer.h"
 #include "lodepng.h"
 
@@ -31,6 +25,9 @@ int main(int argc, const char * argv[]) {
     unsigned w = 800;
     unsigned h = 600;
     
+	LambertConic lc(-140.7_deg, -140.7_deg, -140.7_deg);
+	GOES g(-140.7_deg);
+
     /*
     std::array<Projections::Pixel<int>, 8> p;
     ns::Mercator mercSimd;

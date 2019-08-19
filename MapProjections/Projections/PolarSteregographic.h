@@ -1,6 +1,8 @@
 #ifndef POLAR_STEREOGRAPHIC_H
 #define POLAR_STEREOGRAPHIC_H
 
+#include <cmath>
+
 #include "../GeoCoordinate.h"
 #include "../ProjectionInfo.h"
 #include "../MapProjectionStructures.h"
@@ -21,7 +23,7 @@ namespace Projections
 		static const bool INDEPENDENT_LAT_LON = false; //can Lat / Lon be computed separatly. To compute one, we dont need the other
 
 		PolarSteregographic() : PolarSteregographic(10.0_deg, 60.0_deg) {}
-		PolarSteregographic(Longitude lonCentralMeridian, Latitude latCentral) : ProjectionInfo(PROJECTION::POLAR_STEREOGRAPHICS_PROJ),
+		PolarSteregographic(const Longitude & lonCentralMeridian, const Latitude & latCentral) : ProjectionInfo(PROJECTION::POLAR_STEREOGRAPHICS_PROJ),
 			lonCentralMeridian(lonCentralMeridian),
 			latCentral(latCentral)
 		{ }
@@ -30,10 +32,10 @@ namespace Projections
 
 	protected:
 
-		Longitude lonCentralMeridian;
-		Latitude latCentral;
+		const Longitude lonCentralMeridian;
+		const Latitude latCentral;
 
-		ProjectedValue ProjectInternal(Coordinate c) const
+		ProjectedValue ProjectInternal(const Coordinate & c) const
 		{
 			MyRealType m = (1.0 + std::sin(latCentral.rad())) / (1.0 + std::sin(c.lat.rad()));
 			MyRealType cosLat = std::cos(c.lat.rad());

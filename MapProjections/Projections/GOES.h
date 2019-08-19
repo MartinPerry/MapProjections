@@ -1,5 +1,7 @@
-#ifndef GOES_H
-#define GOES_H
+#ifndef GOES_PROJECTION_H
+#define GOES_PROJECTION_H
+
+#include <cmath>
 
 #include "../GeoCoordinate.h"
 #include "../ProjectionInfo.h"
@@ -15,11 +17,10 @@ namespace Projections
 	class GOES : public ProjectionInfo<GOES>
 	{
 	public:
-
 		static const bool INDEPENDENT_LAT_LON = false; //can Lat / Lon be computed separatly. To compute one, we dont need the other
 
-		GOES() : satLon(-140.7_deg),
-			ProjectionInfo(PROJECTION::GOES_PROJ)
+		GOES(const Longitude & sateliteLon) : ProjectionInfo(PROJECTION::GOES_PROJ),
+			satLon(sateliteLon)
 		{}
 
 
@@ -28,11 +29,11 @@ namespace Projections
 	protected:
 
 		const Longitude satLon;
-		const MyRealType SAT_DIST = 42164.0;
-		const MyRealType RADIUS_EQUATOR = 6378.1370;
-		const MyRealType RADIUS_POLAR = 6356.7523;
+		const MyRealType SAT_DIST = MyRealType(42164.0);
+		const MyRealType RADIUS_EQUATOR = MyRealType(6378.1370);
+		const MyRealType RADIUS_POLAR = MyRealType(6356.7523);
 
-		ProjectedValue ProjectInternal(Coordinate c) const
+		ProjectedValue ProjectInternal(const Coordinate & c) const
 		{
 			MyRealType cLat = std::atan(0.993305616 * std::tan(c.lat.rad()));
 			MyRealType cosCLat = std::cos(cLat);
@@ -56,7 +57,7 @@ namespace Projections
 		};
 
 		ProjectedValueInverse ProjectInverseInternal(MyRealType x, MyRealType y) const
-		{
+		{		
 			MyRealType cosX = std::cos(x);
 			MyRealType cosY = std::cos(y);
 			MyRealType cos2X = cosX * cosX;

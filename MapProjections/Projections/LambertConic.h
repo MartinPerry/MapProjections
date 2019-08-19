@@ -1,6 +1,8 @@
 #ifndef LAMBERT_CONIC_H
 #define LAMBERT_CONIC_H
 
+#include <cmath>
+
 #include "../GeoCoordinate.h"
 #include "../ProjectionInfo.h"
 #include "../MapProjectionStructures.h"
@@ -19,7 +21,7 @@ namespace Projections
 	public:
 		static const bool INDEPENDENT_LAT_LON = false; //can Lat / Lon be computed separatly. To compute one, we dont need the other
 
-		LambertConic(Latitude latProjOrigin, Longitude lonCentMeridian, Latitude stanParallel) :
+		LambertConic(const Latitude & latProjOrigin, const Longitude & lonCentMeridian, const Latitude & stanParallel) :
 			ProjectionInfo(PROJECTION::LAMBERT_CONIC_PROJ),
 			latProjectionOrigin(latProjOrigin),
 			lonCentralMeridian(lonCentMeridian),
@@ -49,17 +51,17 @@ namespace Projections
 		friend class ProjectionInfo<LambertConic>;
 
 	protected:
-		Latitude latProjectionOrigin;
-		Longitude lonCentralMeridian;
-		Latitude standardParallel1;
-		Latitude standardParallel2;
+		const Latitude latProjectionOrigin;
+		const Longitude lonCentralMeridian;
+		const Latitude standardParallel1;
+		const Latitude standardParallel2;
 
 
 		double f;
 		double n;
 		double phi0;
 
-		ProjectedValue ProjectInternal(Coordinate c) const
+		ProjectedValue ProjectInternal(const Coordinate & c) const
 		{
 			MyRealType t = ProjectionUtils::cot(ProjectionConstants::PI_4 + 0.5 * c.lat.rad());
 			MyRealType phi = f * std::pow(t, n);

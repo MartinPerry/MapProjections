@@ -10,6 +10,7 @@
 #include "./Projections/LambertConic.h"
 #include "./Projections/Equirectangular.h"
 #include "./Projections/PolarSteregographic.h"
+#include "./Projections/GOES.h"
 
 #include "MapProjectionUtils.h"
 
@@ -415,3 +416,4 @@ template class Projections::ProjectionInfo<Mercator>;
 template class Projections::ProjectionInfo<Miller>;
 template class Projections::ProjectionInfo<Equirectangular>;
 template class Projections::ProjectionInfo<PolarSteregographic>;
+template class Projections::ProjectionInfo<GOES>;

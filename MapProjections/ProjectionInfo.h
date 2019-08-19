@@ -1,8 +1,6 @@
 #ifndef PROJECTION_INFO_H
 #define PROJECTION_INFO_H
 
-
-
 #include <cstdint>
 #include <cmath>
 #include <vector>
@@ -12,11 +10,11 @@
 
 #include <string>
 
-#include "GeoCoordinate.h"
-#include "MapProjectionStructures.h"
-#include "MapProjectionUtils.h"
+#include "./GeoCoordinate.h"
+#include "./MapProjectionStructures.h"
+#include "./MapProjectionUtils.h"
 
-#include "IProjectionInfo.h"
+#include "./IProjectionInfo.h"
 
 
 #define RET_VAL(PixelType, enable_cond) \

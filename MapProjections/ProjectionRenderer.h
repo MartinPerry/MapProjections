@@ -6,7 +6,7 @@
 #include <string>
 #include <unordered_map>
 
-#include "Projections.h"
+
 #include "ProjectionInfo.h"
 
 namespace Projections

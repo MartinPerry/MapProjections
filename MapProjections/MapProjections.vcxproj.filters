@@ -16,6 +16,12 @@
     <Filter Include="Header Files\SIMD">
       <UniqueIdentifier>{34c5c28a-f0a7-405a-b65f-5c8b39162eab}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\Projections">
+      <UniqueIdentifier>{96fc63df-f7b0-4559-9460-5534b71ef2ea}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\SIMD\Projections">
+      <UniqueIdentifier>{a0e3c983-a15d-4ebd-a7d9-8a7e4c84b2d2}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="lodepng.cpp">
@@ -36,9 +42,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="lodepng.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Projections.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="ProjectionRenderer.h">
@@ -68,11 +71,32 @@
     <ClInclude Include="simd\ProjectionInfo_simd.h">
       <Filter>Header Files\SIMD</Filter>
     </ClInclude>
-    <ClInclude Include="simd\Projections_simd.h">
-      <Filter>Header Files\SIMD</Filter>
-    </ClInclude>
     <ClInclude Include="ProjectionInfo.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Projections\Mercator.h">
+      <Filter>Header Files\Projections</Filter>
+    </ClInclude>
+    <ClInclude Include="Projections\LambertConic.h">
+      <Filter>Header Files\Projections</Filter>
+    </ClInclude>
+    <ClInclude Include="Projections\Miller.h">
+      <Filter>Header Files\Projections</Filter>
+    </ClInclude>
+    <ClInclude Include="Projections\Equirectangular.h">
+      <Filter>Header Files\Projections</Filter>
+    </ClInclude>
+    <ClInclude Include="Projections\PolarSteregographic.h">
+      <Filter>Header Files\Projections</Filter>
+    </ClInclude>
+    <ClInclude Include="simd\Projections\Mercator_simd.h">
+      <Filter>Header Files\SIMD\Projections</Filter>
+    </ClInclude>
+    <ClInclude Include="simd\Projections\Miller_simd.h">
+      <Filter>Header Files\SIMD\Projections</Filter>
+    </ClInclude>
+    <ClInclude Include="Projections\GOES.h">
+      <Filter>Header Files\Projections</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

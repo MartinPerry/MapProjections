@@ -5,7 +5,12 @@
 #include <cstring>
 #include <cassert>
 
-#include "Projections.h"
+#include "./Projections/Mercator.h"
+#include "./Projections/Miller.h"
+#include "./Projections/LambertConic.h"
+#include "./Projections/Equirectangular.h"
+#include "./Projections/PolarSteregographic.h"
+
 #include "MapProjectionUtils.h"
 
 using namespace Projections;

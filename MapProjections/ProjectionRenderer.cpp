@@ -1,7 +1,6 @@
 #include "ProjectionRenderer.h"
 
 #include "./lodepng.h"
-#include "Projections.h"
 #include "MapProjectionStructures.h"
 
 using namespace Projections;
@@ -98,7 +97,7 @@ void ProjectionRenderer::FillData(std::vector<uint8_t> & output)
 std::string ProjectionRenderer::LoadFromFile(const char * filePath)
 {
 	FILE * f = NULL;  //pointer to file we will read in
-	f = fopen(filePath, "rb");
+	my_fopen(&f, filePath, "rb");
 	if (f == NULL)
 	{
 		printf("Failed to open file: \"%s\"\n", filePath);

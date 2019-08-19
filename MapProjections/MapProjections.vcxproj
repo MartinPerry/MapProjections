@@ -155,6 +155,7 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;ENABLE_SIMD;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <LanguageStandard>stdcpp17</LanguageStandard>
+      <EnableEnhancedInstructionSet>AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -168,6 +169,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;ENABLE_SIMD;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <EnableEnhancedInstructionSet>AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -210,6 +212,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;ENABLE_SIMD;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <LanguageStandard>stdcpp17</LanguageStandard>
+      <EnableEnhancedInstructionSet>AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -227,6 +230,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;ENABLE_SIMD;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <EnableEnhancedInstructionSet>AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -289,12 +293,18 @@
     <ClInclude Include="MapProjectionUtils.h" />
     <ClInclude Include="ProjectionInfo.h" />
     <ClInclude Include="ProjectionRenderer.h" />
-    <ClInclude Include="Projections.h" />
+    <ClInclude Include="Projections\Equirectangular.h" />
+    <ClInclude Include="Projections\GOES.h" />
+    <ClInclude Include="Projections\LambertConic.h" />
+    <ClInclude Include="Projections\Mercator.h" />
+    <ClInclude Include="Projections\Miller.h" />
+    <ClInclude Include="Projections\PolarSteregographic.h" />
     <ClInclude Include="simd\avx_math_float.h" />
     <ClInclude Include="simd\MapProjectionStructures_simd.h" />
     <ClInclude Include="simd\MapProjectionUtils_simd.h" />
     <ClInclude Include="simd\ProjectionInfo_simd.h" />
-    <ClInclude Include="simd\Projections_simd.h" />
+    <ClInclude Include="simd\Projections\Mercator_simd.h" />
+    <ClInclude Include="simd\Projections\Miller_simd.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

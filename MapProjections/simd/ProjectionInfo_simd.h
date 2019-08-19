@@ -13,6 +13,7 @@
 #include "./MapProjectionUtils_simd.h"
 #include "./MapProjectionStructures_simd.h"
 
+
 #define RET_VAL_SIMD(PixelType, enable_cond) \
 typename std::enable_if<enable_cond<PixelType>::value, std::array<Projections::Pixel<PixelType>, 8>>::type
 

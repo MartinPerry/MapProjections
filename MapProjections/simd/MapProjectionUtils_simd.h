@@ -7,7 +7,6 @@
 #include <array>
 #include <immintrin.h>     //AVX2
 
-
 #include "./ProjectionInfo_simd.h"
 #include "./MapProjectionStructures_simd.h"
 

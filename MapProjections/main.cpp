@@ -22,12 +22,10 @@ namespace ns = Projections::Simd;
 
 int main(int argc, const char * argv[]) {
     
-    unsigned w = 800;
+    unsigned w = 600;
     unsigned h = 600;
-    
-	LambertConic lc(-140.7_deg, -140.7_deg, -140.7_deg);
-	GOES g(-140.7_deg);
-
+    	
+	
     /*
     std::array<Projections::Pixel<int>, 8> p;
     ns::Mercator mercSimd;
@@ -38,94 +36,72 @@ int main(int argc, const char * argv[]) {
     Reprojection reprojectionSimd = Projections::Simd::ProjectionUtils::CreateReprojection(&millerSimd, &mercSimd);
     */
     
-    std::vector<uint8_t> imgRawData;
-    //imgRawData.resize(800 * 600, 0);
-    
-    std::vector<uint8_t> fileData;
-    lodepng::load_file(fileData, "D://image_eu.png");
-    
-    lodepng::decode(imgRawData, w, h, fileData, LodePNGColorType::LCT_GREY);
-    
+   
     //===================================================
     //Build input projection
     //===================================================
     
     Coordinate bbMin, bbMax;
-    bbMin.lat = -71.52_deg; bbMin.lon = -20.0_deg;
-    bbMax.lat = 23.1_deg; bbMax.lon = 44.1_deg;
+    bbMin.lat = -90.0_deg; bbMin.lon = -180.0_deg;
+    bbMax.lat = 90.0_deg; bbMax.lon = 180.0_deg;
     
-    //create input projection and set its visible frame
-    Miller * miller = new Miller();
-    miller->SetFrame(bbMin, bbMax, w, h, false);
-    
-    ns::Miller * millerSimd = new ns::Miller();
-    millerSimd->SetFrame(bbMin, bbMax, w, h, false);
-    
-    //render image in input projection - it should take input image and
-    //render it 1:1 based on ipImage frame
-    ProjectionRenderer pd(miller);
-    //pd.AddBorders("E://hranice//ll.csv");
-    pd.DrawImage(&imgRawData[0], ProjectionRenderer::GREY,  w, h, miller);
-    //pd.DrawBorders();
-    pd.SaveToFile("D://miller.png");
-    
-    
-    //===================================================
-    // Build output projection
-    //===================================================
-    
-    //Mercator latitude in <-85, 85>
-    if (bbMin.lat.deg() < -85) bbMin.lat = -85.0_deg;
-    if (bbMax.lat.deg() > 85) bbMax.lat = 85.0_deg;
-    
-    Mercator * mercator = new Mercator();
-    mercator->SetFrame(bbMin, bbMax, w, h, false);
-    
-    pd.SetProjection(mercator);
-    
-    auto t00 = std::chrono::high_resolution_clock::now();
-    
-    //compute mapping from input -> output projection
-    //newData[index] = oldData[reprojection[index]]
-    Reprojection reprojection = Projections::ProjectionUtils::CreateReprojection(miller, mercator);
-    //Reprojection reprojection = ns::ProjectionUtils::CreateReprojection(miller, mercator);
-    
-    auto tc = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - t00).count();
-    printf("%lld ms\n", tc);
+
+	GOES g(140.7_deg);
+	g.SetFrame(bbMin, bbMax, w, h, false);
+
+	Coordinate c;
+
+	//new zeeland
+	c.lat = -47.5_deg;
+	c.lon = 167.6_deg;
+	//[400,536] +-
+	//[3662,4925] +-
+	auto pp1 = g.Project<double>(c);
+	auto pp1i = g.ProjectInverse(pp1);
+
+	//hawai
+	c.lat = 19.0_deg; //lat je preklopena znamenkem
+	c.lon = -155.6_deg;
+	//[563,193] +-
+	//[5187,1808] +-
+	auto pp2 = g.Project<double>(c);
+
+	auto pp2i = g.ProjectInverse(pp2);
+
+	//auto xx = g.ProjectInternal(c);
+
+	//auto x = 5005.5 + xx.x * std::pow(2, -16) * 40932513;
+	//auto y = 5005.5 + xx.y * std::pow(2, -16) * 40932513;
+
+	//Mercator latitude in <-85, 85>
+
+	bbMin.lat = -70.0_deg; bbMin.lon = 77.0_deg;
+	bbMax.lat = 74.0_deg; bbMax.lon = 179.9_deg;
+
+	if (bbMin.lat.deg() < -85) bbMin.lat = -85.0_deg;
+	if (bbMax.lat.deg() > 85) bbMax.lat = 85.0_deg;
+
+	Mercator * mercator = new Mercator();
+	mercator->SetFrame(bbMin, bbMax, w, h, true);
+
+	ProjectionRenderer pd(mercator);
+	//compute mapping from input -> output projection   
+	Reprojection reprojection = Projections::ProjectionUtils::CreateReprojection(&g, mercator);
+	
+		
+
+	std::vector<uint8_t> imgRawData;	
+	std::vector<uint8_t> fileData;
+	lodepng::load_file(fileData, "D://h8fulldisk.png");
+	//lodepng::load_file(fileData, "D://full_disk_ahi_true_color.png");	
+	lodepng::decode(imgRawData, w, h, fileData, LodePNGColorType::LCT_GREY);
 
 
 	pd.Clear();
 	pd.DrawImage(&imgRawData[0], ProjectionRenderer::GREY, reprojection);
 	pd.DrawBorders();
-	pd.SaveToFile("D://mercator_float.png");
+	pd.SaveToFile("D://xxx.png");
+	
 
-	//============================================================================
-
-    ns::Mercator * mercatorSimd = new ns::Mercator();
-    mercatorSimd->SetFrame(bbMin, bbMax, w, h, false);
-    
-    
-    
-    Coordinate cc;
-    cc.lat = 10.52_deg; cc.lon = -5.0_deg;
-    
-    auto res = miller->Project<float>(cc);
-    
-    std::array<Projections::Coordinate, 8> c;
-    for (int i = 0; i < 8; i++) {
-        c[i] = cc;
-    }
-    auto res2 = millerSimd->Project<float>(c);
-    
-	t00 = std::chrono::high_resolution_clock::now();
-    Reprojection reprojectionSimd = ns::ProjectionUtils::CreateReprojection(millerSimd, mercatorSimd);    
-	tc = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - t00).count();
-	printf("%lld ms\n", tc);
-
-    pd.DrawImage(&imgRawData[0], ProjectionRenderer::GREY, reprojectionSimd);    
-    pd.DrawBorders();
-    pd.SaveToFile("D://mercator_float_avx.png");
-    	
-    
-    return 0;
+	return 0;
 }

@@ -6,6 +6,7 @@
 #include <vector>
 #include <complex>
 #include <functional>
+#include <tuple>
 
 
 #include <string>
@@ -47,8 +48,8 @@ namespace Projections
 		void SetFrame(InputProj * proj, MyRealType w, MyRealType h, bool keepAR = true);
 
 		void SetFrame(const ProjectionFrame & frame) OVERRIDE;
-		void SetFrame(std::vector<Coordinate> coord, MyRealType w, MyRealType h, bool keepAR = true) OVERRIDE;
-		void SetFrame(Coordinate minCoord, Coordinate maxCoord, MyRealType w, MyRealType h, bool keepAR = true) OVERRIDE;
+		void SetFrame(const std::vector<Coordinate> & coord, MyRealType w, MyRealType h, bool keepAR = true) OVERRIDE;
+		void SetFrame(const Coordinate & minCoord, const Coordinate & maxCoord, MyRealType w, MyRealType h, bool keepAR = true) OVERRIDE;
 
 		Coordinate GetTopLeftCorner() const OVERRIDE;
 		Coordinate CalcStep(STEP_TYPE type) const OVERRIDE;
@@ -60,8 +61,8 @@ namespace Projections
 		template <typename T = int>
 		T GetFrameHeight() const { return static_cast<T>(this->frame.h); }
 
-		Coordinate CalcEndPointShortest(Coordinate start, Angle bearing, MyRealType dist) const OVERRIDE;
-		Coordinate CalcEndPointDirect(Coordinate start, Angle bearing, MyRealType dist) const OVERRIDE;
+		Coordinate CalcEndPointShortest(const Coordinate & start, const Angle & bearing, MyRealType dist) const OVERRIDE;
+		Coordinate CalcEndPointDirect(const Coordinate & start, const Angle & bearing, MyRealType dist) const OVERRIDE;
 
 		void LineBresenham(Pixel<int> start, Pixel<int> end, 
 			std::function<void(int x, int y)> callback) const OVERRIDE;
@@ -93,6 +94,9 @@ namespace Projections
 		
 
 		ProjectionFrame frame;
+
+		std::tuple<double, double, double, double> 
+			GetFrameMinMax(const Coordinate & minCoord, const Coordinate & maxCoord);
 
 		ProjectionInfo(PROJECTION curProjection);
 	};

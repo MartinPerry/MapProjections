@@ -39,6 +39,23 @@ ProjectionInfo<Proj>::ProjectionInfo(PROJECTION curProjection)
 	this->frame.projInvPrecomH = 0.0;
 }
 
+template <typename Proj>
+std::tuple<double, double, double, double> ProjectionInfo<Proj>::GetFrameMinMax(
+	const Coordinate & minCoord, const Coordinate & maxCoord)
+{
+	ProjectedValue tmpMinPixel = static_cast<Proj*>(this)->ProjectInternal(minCoord);
+	ProjectedValue tmpMaxPixel = static_cast<Proj*>(this)->ProjectInternal(maxCoord);
+
+	ProjectedValue minVal, maxVal;
+	
+	minVal.x = std::min(tmpMinPixel.x, tmpMaxPixel.x);
+	minVal.y = std::min(tmpMinPixel.y, tmpMaxPixel.y);
+
+	maxVal.x = std::max(tmpMinPixel.x, tmpMaxPixel.x);
+	maxVal.y = std::max(tmpMinPixel.y, tmpMaxPixel.y);
+
+	return std::make_tuple(minVal.x, minVal.y, maxVal.x, maxVal.y);
+}
 
 
 template <typename Proj>
@@ -68,14 +85,13 @@ void ProjectionInfo<Proj>::SetFrame(const ProjectionFrame & frame)
 /// if yes, data are enlarged beyond AABB to keep AR
 /// </param>
 template <typename Proj>
-void ProjectionInfo<Proj>::SetFrame(std::vector<Coordinate> coord,
+void ProjectionInfo<Proj>::SetFrame(const std::vector<Coordinate> & coord,
 	MyRealType w, MyRealType h, bool keepAR)
 {
 	Coordinate minCoord = coord[0];
 	Coordinate maxCoord = coord[0];
 	
-
-	for (Coordinate & c : coord)
+	for (const Coordinate & c : coord)
 	{
 		if (c.lat.rad() > maxCoord.lat.rad())
 		{
@@ -111,42 +127,54 @@ void ProjectionInfo<Proj>::SetFrame(std::vector<Coordinate> coord,
 /// if yes, data are enlarged beyond AABB to keep AR
 /// </param>
 template <typename Proj>
-void ProjectionInfo<Proj>::SetFrame(Coordinate minCoord, Coordinate maxCoord,
+void ProjectionInfo<Proj>::SetFrame(const Coordinate & minCoord, const Coordinate & maxCoord,
 	MyRealType w, MyRealType h, bool keepAR)
-{
-		
-	//calculate minimum internal projection value
-	ProjectedValue  minPixel = { std::numeric_limits<MyRealType>::max(), std::numeric_limits<MyRealType>::max() };
-	
-	ProjectedValue tmpMinPixel = static_cast<Proj*>(this)->ProjectInternal(minCoord);
-	ProjectedValue tmpMaxPixel = static_cast<Proj*>(this)->ProjectInternal(maxCoord);
-	
-	minPixel.x = std::min(tmpMinPixel.x, tmpMaxPixel.x);
-	minPixel.y = std::min(tmpMinPixel.y, tmpMaxPixel.y);
+{		
+	//calculate minimum internal projection value				
 
-	frame.minPixelOffsetX = minPixel.x;
-    frame.minPixelOffsetY = minPixel.y;
+	auto [minX, minY, maxX, maxY] = static_cast<Proj*>(this)->GetFrameMinMax(minCoord, maxCoord);
 
+	//ProjectedValue tmpMinPixel = static_cast<Proj*>(this)->ProjectInternal(minCoord);
+	//ProjectedValue tmpMaxPixel = static_cast<Proj*>(this)->ProjectInternal(maxCoord);
+	/*
+	if constexpr (std::is_same<Proj, GOES>::value)
+	{
+		tmpMinPixel.x = 0;
+		tmpMinPixel.y = 0;
+
+		tmpMaxPixel.x = 11000;
+		tmpMaxPixel.y = 11000;
+	}
+	*/
+	//store minimal value of [x, y] from internal projection
+	frame.minPixelOffsetX = minX;
+	frame.minPixelOffsetY = minY;
+
+	//Calculate width / height of internal projection		
+	MyRealType projW = maxX - frame.minPixelOffsetX;
+	MyRealType projH = maxY - frame.minPixelOffsetY;
+	
+	
 	//-----------------------------------------------------------
 	//calculate maximum internal projection value
 
 	//move origin to [0, 0]
-	tmpMinPixel.x = tmpMinPixel.x - minPixel.x;
-	tmpMinPixel.y = tmpMinPixel.y - minPixel.y;
+	//tmpMinPixel.x = tmpMinPixel.x - minPixel.x;
+	//tmpMinPixel.y = tmpMinPixel.y - minPixel.y;
 
 	//now, minPixel should be [0,0]
-	assert(tmpMinPixel.x == 0);
-	assert(tmpMinPixel.y == 0);
+	//assert(tmpMinPixel.x == 0);
+	//assert(tmpMinPixel.y == 0);
 
 	//move max accordingly
-	tmpMaxPixel.x = tmpMaxPixel.x - minPixel.x;
-	tmpMaxPixel.y = tmpMaxPixel.y - minPixel.y;
+	//tmpMaxPixel.x = tmpMaxPixel.x - minPixel.x;
+	//tmpMaxPixel.y = tmpMaxPixel.y - minPixel.y;
 
 	//calculate moved maximum
-	ProjectedValue maxPixel = { std::numeric_limits<MyRealType>::min(), std::numeric_limits<MyRealType>::min() };
+	//ProjectedValue maxPixel = { std::numeric_limits<MyRealType>::min(), std::numeric_limits<MyRealType>::min() };
 
-	maxPixel.x = std::max(tmpMinPixel.x, tmpMaxPixel.x);
-	maxPixel.y = std::max(tmpMinPixel.y, tmpMaxPixel.y);
+	//maxPixel.x = std::max(tmpMinPixel.x, tmpMaxPixel.x);
+	//maxPixel.y = std::max(tmpMinPixel.y, tmpMaxPixel.y);
 
 	//----------------------------------------------------------
 	
@@ -157,8 +185,8 @@ void ProjectionInfo<Proj>::SetFrame(Coordinate minCoord, Coordinate maxCoord,
 	this->frame.h = h;
 
 	//calculate scale in width and height
-	this->frame.wAR = this->frame.w / maxPixel.x; //minPixel.x == 0 => no need to calc difference abs(min - max)
-	this->frame.hAR = this->frame.h / maxPixel.y; //minPixel.y == 0 => no need to calc difference abs(min - max)
+	this->frame.wAR = this->frame.w / projW;
+	this->frame.hAR = this->frame.h / projH;
 	
 	this->frame.wPadding = 0;
 	this->frame.hPadding = 0;
@@ -173,8 +201,8 @@ void ProjectionInfo<Proj>::SetFrame(Coordinate minCoord, Coordinate maxCoord,
 		this->frame.wAR = globalAR;
 		this->frame.hAR = globalAR;
 
-		this->frame.wPadding = (this->frame.w - (this->frame.wAR * maxPixel.x)) * MyRealType(0.5);
-		this->frame.hPadding = (this->frame.h - (this->frame.hAR * maxPixel.y)) * MyRealType(0.5);
+		this->frame.wPadding = (this->frame.w - (this->frame.wAR * projW)) * MyRealType(0.5);
+		this->frame.hPadding = (this->frame.h - (this->frame.hAR * projH)) * MyRealType(0.5);
 	}
 	
 	this->frame.projInvPrecomW = -this->frame.wPadding + this->frame.wAR * this->frame.minPixelOffsetX;
@@ -234,8 +262,8 @@ const ProjectionFrame & ProjectionInfo<Proj>::GetFrame() const
 /// <param name="dist"></param>
 /// <returns></returns>
 template <typename Proj>
-Coordinate ProjectionInfo<Proj>::CalcEndPointShortest(Coordinate start,
-	Angle bearing, MyRealType dist) const
+Coordinate ProjectionInfo<Proj>::CalcEndPointShortest(const Coordinate & start,
+	const Angle & bearing, MyRealType dist) const
 {
 	
     MyRealType dr = dist / ProjectionConstants::EARTH_RADIUS;
@@ -272,7 +300,7 @@ Coordinate ProjectionInfo<Proj>::CalcEndPointShortest(Coordinate start,
 /// <returns></returns>
 template <typename Proj>
 Coordinate ProjectionInfo<Proj>::CalcEndPointDirect(
-	Coordinate start, Angle bearing, MyRealType dist) const
+	const Coordinate & start, const Angle & bearing, MyRealType dist) const
 {	
 	MyRealType dr = dist / ProjectionConstants::EARTH_RADIUS;
 

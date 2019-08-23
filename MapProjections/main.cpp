@@ -4,6 +4,7 @@
 #include <vector>
 
 #include "ProjectionInfo.h"
+#include "./Projections/Equirectangular.h"
 #include "./Projections/Mercator.h"
 #include "./Projections/Miller.h"
 #include "./Projections/LambertConic.h"
@@ -20,12 +21,31 @@ using namespace Projections;
 
 namespace ns = Projections::Simd;
 
-int main(int argc, const char * argv[]) {
-    
+int main(int argc, const char * argv[]) 
+{
+	Projections::Coordinate bbMin, bbMax;
+
+    //======= lambert conic
+
+	bbMin.lat = 21.1381_deg; bbMin.lon = -122.72_deg;
+	bbMax.lat = 47.84364_deg; bbMax.lon = -60.90137_deg;
+
+	//create input projection and set its visible frame
+	Projections::LambertConic * inputImage = new Projections::LambertConic(38.5_deg, -97.5_deg, 38.5_deg);
+	inputImage->SetFrame(bbMin, bbMax, 1799, 1059, false);
+
+
+	Projections::Equirectangular * outputImage = new Projections::Equirectangular();
+	outputImage->SetFrame(inputImage, false); //same resolution as ipImage frame
+
+
+	return 0;
+	//=======
+
     unsigned w = 600;
     unsigned h = 600;
-    	
-	
+    
+		
     /*
     std::array<Projections::Pixel<int>, 8> p;
     ns::Mercator mercSimd;
@@ -41,7 +61,7 @@ int main(int argc, const char * argv[]) {
     //Build input projection
     //===================================================
     
-    Coordinate bbMin, bbMax;
+   // Coordinate bbMin, bbMax;
     bbMin.lat = -90.0_deg; bbMin.lon = -180.0_deg;
     bbMax.lat = 90.0_deg; bbMax.lon = 180.0_deg;
     

@@ -41,7 +41,7 @@ namespace Projections
 		const MyRealType RADIUS_POLAR = MyRealType(6356.7523); //in km
 
 		std::tuple<double, double, double, double>
-			GetFrameMinMax(const Coordinate & minCoord, const Coordinate & maxCoord)
+			GetFrameBotLeftTopRight(const Coordinate & botLeft, const Coordinate & topRight)
 		{
 			return std::make_tuple(0, 0, 2 * COFF_COEF, 2 * LOFF_COEF);
 		}

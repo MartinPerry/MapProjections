@@ -47,9 +47,11 @@ namespace Projections
 		template <typename InputProj>
 		void SetFrame(InputProj * proj, MyRealType w, MyRealType h, bool keepAR = true);
 
-		void SetFrame(const ProjectionFrame & frame) OVERRIDE;
-		void SetFrame(const std::vector<Coordinate> & coord, MyRealType w, MyRealType h, bool keepAR = true) OVERRIDE;
-		void SetFrame(const Coordinate & minCoord, const Coordinate & maxCoord, MyRealType w, MyRealType h, bool keepAR = true) OVERRIDE;
+		void SetFrame(const ProjectionFrame & frame) OVERRIDE;		
+		void SetFrame(const Coordinate & botLeft, const Coordinate & topRight, MyRealType w, MyRealType h, bool keepAR = true) OVERRIDE;
+		void SetFrame(const Coordinate & a, const Coordinate & b, const Coordinate & c, const Coordinate & d, 
+			MyRealType w, MyRealType h, bool keepAR = true) OVERRIDE;
+
 
 		Coordinate GetTopLeftCorner() const OVERRIDE;
 		Coordinate CalcStep(STEP_TYPE type) const OVERRIDE;
@@ -96,7 +98,7 @@ namespace Projections
 		ProjectionFrame frame;
 
 		std::tuple<double, double, double, double> 
-			GetFrameMinMax(const Coordinate & minCoord, const Coordinate & maxCoord);
+			GetFrameBotLeftTopRight(const Coordinate & botLeft, const Coordinate & topRight);
 
 		ProjectionInfo(PROJECTION curProjection);
 	};

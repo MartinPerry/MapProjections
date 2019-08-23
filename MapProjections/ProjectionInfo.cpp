@@ -27,24 +27,24 @@ template <typename Proj>
 ProjectionInfo<Proj>::ProjectionInfo(PROJECTION curProjection)
 	: IProjectionInfo(curProjection)		
 {
-    frame.minPixelOffsetX = std::numeric_limits<MyRealType>::max();
-    frame.minPixelOffsetY = std::numeric_limits<MyRealType>::max();
-	frame.w = 0;
-	frame.h = 0;
-	frame.wPadding = 0;
-	frame.hPadding = 0;
-	frame.wAR = 1;
-	frame.hAR = 1;	
+	this->frame.minPixelOffsetX = std::numeric_limits<MyRealType>::max();
+	this->frame.minPixelOffsetY = std::numeric_limits<MyRealType>::max();
+	this->frame.w = 0;
+	this->frame.h = 0;
+	this->frame.wPadding = 0;
+	this->frame.hPadding = 0;
+	this->frame.wAR = 1;
+	this->frame.hAR = 1;
 	this->frame.projInvPrecomW = 0.0;
 	this->frame.projInvPrecomH = 0.0;
 }
 
 template <typename Proj>
-std::tuple<double, double, double, double> ProjectionInfo<Proj>::GetFrameMinMax(
-	const Coordinate & minCoord, const Coordinate & maxCoord)
+std::tuple<double, double, double, double> ProjectionInfo<Proj>::GetFrameBotLeftTopRight(
+	const Coordinate & botLeft, const Coordinate & topRight)
 {
-	ProjectedValue tmpMinPixel = static_cast<Proj*>(this)->ProjectInternal(minCoord);
-	ProjectedValue tmpMaxPixel = static_cast<Proj*>(this)->ProjectInternal(maxCoord);
+	ProjectedValue tmpMinPixel = static_cast<Proj*>(this)->ProjectInternal(botLeft);
+	ProjectedValue tmpMaxPixel = static_cast<Proj*>(this)->ProjectInternal(topRight);
 
 	ProjectedValue minVal, maxVal;
 	
@@ -71,81 +71,31 @@ void ProjectionInfo<Proj>::SetFrame(const ProjectionFrame & frame)
     this->frame.minPixelOffsetY = frame.minPixelOffsetY;
 	this->frame.projInvPrecomW = frame.projInvPrecomW;
 	this->frame.projInvPrecomH = frame.projInvPrecomH;
+
+	this->ComputeAABB(this->frame.min, this->frame.max);
 }
 
 
-
-/// <summary>
-/// Set current data active frame based on AABB that si calculatef from set of points
-/// </summary>
-/// <param name="coord">set of GPS points</param>
-/// <param name="w">frame width</param>
-/// <param name="h">frame height</param>
-/// <param name="keepAR">keep AR of data (default: true) 
-/// if yes, data are enlarged beyond AABB to keep AR
-/// </param>
-template <typename Proj>
-void ProjectionInfo<Proj>::SetFrame(const std::vector<Coordinate> & coord,
-	MyRealType w, MyRealType h, bool keepAR)
-{
-	Coordinate minCoord = coord[0];
-	Coordinate maxCoord = coord[0];
-	
-	for (const Coordinate & c : coord)
-	{
-		if (c.lat.rad() > maxCoord.lat.rad())
-		{
-			maxCoord.lat = c.lat;
-		}
-		if (c.lon.rad() > maxCoord.lon.rad())
-		{
-			maxCoord.lon = c.lon;
-		}
-
-
-		if (c.lat.rad() < minCoord.lat.rad())
-		{
-			minCoord.lat = c.lat;
-		}
-		if (c.lon.rad() < minCoord.lon.rad())
-		{
-			minCoord.lon = c.lon;
-		}
-	}
-
-	this->SetFrame(minCoord, maxCoord, w, h, keepAR);
-}
 
 /// <summary>
 /// Set current data active frame based on AABB (minCoord, maxCoord)
 /// </summary>
-/// <param name="minCoord">AABB min</param>
-/// <param name="maxCoord">AABB max</param>
+/// <param name="botLeft">Bottom left coordinate</param>
+/// <param name="topRight">Top right coordinate</param>
 /// <param name="w">frame width</param>
 /// <param name="h">frame height</param>
 /// <param name="keepAR">keep AR of data (default: true) 
 /// if yes, data are enlarged beyond AABB to keep AR
 /// </param>
 template <typename Proj>
-void ProjectionInfo<Proj>::SetFrame(const Coordinate & minCoord, const Coordinate & maxCoord,
+void ProjectionInfo<Proj>::SetFrame(const Coordinate & botLeft, const Coordinate & topRight,
 	MyRealType w, MyRealType h, bool keepAR)
 {		
 	//calculate minimum internal projection value				
 
-	auto [minX, minY, maxX, maxY] = static_cast<Proj*>(this)->GetFrameMinMax(minCoord, maxCoord);
+	auto [minX, minY, maxX, maxY] = static_cast<Proj*>(this)->GetFrameBotLeftTopRight(botLeft, topRight);
 
-	//ProjectedValue tmpMinPixel = static_cast<Proj*>(this)->ProjectInternal(minCoord);
-	//ProjectedValue tmpMaxPixel = static_cast<Proj*>(this)->ProjectInternal(maxCoord);
-	/*
-	if constexpr (std::is_same<Proj, GOES>::value)
-	{
-		tmpMinPixel.x = 0;
-		tmpMinPixel.y = 0;
 
-		tmpMaxPixel.x = 11000;
-		tmpMaxPixel.y = 11000;
-	}
-	*/
 	//store minimal value of [x, y] from internal projection
 	frame.minPixelOffsetX = minX;
 	frame.minPixelOffsetY = minY;
@@ -153,34 +103,9 @@ void ProjectionInfo<Proj>::SetFrame(const Coordinate & minCoord, const Coordinat
 	//Calculate width / height of internal projection		
 	MyRealType projW = maxX - frame.minPixelOffsetX;
 	MyRealType projH = maxY - frame.minPixelOffsetY;
-	
-	
-	//-----------------------------------------------------------
-	//calculate maximum internal projection value
-
-	//move origin to [0, 0]
-	//tmpMinPixel.x = tmpMinPixel.x - minPixel.x;
-	//tmpMinPixel.y = tmpMinPixel.y - minPixel.y;
-
-	//now, minPixel should be [0,0]
-	//assert(tmpMinPixel.x == 0);
-	//assert(tmpMinPixel.y == 0);
-
-	//move max accordingly
-	//tmpMaxPixel.x = tmpMaxPixel.x - minPixel.x;
-	//tmpMaxPixel.y = tmpMaxPixel.y - minPixel.y;
-
-	//calculate moved maximum
-	//ProjectedValue maxPixel = { std::numeric_limits<MyRealType>::min(), std::numeric_limits<MyRealType>::min() };
-
-	//maxPixel.x = std::max(tmpMinPixel.x, tmpMaxPixel.x);
-	//maxPixel.y = std::max(tmpMinPixel.y, tmpMaxPixel.y);
-
+			
 	//----------------------------------------------------------
-	
-	this->frame.min = minCoord;
-	this->frame.max = maxCoord;
-
+		
 	this->frame.w = w;
 	this->frame.h = h;
 
@@ -207,6 +132,14 @@ void ProjectionInfo<Proj>::SetFrame(const Coordinate & minCoord, const Coordinat
 	
 	this->frame.projInvPrecomW = -this->frame.wPadding + this->frame.wAR * this->frame.minPixelOffsetX;
 	this->frame.projInvPrecomH = -this->frame.h + this->frame.hPadding - this->frame.hAR * this->frame.minPixelOffsetY;
+
+	this->ComputeAABB(this->frame.min, this->frame.max);
+}
+
+template <typename Proj>
+void ProjectionInfo<Proj>::SetFrame(const Coordinate & a, const Coordinate & b, const Coordinate & c, const Coordinate & d,
+	MyRealType w, MyRealType h, bool keepAR)
+{
 }
 
 /// <summary>

@@ -37,6 +37,12 @@ ProjectionInfo<Proj>::ProjectionInfo(PROJECTION curProjection)
 	this->frame.hAR = 1;
 	this->frame.projInvPrecomW = 0.0;
 	this->frame.projInvPrecomH = 0.0;
+
+	this->frame.min.lat = -90.0_deg;
+	this->frame.max.lat = 90.0_deg;
+
+	this->frame.min.lon = -180.0_deg;
+	this->frame.max.lon = 180.0_deg;
 }
 
 template <typename Proj>
@@ -78,7 +84,13 @@ void ProjectionInfo<Proj>::SetFrame(const ProjectionFrame & frame)
 
 
 /// <summary>
-/// Set current data active frame based on AABB (minCoord, maxCoord)
+/// Set current data active frame based on image bottom left and
+/// top right coordinate
+/// 
+/// This assumes that data are plotted in 2D image and image has corners
+/// These corners do not have to correspond to AABB of coordinates
+/// For example: Lambert - image is square but corners are not AABB
+/// 
 /// </summary>
 /// <param name="botLeft">Bottom left coordinate</param>
 /// <param name="topRight">Top right coordinate</param>
@@ -136,15 +148,34 @@ void ProjectionInfo<Proj>::SetFrame(const Coordinate & botLeft, const Coordinate
 	this->ComputeAABB(this->frame.min, this->frame.max);
 }
 
+
+/// <summary>
+/// Set current data active frame based on AABB
+/// For projections that have orthogonal lat/lon,
+/// this is same as SetFrame, since botLeft = min and topRight = max
+/// 
+/// However, for other projections like Lambert, this will behave differently
+/// 
+/// </summary>
+/// <param name="min"></param>
+/// <param name="max"></param>
+/// <param name="w"></param>
+/// <param name="h"></param>
+/// <param name="keepAR"></param>
 template <typename Proj>
-void ProjectionInfo<Proj>::SetFrame(const Coordinate & a, const Coordinate & b, const Coordinate & c, const Coordinate & d,
+void ProjectionInfo<Proj>::SetFrameFromAABB(const Coordinate & min, const Coordinate & max,
 	MyRealType w, MyRealType h, bool keepAR)
 {
+	//not working correctly for non-orthogonal lat/lon projections !!!!!
+	//todo
+	this->SetFrame(min, max, w, h, keepAR);
 }
 
 /// <summary>
 /// calculate how many "degrees" is for one "pixel" in lat / lon
 /// cordinates are boundaries of pixels :
+/// This is correct only for projections that have orthogonal lat / lon
+/// (like Mercator), but not for eg. Lambert
 /// 
 /// Eg:
 /// Image is 2x2 px
@@ -345,22 +376,22 @@ void ProjectionInfo<Proj>::ComputeAABB(Coordinate & min, Coordinate & max) const
 	this->LineBresenham({ 0,0 }, { 0, hh },
 		[&](int x, int y) -> void {
 		Coordinate c = this->ProjectInverse({ x, y });
-		border.push_back(c);
+		border.push_back(std::move(c));
 	});
 	this->LineBresenham({ 0,0 }, { ww, 0 },
 		[&](int x, int y) -> void {
 		Coordinate c = this->ProjectInverse({ x, y });
-		border.push_back(c);
+		border.push_back(std::move(c));
 	});
 	this->LineBresenham({ ww, hh }, { 0, hh },
 		[&](int x, int y) -> void {
 		Coordinate c = this->ProjectInverse({ x, y });
-		border.push_back(c);
+		border.push_back(std::move(c));
 	});
 	this->LineBresenham({ ww, hh }, { 0, hh },
 		[&](int x, int y) -> void {
 		Coordinate c = this->ProjectInverse({ x, y });
-		border.push_back(c);
+		border.push_back(std::move(c));
 	});
 
 	

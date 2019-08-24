@@ -41,18 +41,16 @@ namespace Projections
 		virtual void SetFrame(InputProj * proj, double w, double h, bool keepAR = true) = 0;
 		*/
 
-		virtual void SetFrame(const ProjectionFrame & frame) = 0;
-		virtual void SetFrame(std::vector<Coordinate> coord, MyRealType w, MyRealType h, bool keepAR = true) = 0;
+		virtual void SetFrame(const ProjectionFrame & frame) = 0;		
 		virtual void SetFrame(const Coordinate & botLeft, const Coordinate & topRight, MyRealType w, MyRealType h, bool keepAR = true) = 0;
-		virtual void SetFrame(const Coordinate & a, const Coordinate & b, const Coordinate & c, const Coordinate & d,
-			MyRealType w, MyRealType h, bool keepAR = true) = 0;
+		virtual void SetFrameFromAABB(const Coordinate & min, const Coordinate & max, MyRealType w, MyRealType h, bool keepAR = true) = 0;
 
 		virtual Coordinate GetTopLeftCorner() const = 0;
 		virtual Coordinate CalcStep(STEP_TYPE type) const = 0;
 		virtual const ProjectionFrame & GetFrame() const = 0;
 
-		virtual Coordinate CalcEndPointShortest(Coordinate start, Angle bearing, MyRealType dist) const = 0;
-		virtual Coordinate CalcEndPointDirect(Coordinate start, Angle bearing, MyRealType dist) const = 0;
+		virtual Coordinate CalcEndPointShortest(const Coordinate & start, const Angle & bearing, MyRealType dist) const = 0;
+		virtual Coordinate CalcEndPointDirect(const Coordinate & start, const Angle & bearing, MyRealType dist) const = 0;
 
 		virtual void LineBresenham(Pixel<int> start, Pixel<int> end,
 			std::function<void(int x, int y)> callback) const = 0;

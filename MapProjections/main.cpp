@@ -21,23 +21,60 @@ using namespace Projections;
 
 namespace ns = Projections::Simd;
 
-int main(int argc, const char * argv[]) 
+
+void TestLambertConic()
 {
+	unsigned w = 600;
+	unsigned h = 600;
+
+	std::vector<uint8_t> imgRawData;
+	std::vector<uint8_t> fileData;
+	lodepng::load_file(fileData, "D://hrrr.png");
+	//lodepng::load_file(fileData, "D://full_disk_ahi_true_color.png");	
+	lodepng::decode(imgRawData, w, h, fileData, LodePNGColorType::LCT_GREY);
+
+
+
 	Projections::Coordinate bbMin, bbMax;
 
-    //======= lambert conic
+	//======= lambert conic
 
 	bbMin.lat = 21.1381_deg; bbMin.lon = -122.72_deg;
 	bbMax.lat = 47.84364_deg; bbMax.lon = -60.90137_deg;
 
+	bbMin.lat = 21.140547_deg; bbMin.lon = -134.09548_deg;
+	bbMax.lat = 52.6132742_deg; bbMax.lon = -60.9365_deg;
+
 	//create input projection and set its visible frame
 	Projections::LambertConic * inputImage = new Projections::LambertConic(38.5_deg, -97.5_deg, 38.5_deg);
+
+	//auto kk = inputImage->ProjectInverseInternal(-899.5, -529.5);
+
 	inputImage->SetFrame(bbMin, bbMax, 1799, 1059, false);
 
 
 	Projections::Equirectangular * outputImage = new Projections::Equirectangular();
 	outputImage->SetFrame(inputImage, false); //same resolution as ipImage frame
 
+
+	ProjectionRenderer pd(outputImage);
+	//compute mapping from input -> output projection   
+	Reprojection reprojection = Projections::ProjectionUtils::CreateReprojection(inputImage, outputImage);
+
+
+
+	pd.Clear();
+	pd.DrawImage(&imgRawData[0], ProjectionRenderer::GREY, reprojection);
+	pd.DrawBorders();
+	pd.SaveToFile("D://xxx2.png");
+
+}
+
+
+
+int main(int argc, const char * argv[]) 
+{
+	TestLambertConic();
 
 	return 0;
 	//=======
@@ -60,7 +97,8 @@ int main(int argc, const char * argv[])
     //===================================================
     //Build input projection
     //===================================================
-    
+	Projections::Coordinate bbMin, bbMax;
+
    // Coordinate bbMin, bbMax;
     bbMin.lat = -90.0_deg; bbMin.lon = -180.0_deg;
     bbMax.lat = 90.0_deg; bbMax.lon = 180.0_deg;

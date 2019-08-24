@@ -12,7 +12,39 @@ namespace Projections
 
 	struct ProjectionUtils
 	{
-		
+		/// <summary>
+		/// Reproject inputData based on reproj.
+		/// Output array has size reproj.outW * reproj.outH
+		/// Output array must be released with delete[]
+		/// </summary>
+		/// <param name="reproj"></param>
+		/// <param name="inputData"></param>
+		/// <param name="NO_VALUE"></param>
+		/// <returns></returns>
+		template <typename DataType>
+		static DataType * ReprojectData(const Reprojection & reproj, DataType * inputData, DataType NO_VALUE)
+		{			
+			DataType * output = new DataType[reproj.outW * reproj.outH];
+
+			for (int y = 0; y < reproj.outH; y++)
+			{
+				for (int x = 0; x < reproj.outW; x++)
+				{
+					int index = x + y * reproj.outW;
+					if ((reproj.pixels[index].x == -1) || (reproj.pixels[index].y == -1))
+					{
+						//outside of the model - no data - put there NO_VALUE
+						output[index] = NO_VALUE;
+						continue;
+					}
+					int origIndex = reproj.pixels[index].x + reproj.pixels[index].y * reproj.inW;
+					output[index] = inputData[origIndex];
+				}
+			}
+
+			return output;
+		}
+
 		/// <summary>
 		/// Re-project data from -> to
 		/// Calculates mapping: toData[index] = fromData[reprojection[index]]
@@ -93,9 +125,16 @@ namespace Projections
 		};
 
 
+		/// <summary>
+		/// Reproject single pixel from -> to
+		/// </summary>
+		/// <param name="p"></param>
+		/// <param name="from"></param>
+		/// <param name="to"></param>
+		/// <returns></returns>
 		template <typename InPixelType, typename OutPixelType,
 			typename FromProjection, typename ToProjection>
-			static Pixel<OutPixelType> ReProject(Pixel<InPixelType> p,
+		static Pixel<OutPixelType> ReProject(Pixel<InPixelType> p,
 				const FromProjection * from, const ToProjection * to)
 		{
             Coordinate cc = to->template ProjectInverse<InPixelType, false>(p);
@@ -136,11 +175,16 @@ namespace Projections
 			return (latDeg > 90) ? (latDeg - 180) : latDeg;
 		};
 
+		/// <summary>
+		/// Calculate Haversine distance in km between from - to
+		/// 
+		/// /http://stackoverflow.com/questions/365826/calculate-distance-between-2-gps-coordinates
+		/// </summary>		
+		/// <param name="from"></param>
+		/// <param name="to"></param>
+		/// <returns></returns>
 		static double Distance(const Coordinate & from, const Coordinate & to)
-		{
-			//haversine distance in km
-			//http://stackoverflow.com/questions/365826/calculate-distance-between-2-gps-coordinates
-
+		{			
 			MyRealType dlong = to.lon.rad() - from.lon.rad();
 			MyRealType dlat = to.lat.rad() - from.lat.rad();
 
@@ -151,7 +195,7 @@ namespace Projections
 			if (dlong >= 3.14159265358979323846)
 			{
 				//we are going over 0deg meridian
-				//distance meaby wrapped around the word - shortest path
+				//distance maybe wrapped around the word - shortest path
 
 				//split computation to [-lon, 0] & [0, lon]
 				//which basically mean, subtract equator length => 40075km

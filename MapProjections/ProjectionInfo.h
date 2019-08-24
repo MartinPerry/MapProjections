@@ -49,8 +49,7 @@ namespace Projections
 
 		void SetFrame(const ProjectionFrame & frame) OVERRIDE;		
 		void SetFrame(const Coordinate & botLeft, const Coordinate & topRight, MyRealType w, MyRealType h, bool keepAR = true) OVERRIDE;
-		void SetFrame(const Coordinate & a, const Coordinate & b, const Coordinate & c, const Coordinate & d, 
-			MyRealType w, MyRealType h, bool keepAR = true) OVERRIDE;
+		void SetFrameFromAABB(const Coordinate & min, const Coordinate & max, MyRealType w, MyRealType h, bool keepAR = true) OVERRIDE;
 
 
 		Coordinate GetTopLeftCorner() const OVERRIDE;
@@ -116,10 +115,8 @@ namespace Projections
 	template <typename InputProj>
 	void ProjectionInfo<Proj>::SetFrame(InputProj * proj, bool keepAR)
 	{
-		Coordinate cMin, cMax;
-		proj->ComputeAABB(cMin, cMax);
-
-		this->SetFrame(cMin, cMax, proj->GetFrameWidth(), proj->GetFrameHeight(), keepAR);
+		auto f = proj->GetFrame();
+		this->SetFrameFromAABB(f.min, f.max, f.w, f.h, keepAR);
 	};
 
 
@@ -136,10 +133,8 @@ namespace Projections
 	template <typename InputProj>
 	void ProjectionInfo<Proj>::SetFrame(InputProj * proj, MyRealType w, MyRealType h, bool keepAR)
 	{
-		Coordinate cMin, cMax;
-		proj->ComputeAABB(cMin, cMax);
-
-		this->SetFrame(cMin, cMax, w, h, keepAR);
+		auto f = proj->GetFrame();
+		this->SetFrame(f.min, f.max, w, h, keepAR);
 	};
 
 

@@ -19,8 +19,10 @@ namespace Projections
 	{
 	public:
 		static const bool INDEPENDENT_LAT_LON = true; //can Lat / Lon be computed separatly. To compute one, we dont need the other
+		static const bool ORTHOGONAL_LAT_LON = true; //is lat / lon is orthogonal to each other
 
-		Mercator() : ProjectionInfo(PROJECTION::MERCATOR_PROJ) { }
+		Mercator() : ProjectionInfo(PROJECTION::MERCATOR_PROJ)
+		{ }
 
 		friend class ProjectionInfo<Mercator>;
 

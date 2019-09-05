@@ -20,6 +20,7 @@ namespace Projections
 	public:
 
 		static const bool INDEPENDENT_LAT_LON = true; //can Lat / Lon be computed separatly. To compute one, we dont need the other
+		static const bool ORTHOGONAL_LAT_LON = true; //lat / lon is orthogonal to each otjer
 
 		Equirectangular() : Equirectangular(0.0_deg) {}
 		Equirectangular(const Longitude & lonCentralMeridian) :

@@ -29,7 +29,7 @@ void TestLambertConic()
 
 	std::vector<uint8_t> imgRawData;
 	std::vector<uint8_t> fileData;
-	lodepng::load_file(fileData, "D://hrrr.png");
+	lodepng::load_file(fileData, "D://hrrr2.png");
 	//lodepng::load_file(fileData, "D://full_disk_ahi_true_color.png");	
 	lodepng::decode(imgRawData, w, h, fileData, LodePNGColorType::LCT_GREY);
 
@@ -50,7 +50,7 @@ void TestLambertConic()
 
 	//auto kk = inputImage->ProjectInverseInternal(-899.5, -529.5);
 
-	inputImage->SetFrame(bbMin, bbMax, 1799, 1059, false);
+	inputImage->SetFrame(bbMin, bbMax, w, h, false);
 
 
 	Projections::Equirectangular * outputImage = new Projections::Equirectangular();

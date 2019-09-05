@@ -84,8 +84,8 @@ namespace Projections
 		MyRealType wAR; //width AR
 		MyRealType hAR; //height AR
 
-		MyRealType projInvPrecomW;
-		MyRealType projInvPrecomH;
+		MyRealType projPrecomX;
+		MyRealType projPrecomY;
 	};
 
     struct ProjectionConstants

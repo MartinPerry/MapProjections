@@ -35,8 +35,8 @@ ProjectionInfo<Proj>::ProjectionInfo(PROJECTION curProjection)
 	this->frame.hPadding = 0;
 	this->frame.wAR = 1;
 	this->frame.hAR = 1;
-	this->frame.projInvPrecomW = 0.0;
-	this->frame.projInvPrecomH = 0.0;
+	this->frame.projPrecomX = 0.0;
+	this->frame.projPrecomY = 0.0;
 
 	this->frame.min.lat = -90.0_deg;
 	this->frame.max.lat = 90.0_deg;
@@ -75,8 +75,8 @@ void ProjectionInfo<Proj>::SetFrame(const ProjectionFrame & frame)
 	this->frame.wPadding = frame.wPadding;
 	this->frame.minPixelOffsetX = frame.minPixelOffsetX;
     this->frame.minPixelOffsetY = frame.minPixelOffsetY;
-	this->frame.projInvPrecomW = frame.projInvPrecomW;
-	this->frame.projInvPrecomH = frame.projInvPrecomH;
+	this->frame.projPrecomX = frame.projPrecomX;
+	this->frame.projPrecomY = frame.projPrecomY;
 
 	this->ComputeAABB(this->frame.min, this->frame.max);
 }
@@ -142,8 +142,8 @@ void ProjectionInfo<Proj>::SetFrame(const Coordinate & botLeft, const Coordinate
 		this->frame.hPadding = (this->frame.h - (this->frame.hAR * projH)) * MyRealType(0.5);
 	}
 	
-	this->frame.projInvPrecomW = -this->frame.wPadding + this->frame.wAR * this->frame.minPixelOffsetX;
-	this->frame.projInvPrecomH = -this->frame.h + this->frame.hPadding - this->frame.hAR * this->frame.minPixelOffsetY;
+	this->frame.projPrecomX = -this->frame.wPadding + this->frame.wAR * this->frame.minPixelOffsetX;
+	this->frame.projPrecomY = -this->frame.h + this->frame.hPadding - this->frame.hAR * this->frame.minPixelOffsetY;
 
 	this->ComputeAABB(this->frame.min, this->frame.max);
 }
@@ -371,29 +371,40 @@ void ProjectionInfo<Proj>::ComputeAABB(Coordinate & min, Coordinate & max) const
 {
 	int ww = static_cast<int>(this->frame.w - 1);
 	int hh = static_cast<int>(this->frame.h - 1);
-
+	
 	std::vector<Coordinate> border;
-	this->LineBresenham({ 0,0 }, { 0, hh },
-		[&](int x, int y) -> void {
-		Coordinate c = this->ProjectInverse({ x, y });
-		border.push_back(std::move(c));
-	});
-	this->LineBresenham({ 0,0 }, { ww, 0 },
-		[&](int x, int y) -> void {
-		Coordinate c = this->ProjectInverse({ x, y });
-		border.push_back(std::move(c));
-	});
-	this->LineBresenham({ ww, hh }, { 0, hh },
-		[&](int x, int y) -> void {
-		Coordinate c = this->ProjectInverse({ x, y });
-		border.push_back(std::move(c));
-	});
-	this->LineBresenham({ ww, hh }, { 0, hh },
-		[&](int x, int y) -> void {
-		Coordinate c = this->ProjectInverse({ x, y });
-		border.push_back(std::move(c));
-	});
 
+	if (static_cast<const Proj*>(this)->ORTHOGONAL_LAT_LON)
+	{
+		Coordinate c = this->ProjectInverse({ 0, 0 });
+		border.push_back(std::move(c));
+
+		c = this->ProjectInverse({ ww, hh });
+		border.push_back(std::move(c));
+	}
+	else
+	{
+		this->LineBresenham({ 0,0 }, { 0, hh },
+			[&](int x, int y) -> void {
+				Coordinate c = this->ProjectInverse({ x, y });
+				border.push_back(std::move(c));
+			});
+		this->LineBresenham({ 0,0 }, { ww, 0 },
+			[&](int x, int y) -> void {
+				Coordinate c = this->ProjectInverse({ x, y });
+				border.push_back(std::move(c));
+			});
+		this->LineBresenham({ ww, hh }, { 0, hh },
+			[&](int x, int y) -> void {
+				Coordinate c = this->ProjectInverse({ x, y });
+				border.push_back(std::move(c));
+			});
+		this->LineBresenham({ ww, hh }, { 0, hh },
+			[&](int x, int y) -> void {
+				Coordinate c = this->ProjectInverse({ x, y });
+				border.push_back(std::move(c));
+			});
+	}
 	
 	ProjectionUtils::ComputeAABB(border, min, max);
 }

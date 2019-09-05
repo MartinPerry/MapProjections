@@ -21,6 +21,7 @@ namespace Projections
 	public:
 
 		static const bool INDEPENDENT_LAT_LON = false; //can Lat / Lon be computed separatly. To compute one, we dont need the other
+		static const bool ORTHOGONAL_LAT_LON = false; //is lat / lon is orthogonal to each other
 
 		PolarSteregographic() : PolarSteregographic(10.0_deg, 60.0_deg) {}
 		PolarSteregographic(const Longitude & lonCentralMeridian, const Latitude & latCentral) : ProjectionInfo(PROJECTION::POLAR_STEREOGRAPHICS_PROJ),

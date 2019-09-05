@@ -149,15 +149,19 @@ namespace Projections
 	RET_VAL(PixelType, std::is_integral) ProjectionInfo<Proj>::Project(const Coordinate & c) const
 	{
 
-		ProjectedValue raw = static_cast<const Proj*>(this)->ProjectInternal(c);
-
-
-		raw.x = raw.x - this->frame.minPixelOffsetX;
-		raw.y = raw.y - this->frame.minPixelOffsetY;
+		ProjectedValue rawPixel = static_cast<const Proj*>(this)->ProjectInternal(c);
 
 		Pixel<PixelType> p;
-		p.x = static_cast<PixelType>(std::round(this->frame.wPadding + (raw.x * this->frame.wAR)));
-		p.y = static_cast<PixelType>(std::round(this->frame.h - this->frame.hPadding - (raw.y * this->frame.hAR)));
+		p.x = static_cast<PixelType>(std::round(-this->frame.projPrecomX + rawPixel.x * this->frame.wAR));
+		p.y = static_cast<PixelType>(std::round(-this->frame.projPrecomY - rawPixel.y * this->frame.hAR));
+
+
+		//rawPixel.x = rawPixel.x - this->frame.minPixelOffsetX;
+		//rawPixel.y = rawPixel.y - this->frame.minPixelOffsetY;
+
+		//Pixel<PixelType> p;
+		//p.x = static_cast<PixelType>(std::round(this->frame.wPadding + (rawPixel.x * this->frame.wAR)));
+		//p.y = static_cast<PixelType>(std::round(this->frame.h - this->frame.hPadding - (rawPixel.y * this->frame.hAR)));
 
 		return p;
 	};
@@ -170,14 +174,19 @@ namespace Projections
 		//project value and get "pseudo" pixel coordinate
 		ProjectedValue rawPixel = static_cast<const Proj*>(this)->ProjectInternal(c);
 
+		Pixel<PixelType> p;
+		p.x = static_cast<PixelType>(-this->frame.projPrecomX + rawPixel.x * this->frame.wAR);
+		p.y = static_cast<PixelType>(-this->frame.projPrecomY - rawPixel.y * this->frame.hAR);
+
+
 		//move our pseoude pixel to "origin"
-		rawPixel.x = rawPixel.x - this->frame.minPixelOffsetX;
-		rawPixel.y = rawPixel.y - this->frame.minPixelOffsetY;
+		//rawPixel.x = rawPixel.x - this->frame.minPixelOffsetX;
+		//rawPixel.y = rawPixel.y - this->frame.minPixelOffsetY;
 
 		//calculate pixel in final frame
-		Pixel<PixelType> p;
-		p.x = static_cast<PixelType>(this->frame.wPadding + (rawPixel.x * this->frame.wAR));
-		p.y = static_cast<PixelType>(this->frame.h - this->frame.hPadding - (rawPixel.y * this->frame.hAR));
+		//Pixel<PixelType> p;
+		//p.x = static_cast<PixelType>(this->frame.wPadding + (rawPixel.x * this->frame.wAR));
+		//p.y = static_cast<PixelType>(this->frame.h - this->frame.hPadding - (rawPixel.y * this->frame.hAR));
 
 		return p;
 	};
@@ -193,11 +202,11 @@ namespace Projections
 	{
 
 		//double xx = (static_cast<double>(p.x) - this->frame.wPadding + this->frame.wAR * this->frame.minPixelOffset.x);
-		MyRealType xx = (static_cast<MyRealType>(p.x) + this->frame.projInvPrecomW);
+		MyRealType xx = (static_cast<MyRealType>(p.x) + this->frame.projPrecomX);
 		xx /= this->frame.wAR;
 
 		//double yy = (static_cast<double>(p.y) - this->frame.h + this->frame.hPadding - this->frame.hAR * this->frame.minPixelOffset.y);
-		MyRealType yy = (static_cast<MyRealType>(p.y) + this->frame.projInvPrecomH);
+		MyRealType yy = (static_cast<MyRealType>(p.y) + this->frame.projPrecomY);
 		yy /= -this->frame.hAR;
 
 

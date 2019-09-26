@@ -4,6 +4,7 @@
 
 #include <vector>
 #include <string>
+#include <tuple>
 
 #include "GeoCoordinate.h"
 
@@ -53,6 +54,9 @@ namespace Projections
 
 		Coordinate() {};
 		Coordinate(Longitude lon, Latitude lat) : lon(lon), lat(lat) {};
+
+		static Coordinate CreateFromCartesianLHSystem(MyRealType x, MyRealType y, MyRealType z);
+		std::tuple<MyRealType, MyRealType, MyRealType> ConvertToCartesianLHSystem(MyRealType radius);
 	};
 
 	struct Reprojection

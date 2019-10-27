@@ -24,24 +24,22 @@ namespace Projections
 		template <typename DataType>
 		static DataType * ReprojectData(const Reprojection & reproj, DataType * inputData, DataType NO_VALUE)
 		{			
-			DataType * output = new DataType[reproj.outW * reproj.outH];
+			size_t count = reproj.outW * reproj.outH;
 
-			for (int y = 0; y < reproj.outH; y++)
+			DataType * output = new DataType[count];
+
+			for (size_t index = 0; index < count; index++)
 			{
-				for (int x = 0; x < reproj.outW; x++)
+				if ((reproj.pixels[index].x == -1) || (reproj.pixels[index].y == -1))
 				{
-					int index = x + y * reproj.outW;
-					if ((reproj.pixels[index].x == -1) || (reproj.pixels[index].y == -1))
-					{
-						//outside of the model - no data - put there NO_VALUE
-						output[index] = NO_VALUE;
-						continue;
-					}
-					int origIndex = reproj.pixels[index].x + reproj.pixels[index].y * reproj.inW;
-					output[index] = inputData[origIndex];
+					//outside of the model - no data - put there NO_VALUE
+					output[index] = NO_VALUE;
+					continue;
 				}
+				size_t origIndex = reproj.pixels[index].x + reproj.pixels[index].y * reproj.inW;
+				output[index] = inputData[origIndex];
 			}
-
+			
 			return output;
 		}
 
@@ -151,6 +149,11 @@ namespace Projections
 		static void ComputeAABB(const std::vector<Coordinate> & c,
 			Coordinate & min, Coordinate & max)
 		{
+			if (c.size() == 0)
+			{				
+				return;
+			}
+
 			min = c[0];
 			max = c[0];
 			for (size_t i = 1; i < c.size(); i++)

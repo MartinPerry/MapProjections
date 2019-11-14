@@ -369,8 +369,11 @@ void ProjectionInfo<Proj>::LineBresenham(Pixel<int> start, Pixel<int> end,
 template <typename Proj>
 void ProjectionInfo<Proj>::ComputeAABB(Coordinate & min, Coordinate & max) const
 {
-	int ww = static_cast<int>(this->frame.w - 1);
-	int hh = static_cast<int>(this->frame.h - 1);
+	//[0, 0] is at pixel corner
+	//[w, h] is at pixel corner
+	//If we use [w - 1, h - 1] it correspond to [0, 0] at pixel center
+	int ww = static_cast<int>(this->frame.w);
+	int hh = static_cast<int>(this->frame.h);
 	
 	std::vector<Coordinate> border;
 

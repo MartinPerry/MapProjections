@@ -34,9 +34,8 @@ namespace Projections
 
 	typedef enum STEP_TYPE
     {
-		PIXEL_CENTER = 0,
-		PIXEL_BORDER = 1
-
+		PIXEL_BORDER = 0,
+		PIXEL_CENTER = 1
 	} STEP_TYPE;
 
 	template <typename PixelType = int,
@@ -90,6 +89,8 @@ namespace Projections
 
 		MyRealType projPrecomX;
 		MyRealType projPrecomY;
+
+		STEP_TYPE stepType;
 	};
 
     struct ProjectionConstants

@@ -37,6 +37,7 @@ ProjectionInfo<Proj>::ProjectionInfo(PROJECTION curProjection)
 	this->frame.hAR = 1;
 	this->frame.projPrecomX = 0.0;
 	this->frame.projPrecomY = 0.0;
+	this->frame.stepType = STEP_TYPE::PIXEL_CENTER;
 
 	this->frame.min.lat = -90.0_deg;
 	this->frame.max.lat = 90.0_deg;
@@ -77,6 +78,7 @@ void ProjectionInfo<Proj>::SetFrame(const ProjectionFrame & frame)
     this->frame.minPixelOffsetY = frame.minPixelOffsetY;
 	this->frame.projPrecomX = frame.projPrecomX;
 	this->frame.projPrecomY = frame.projPrecomY;
+	this->frame.stepType = frame.stepType;
 
 	this->ComputeAABB(this->frame.min, this->frame.max);
 }
@@ -91,22 +93,43 @@ void ProjectionInfo<Proj>::SetFrame(const ProjectionFrame & frame)
 /// These corners do not have to correspond to AABB of coordinates
 /// For example: Lambert - image is square but corners are not AABB
 /// 
+/// StepType - determine, where coordinate botLeft and topRight is positioned within the pixel
+/// It can be at pixel center or on its border
+/// First position [0, 0] is always correct,
+/// Max position [w, h] can be shifted by -1 based on mode:
+/// 
+/// If we have data:
+/// Border mode: 
+/// width = 3 pixels (a---b---c---d), GPS is located at a, b, c, d
+/// In this case, there are 3 "steps" between GPS positions, but 4 positions in total
+/// For this, max position is calculated directly from width that correspond to steps
+/// a + 3 * '---' => d
+/// 
+/// Center mode:
+/// width = 3 pixels (|-a-|-b-|-c-|), GPS is located at a, b, c
+/// In this case, there are only 2 steps between GPS positions, but 3 positions in total
+/// For this, max position is calculated by subtract 1 from width to get correct last.
+/// a + (3 - 1) * '-x-' => c
+/// 
 /// </summary>
 /// <param name="botLeft">Bottom left coordinate</param>
 /// <param name="topRight">Top right coordinate</param>
 /// <param name="w">frame width</param>
 /// <param name="h">frame height</param>
+/// <param name="stepType">type of pixel steps</param> 
 /// <param name="keepAR">keep AR of data (default: true) 
 /// if yes, data are enlarged beyond AABB to keep AR
 /// </param>
 template <typename Proj>
 void ProjectionInfo<Proj>::SetFrame(const Coordinate & botLeft, const Coordinate & topRight,
-	MyRealType w, MyRealType h, bool keepAR)
+	MyRealType w, MyRealType h, STEP_TYPE stepType, bool keepAR)
 {		
+	
 	//calculate minimum internal projection value				
 
 	auto [minX, minY, maxX, maxY] = static_cast<Proj*>(this)->GetFrameBotLeftTopRight(botLeft, topRight);
 
+	this->frame.stepType = stepType;
 
 	//store minimal value of [x, y] from internal projection
 	frame.minPixelOffsetX = minX;
@@ -122,8 +145,8 @@ void ProjectionInfo<Proj>::SetFrame(const Coordinate & botLeft, const Coordinate
 	this->frame.h = h;
 
 	//calculate scale in width and height
-	this->frame.wAR = this->frame.w / projW;
-	this->frame.hAR = this->frame.h / projH;
+	this->frame.wAR = (this->frame.w - stepType) / projW;
+	this->frame.hAR = (this->frame.h - stepType) / projH;
 	
 	this->frame.wPadding = 0;
 	this->frame.hPadding = 0;
@@ -138,12 +161,12 @@ void ProjectionInfo<Proj>::SetFrame(const Coordinate & botLeft, const Coordinate
 		this->frame.wAR = globalAR;
 		this->frame.hAR = globalAR;
 
-		this->frame.wPadding = (this->frame.w - (this->frame.wAR * projW)) * MyRealType(0.5);
-		this->frame.hPadding = (this->frame.h - (this->frame.hAR * projH)) * MyRealType(0.5);
+		this->frame.wPadding = ((this->frame.w - stepType) - (this->frame.wAR * projW)) * MyRealType(0.5);
+		this->frame.hPadding = ((this->frame.h - stepType) - (this->frame.hAR * projH)) * MyRealType(0.5);
 	}
 	
 	this->frame.projPrecomX = -this->frame.wPadding + this->frame.wAR * this->frame.minPixelOffsetX;
-	this->frame.projPrecomY = -this->frame.h + this->frame.hPadding - this->frame.hAR * this->frame.minPixelOffsetY;
+	this->frame.projPrecomY = -(this->frame.h - stepType) + this->frame.hPadding - this->frame.hAR * this->frame.minPixelOffsetY;
 
 	this->ComputeAABB(this->frame.min, this->frame.max);
 }
@@ -164,11 +187,11 @@ void ProjectionInfo<Proj>::SetFrame(const Coordinate & botLeft, const Coordinate
 /// <param name="keepAR"></param>
 template <typename Proj>
 void ProjectionInfo<Proj>::SetFrameFromAABB(const Coordinate & min, const Coordinate & max,
-	MyRealType w, MyRealType h, bool keepAR)
+	MyRealType w, MyRealType h, STEP_TYPE stepType, bool keepAR)
 {
 	//not working correctly for non-orthogonal lat/lon projections !!!!!
 	//todo
-	this->SetFrame(min, max, w, h, keepAR);
+	this->SetFrame(min, max, w, h, stepType, keepAR);
 }
 
 /// <summary>
@@ -178,25 +201,26 @@ void ProjectionInfo<Proj>::SetFrameFromAABB(const Coordinate & min, const Coordi
 /// (like Mercator), but not for eg. Lambert
 /// 
 /// Eg:
-/// Image is 2x2 px
+/// For 
+/// Image with frame 2x2 px and border mode:
 ///    -180  +180
-///  +90 -------
+///  +90 *-----*
 ///      |  |  |
 ///      -------
 ///      |  |  |
-///  -90 -------
+///  -90 *-----*
 /// Step latitude : (90 - (-90)) / 2 = 90
 /// Step longitude : (180 - (-180)) / 2 = 180
 /// </summary>
 /// <returns></returns>
 template <typename Proj>
-Coordinate ProjectionInfo<Proj>::CalcStep(STEP_TYPE type) const
-{
-	int dif = (type == STEP_TYPE::PIXEL_BORDER) ? 0 : 1;
-	
+Coordinate ProjectionInfo<Proj>::GetDeltaStep() const
+{	
 	Coordinate step;
-	step.lat = Latitude::rad((this->frame.max.lat.rad() - this->frame.min.lat.rad()) / (this->frame.h - dif));
-	step.lon = Longitude::rad((this->frame.max.lon.rad() - this->frame.min.lon.rad()) / (this->frame.w - dif));
+	step.lat = Latitude::rad((this->frame.max.lat.rad() - this->frame.min.lat.rad()) / 
+		(this->frame.h - this->frame.stepType));
+	step.lon = Longitude::rad((this->frame.max.lon.rad() - this->frame.min.lon.rad()) / 
+		(this->frame.w - this->frame.stepType));
 
 	return step;
 }
@@ -217,81 +241,9 @@ const ProjectionFrame & ProjectionInfo<Proj>::GetFrame() const
 	return this->frame;
 }
 
-/// <summary>
-/// Calculate end point based on shortest path (on real earth surface)
-/// see: http://www.movable-type.co.uk/scripts/latlong.html
-/// </summary>
-/// <param name="start"></param>
-/// <param name="bearing"></param>
-/// <param name="dist"></param>
-/// <returns></returns>
-template <typename Proj>
-Coordinate ProjectionInfo<Proj>::CalcEndPointShortest(const Coordinate & start,
-	const Angle & bearing, MyRealType dist) const
-{
-	
-    MyRealType dr = dist / ProjectionConstants::EARTH_RADIUS;
-	
-	MyRealType sinLat = std::sin(start.lat.rad());
-	MyRealType cosLat = std::cos(start.lat.rad());
-	MyRealType sinDr = std::sin(dr);
-	MyRealType cosDr = std::cos(dr);
-	MyRealType sinBear = std::sin(bearing.rad());
-	MyRealType cosBear = std::cos(bearing.rad());
-
-	MyRealType sinEndLat = sinLat * cosDr + cosLat * sinDr * cosBear;
-	MyRealType endLat = std::asin(sinEndLat);
-	MyRealType y = sinBear * sinDr * cosLat;
-	MyRealType x = cosDr - sinLat * sinLat;
-	MyRealType endLon = start.lon.rad() + std::atan2(y, x);
-
-	
-	Coordinate end;
-	end.lat = Latitude::rad(endLat);
-    end.lon = Longitude::deg(ProjectionUtils::NormalizeLon(ProjectionUtils::radToDeg(endLon)));
-
-	return end;
-
-}
 
 /// <summary>
-/// "Rhumb lines"
-/// Calculate end point based on direct path (straight line between two points in projected earth)
-/// </summary>
-/// <param name="start"></param>
-/// <param name="bearing"></param>
-/// <param name="dist"></param>
-/// <returns></returns>
-template <typename Proj>
-Coordinate ProjectionInfo<Proj>::CalcEndPointDirect(
-	const Coordinate & start, const Angle & bearing, MyRealType dist) const
-{	
-	MyRealType dr = dist / ProjectionConstants::EARTH_RADIUS;
-
-	MyRealType difDr = dr * std::cos(bearing.rad());
-	MyRealType endLat = start.lat.rad() + difDr;
-
-	// check for some daft bugger going past the pole, normalise latitude if so
-	if (std::abs(endLat) > ProjectionConstants::PI_2) endLat = endLat > 0 ? ProjectionConstants::PI - endLat : -ProjectionConstants::PI - endLat;
-
-
-	MyRealType projLatDif = std::log(std::tan(endLat / 2 + ProjectionConstants::PI_4) / std::tan(start.lat.rad() / 2 + ProjectionConstants::PI_4));
-	MyRealType q = std::abs(projLatDif) > 10e-12 ? difDr / projLatDif : std::cos(start.lat.rad()); // E-W course becomes ill-conditioned with 0/0
-
-	MyRealType difDrQ = dr * std::sin(bearing.rad()) / q;
-	MyRealType endLon = start.lon.rad() + difDrQ;
-
-	
-
-	Coordinate end;
-	end.lat = Latitude::rad(endLat);
-	end.lon = Longitude::deg(ProjectionUtils::NormalizeLon(ProjectionUtils::radToDeg(endLon)));
-
-	return end;
-}
-
-/// <summary>
-/// Get pixels on line. For each pixel, callback function is called
+/// Get "pixels" on line. For each "pixel", callback function is called
 /// </summary>
 /// <param name="start"></param>
 /// <param name="end"></param>
@@ -300,30 +252,36 @@ template <typename Proj>
 void ProjectionInfo<Proj>::LineBresenham(Pixel<int> start, Pixel<int> end,
 	std::function<void(int x, int y)> callback) const
 {
-	if ((start.x >= static_cast<int>(this->GetFrameWidth()))
-		|| (start.y >= static_cast<int>(this->GetFrameHeight())))
+	if ((start.x < 0) || (start.y < 0))
 	{
 		return;
 	}
 
-	if ((end.x >= static_cast<int>(this->GetFrameWidth()))
-		|| (end.y >= static_cast<int>(this->GetFrameHeight())))
+	if ((end.x < 0) || (end.y < 0))
 	{
 		return;
 	}
 
-	if ((start.x < 0)
-		|| (start.y < 0))
+	
+	//for coordinates at pixel corner:
+	//[0, 0] is at pixel corner
+	//[w, h] is at pixel corner
+	//for coordinates at pixel center:
+	//use [w - 1, h - 1] (it correspond to [0, 0] for pixel center)
+	int ww = static_cast<int>(this->frame.w) - this->frame.stepType;
+	int hh = static_cast<int>(this->frame.h) - this->frame.stepType;
+
+
+	if ((start.x > ww) || (start.y > hh))
 	{
 		return;
 	}
 
-	if ((end.x < 0)
-		|| (end.y < 0))
+	if ((end.x > ww) || (end.y > hh))
 	{
 		return;
 	}
-
+	
 
 
 
@@ -368,13 +326,16 @@ void ProjectionInfo<Proj>::LineBresenham(Pixel<int> start, Pixel<int> end,
 /// <param name="max"></param>
 template <typename Proj>
 void ProjectionInfo<Proj>::ComputeAABB(Coordinate & min, Coordinate & max) const
-{
+{	
+	//for coordinates at pixel corner:
 	//[0, 0] is at pixel corner
 	//[w, h] is at pixel corner
-	//If we use [w - 1, h - 1] it correspond to [0, 0] at pixel center
-	int ww = static_cast<int>(this->frame.w);
-	int hh = static_cast<int>(this->frame.h);
-	
+	//for coordinates at pixel center:
+	//use [w - 1, h - 1] (it correspond to [0, 0] for pixel center)
+	int ww = static_cast<int>(this->frame.w) - this->frame.stepType;
+	int hh = static_cast<int>(this->frame.h) - this->frame.stepType;
+
+			
 	std::vector<Coordinate> border;
 
 	if (static_cast<const Proj*>(this)->ORTHOGONAL_LAT_LON)

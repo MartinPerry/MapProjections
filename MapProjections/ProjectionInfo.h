@@ -26,7 +26,9 @@ namespace Projections
 	template <typename Proj>
 	class ProjectionInfo : public IProjectionInfo
 	{
-	public:				
+	public:		
+		
+
 		virtual ~ProjectionInfo() = default;
 
 		template <typename PixelType = int>
@@ -45,15 +47,15 @@ namespace Projections
 		void SetFrame(InputProj * proj, bool keepAR = true);
 
 		template <typename InputProj>
-		void SetFrame(InputProj * proj, MyRealType w, MyRealType h, bool keepAR = true);
+		void SetFrame(InputProj * proj, MyRealType w, MyRealType h, STEP_TYPE stepType, bool keepAR = true);
 
 		void SetFrame(const ProjectionFrame & frame) OVERRIDE;		
-		void SetFrame(const Coordinate & botLeft, const Coordinate & topRight, MyRealType w, MyRealType h, bool keepAR = true) OVERRIDE;
-		void SetFrameFromAABB(const Coordinate & min, const Coordinate & max, MyRealType w, MyRealType h, bool keepAR = true) OVERRIDE;
+		void SetFrame(const Coordinate & botLeft, const Coordinate & topRight, MyRealType w, MyRealType h, STEP_TYPE stepType, bool keepAR = true) OVERRIDE;
+		void SetFrameFromAABB(const Coordinate & min, const Coordinate & max, MyRealType w, MyRealType h, STEP_TYPE stepType, bool keepAR = true) OVERRIDE;
 
 
 		Coordinate GetTopLeftCorner() const OVERRIDE;
-		Coordinate CalcStep(STEP_TYPE type) const OVERRIDE;
+		Coordinate GetDeltaStep() const OVERRIDE;
 		const ProjectionFrame & GetFrame() const OVERRIDE;
 
 
@@ -61,10 +63,7 @@ namespace Projections
 		T GetFrameWidth() const { return static_cast<T>(this->frame.w); }
 		template <typename T = int>
 		T GetFrameHeight() const { return static_cast<T>(this->frame.h); }
-
-		Coordinate CalcEndPointShortest(const Coordinate & start, const Angle & bearing, MyRealType dist) const OVERRIDE;
-		Coordinate CalcEndPointDirect(const Coordinate & start, const Angle & bearing, MyRealType dist) const OVERRIDE;
-
+		
 		void LineBresenham(Pixel<int> start, Pixel<int> end, 
 			std::function<void(int x, int y)> callback) const OVERRIDE;
 
@@ -99,6 +98,7 @@ namespace Projections
 		std::tuple<double, double, double, double> 
 			GetFrameBotLeftTopRight(const Coordinate & botLeft, const Coordinate & topRight);
 
+		
 		ProjectionInfo(PROJECTION curProjection);
 	};
 
@@ -116,7 +116,7 @@ namespace Projections
 	void ProjectionInfo<Proj>::SetFrame(InputProj * proj, bool keepAR)
 	{
 		auto f = proj->GetFrame();
-		this->SetFrameFromAABB(f.min, f.max, f.w, f.h, keepAR);
+		this->SetFrameFromAABB(f.min, f.max, f.w, f.h, f.stepType, keepAR);
 	};
 
 
@@ -131,10 +131,10 @@ namespace Projections
 	/// </param>
 	template <typename Proj>
 	template <typename InputProj>
-	void ProjectionInfo<Proj>::SetFrame(InputProj * proj, MyRealType w, MyRealType h, bool keepAR)
+	void ProjectionInfo<Proj>::SetFrame(InputProj * proj, MyRealType w, MyRealType h, STEP_TYPE stepType, bool keepAR)
 	{
 		auto f = proj->GetFrame();
-		this->SetFrame(f.min, f.max, w, h, keepAR);
+		this->SetFrame(f.min, f.max, w, h, stepType, keepAR);
 	};
 
 

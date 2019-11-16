@@ -50,7 +50,7 @@ void TestLambertConic()
 
 	//auto kk = inputImage->ProjectInverseInternal(-899.5, -529.5);
 
-	inputImage->SetFrame(bbMin, bbMax, w, h, false);
+	inputImage->SetFrame(bbMin, bbMax, w, h, Projections::STEP_TYPE::PIXEL_CENTER, false);
 
 
 	Projections::Equirectangular * outputImage = new Projections::Equirectangular();
@@ -105,7 +105,7 @@ int main(int argc, const char * argv[])
     
 
 	GOES g(140.7_deg);
-	g.SetFrame(bbMin, bbMax, w, h, false);
+	g.SetFrame(bbMin, bbMax, w, h, Projections::STEP_TYPE::PIXEL_CENTER, false);
 
 	Coordinate c;
 
@@ -140,7 +140,7 @@ int main(int argc, const char * argv[])
 	if (bbMax.lat.deg() > 85) bbMax.lat = 85.0_deg;
 
 	Mercator * mercator = new Mercator();
-	mercator->SetFrame(bbMin, bbMax, w, h, true);
+	mercator->SetFrame(bbMin, bbMax, w, h, Projections::STEP_TYPE::PIXEL_CENTER, true);
 
 	ProjectionRenderer pd(mercator);
 	//compute mapping from input -> output projection   

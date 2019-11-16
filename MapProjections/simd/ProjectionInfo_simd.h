@@ -84,7 +84,7 @@ namespace Projections::Simd
         res.x = _mm256_add_ps(res.x, _mm256_set1_ps(static_cast<float>(frame.wPadding)));
         
         res.y = _mm256_mul_ps(raw.y, _mm256_set1_ps(static_cast<float>(frame.hAR)));
-        res.y = _mm256_sub_ps(_mm256_set1_ps(static_cast<float>(frame.h - frame.hPadding)), res.y);
+        res.y = _mm256_sub_ps(_mm256_set1_ps(static_cast<float>((frame.h - frame.stepType) - frame.hPadding)), res.y);
         
         //move our pseoude pixel to "origin"
         //rawPixel.x = rawPixel.x - frame.minPixelOffset.x;

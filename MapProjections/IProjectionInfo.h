@@ -1,6 +1,8 @@
 #ifndef IPROJECTION_INFO_H
 #define IPROJECTION_INFO_H
 
+#include <functional>
+
 #include "MapProjectionStructures.h"
 
 //#define USE_VIRTUAL_INTERFACE
@@ -16,6 +18,9 @@ namespace Projections
 	class IProjectionInfo
 	{
 	public:
+
+		static Coordinate CalcEndPointShortest(const Coordinate & start, const Angle & bearing, MyRealType dist);
+		static Coordinate CalcEndPointDirect(const Coordinate & start, const Angle & bearing, MyRealType dist);
 
 		const PROJECTION curProjection;
 
@@ -42,16 +47,13 @@ namespace Projections
 		*/
 
 		virtual void SetFrame(const ProjectionFrame & frame) = 0;		
-		virtual void SetFrame(const Coordinate & botLeft, const Coordinate & topRight, MyRealType w, MyRealType h, bool keepAR = true) = 0;
-		virtual void SetFrameFromAABB(const Coordinate & min, const Coordinate & max, MyRealType w, MyRealType h, bool keepAR = true) = 0;
+		virtual void SetFrame(const Coordinate & botLeft, const Coordinate & topRight, MyRealType w, MyRealType h, STEP_TYPE stepType, bool keepAR = true) = 0;
+		virtual void SetFrameFromAABB(const Coordinate & min, const Coordinate & max, MyRealType w, MyRealType h, STEP_TYPE stepType, bool keepAR = true) = 0;
 
 		virtual Coordinate GetTopLeftCorner() const = 0;
-		virtual Coordinate CalcStep(STEP_TYPE type) const = 0;
+		virtual Coordinate GetDeltaStep() const = 0;
 		virtual const ProjectionFrame & GetFrame() const = 0;
-
-		virtual Coordinate CalcEndPointShortest(const Coordinate & start, const Angle & bearing, MyRealType dist) const = 0;
-		virtual Coordinate CalcEndPointDirect(const Coordinate & start, const Angle & bearing, MyRealType dist) const = 0;
-
+	
 		virtual void LineBresenham(Pixel<int> start, Pixel<int> end,
 			std::function<void(int x, int y)> callback) const = 0;
 

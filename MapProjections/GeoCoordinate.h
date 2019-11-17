@@ -1,6 +1,8 @@
 #ifndef GEOCORDINATE_H
 #define GEOCORDINATE_H
 
+#include <math.h>
+
 typedef double MyRealType;
 
 template <typename T>
@@ -38,6 +40,12 @@ struct Latitude : public IAngle<Latitude>
 	Latitude() : IAngle() {};
 	Latitude(const Angle & a) : IAngle(a.rad(), a.deg()) {};
 
+	void Normalize()
+	{
+		valDeg = (valDeg > 90) ? (valDeg - 180) : valDeg;
+		valRad = Angle::deg(valDeg).rad();
+	};
+
 	friend struct IAngle<Latitude>;
 protected:
 	Latitude(MyRealType valRad, MyRealType valDeg) : IAngle(valRad, valDeg) {};
@@ -47,6 +55,12 @@ struct Longitude : public IAngle<Longitude>
 {
 	Longitude() : IAngle() {};
 	Longitude(const Angle & a) : IAngle(a.rad(), a.deg()) {};
+
+	void Normalize()
+	{
+		valDeg = std::fmod(valDeg + 540, 360) - 180;
+		valRad = Angle::deg(valDeg).rad();
+	};
 
 	friend struct IAngle<Longitude>;
 protected:

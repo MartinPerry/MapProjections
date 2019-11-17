@@ -1,6 +1,5 @@
-#include "./IProjectionInfo.h"
-
 #include "./MapProjectionUtils.h"
+
 
 using namespace Projections;
 
@@ -12,7 +11,7 @@ using namespace Projections;
 /// <param name="bearing"></param>
 /// <param name="dist"></param>
 /// <returns></returns>
-Coordinate IProjectionInfo::CalcEndPointShortest(const Coordinate & start,
+Coordinate ProjectionUtils::CalcEndPointShortest(const Coordinate & start,
 	const Angle & bearing, MyRealType dist)
 {
 
@@ -34,7 +33,8 @@ Coordinate IProjectionInfo::CalcEndPointShortest(const Coordinate & start,
 
 	Coordinate end;
 	end.lat = Latitude::rad(endLat);
-	end.lon = Longitude::deg(ProjectionUtils::NormalizeLon(ProjectionUtils::radToDeg(endLon)));
+	end.lon = Longitude::rad(endLon);
+	end.lon.Normalize();
 
 	return end;
 
@@ -48,7 +48,7 @@ Coordinate IProjectionInfo::CalcEndPointShortest(const Coordinate & start,
 /// <param name="bearing"></param>
 /// <param name="dist"></param>
 /// <returns></returns>
-Coordinate IProjectionInfo::CalcEndPointDirect(
+Coordinate ProjectionUtils::CalcEndPointDirect(
 	const Coordinate & start, const Angle & bearing, MyRealType dist)
 {
 	MyRealType dr = dist / ProjectionConstants::EARTH_RADIUS;
@@ -70,7 +70,39 @@ Coordinate IProjectionInfo::CalcEndPointDirect(
 
 	Coordinate end;
 	end.lat = Latitude::rad(endLat);
-	end.lon = Longitude::deg(ProjectionUtils::NormalizeLon(ProjectionUtils::radToDeg(endLon)));
+	end.lon = Longitude::rad(endLon);
+	end.lon.Normalize();
 
 	return end;
 }
+
+/// <summary>
+/// Calculate Haversine distance in km between from - to
+/// 
+/// /http://stackoverflow.com/questions/365826/calculate-distance-between-2-gps-coordinates
+/// </summary>		
+/// <param name="from"></param>
+/// <param name="to"></param>
+/// <returns></returns>
+double ProjectionUtils::Distance(const Coordinate & from, const Coordinate & to)
+{
+	MyRealType dlong = to.lon.rad() - from.lon.rad();
+	MyRealType dlat = to.lat.rad() - from.lat.rad();
+
+	MyRealType a = std::pow(std::sin(dlat / 2.0), 2) + std::cos(from.lat.rad()) * std::cos(to.lat.rad()) * std::pow(std::sin(dlong / 2.0), 2);
+	MyRealType c = 2 * std::atan2(std::sqrt(a), std::sqrt(1 - a));
+	MyRealType d = 6367 * c;
+
+	if (dlong >= 3.14159265358979323846)
+	{
+		//we are going over 0deg meridian
+		//distance maybe wrapped around the word - shortest path
+
+		//split computation to [-lon, 0] & [0, lon]
+		//which basically mean, subtract equator length => 40075km
+
+		d = 40075.0 - d;
+	}
+
+	return d;
+};

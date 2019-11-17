@@ -18,10 +18,7 @@ namespace Projections
 	class IProjectionInfo
 	{
 	public:
-
-		static Coordinate CalcEndPointShortest(const Coordinate & start, const Angle & bearing, MyRealType dist);
-		static Coordinate CalcEndPointDirect(const Coordinate & start, const Angle & bearing, MyRealType dist);
-
+		
 		const PROJECTION curProjection;
 
 		virtual ~IProjectionInfo() = default;

@@ -282,7 +282,6 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="IProjectionInfo.cpp" />
     <ClCompile Include="lodepng.cpp" />
     <ClCompile Include="main.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_lib|Win32'">true</ExcludedFromBuild>
@@ -291,6 +290,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release_lib|x64'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="MapProjectionStructures.cpp" />
+    <ClCompile Include="MapProjectionsUtils.cpp" />
     <ClCompile Include="ProjectionInfo.cpp" />
     <ClCompile Include="ProjectionRenderer.cpp" />
   </ItemGroup>
@@ -314,6 +314,9 @@
     <ClInclude Include="simd\ProjectionInfo_simd.h" />
     <ClInclude Include="simd\Projections\Mercator_simd.h" />
     <ClInclude Include="simd\Projections\Miller_simd.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\README.md" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

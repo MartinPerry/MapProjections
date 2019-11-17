@@ -167,55 +167,16 @@ namespace Projections
 
 			}
 		};
-
-		static double NormalizeLon(MyRealType lonDeg)
-		{
-			return std::fmod(lonDeg + 540, 360) - 180;
-		};
-
-		static double NormalizeLat(MyRealType latDeg)
-		{
-			return (latDeg > 90) ? (latDeg - 180) : latDeg;
-		};
-
-		/// <summary>
-		/// Calculate Haversine distance in km between from - to
-		/// 
-		/// /http://stackoverflow.com/questions/365826/calculate-distance-between-2-gps-coordinates
-		/// </summary>		
-		/// <param name="from"></param>
-		/// <param name="to"></param>
-		/// <returns></returns>
-		static double Distance(const Coordinate & from, const Coordinate & to)
-		{			
-			MyRealType dlong = to.lon.rad() - from.lon.rad();
-			MyRealType dlat = to.lat.rad() - from.lat.rad();
-
-			MyRealType a = std::pow(std::sin(dlat / 2.0), 2) + std::cos(from.lat.rad()) * std::cos(to.lat.rad()) * std::pow(std::sin(dlong / 2.0), 2);
-			MyRealType c = 2 * std::atan2(std::sqrt(a), std::sqrt(1 - a));
-			MyRealType d = 6367 * c;
-
-			if (dlong >= 3.14159265358979323846)
-			{
-				//we are going over 0deg meridian
-				//distance maybe wrapped around the word - shortest path
-
-				//split computation to [-lon, 0] & [0, lon]
-				//which basically mean, subtract equator length => 40075km
-
-				d = 40075.0 - d;
-			}
-
-			return d;
-		};
+	
+		static Coordinate CalcEndPointShortest(const Coordinate & start, const Angle & bearing, MyRealType dist);
+		static Coordinate CalcEndPointDirect(const Coordinate & start, const Angle & bearing, MyRealType dist);
+		static double Distance(const Coordinate & from, const Coordinate & to);
         
         inline static MyRealType cot(MyRealType x) { return 1.0 / std::tan(x); };
         inline static MyRealType sec(MyRealType x) { return 1.0 / std::cos(x); };
         inline static MyRealType sinc(MyRealType x) { return std::sin(x) / x; };
         inline static MyRealType sgn(MyRealType x) { return (x < 0) ? -1 : (x > 0); };
-      
-        inline static MyRealType degToRad(MyRealType x) { return x * 0.0174532925; }
-        inline static MyRealType radToDeg(MyRealType x) { return x * 57.2957795; }
+              
 	};
 
 };

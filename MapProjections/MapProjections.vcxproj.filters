@@ -39,7 +39,7 @@
     <ClCompile Include="ProjectionInfo.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="IProjectionInfo.cpp">
+    <ClCompile Include="MapProjectionsUtils.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -101,5 +101,10 @@
     <ClInclude Include="Projections\GOES.h">
       <Filter>Header Files\Projections</Filter>
     </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\README.md">
+      <Filter>Resource Files</Filter>
+    </None>
   </ItemGroup>
 </Project>

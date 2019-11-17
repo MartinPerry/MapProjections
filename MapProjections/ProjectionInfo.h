@@ -214,16 +214,15 @@ namespace Projections
 		ProjectedValueInverse pi = static_cast<const Proj*>(this)->ProjectInverseInternal(xx, yy);
 
 		Coordinate c;
+		c.lat = pi.lat;
+		c.lon = pi.lon;
+
 		if (Normalize)
 		{
-			c.lat = Latitude::deg(ProjectionUtils::NormalizeLat(pi.lat.deg()));
-			c.lon = Longitude::deg(ProjectionUtils::NormalizeLon(pi.lon.deg()));
+			c.lat.Normalize();
+			c.lon.Normalize();			
 		}
-		else
-		{
-			c.lat = pi.lat;
-			c.lon = pi.lon;
-		}
+		
 		return c;
 	};
 

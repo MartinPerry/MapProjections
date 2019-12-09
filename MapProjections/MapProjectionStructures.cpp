@@ -21,6 +21,7 @@ const MyRealType ProjectionConstants::PI_2 = MyRealType(0.5) * ProjectionConstan
 const MyRealType ProjectionConstants::E = MyRealType(std::exp(1.0));
 const MyRealType ProjectionConstants::EARTH_RADIUS = MyRealType(6371);
 
+//=============================================================================
 
 /// <summary>
 /// Create Coordinate from cartexian [x, y, z]. 
@@ -43,25 +44,23 @@ Coordinate Coordinate::CreateFromCartesianLHSystem(MyRealType x, MyRealType y, M
 };
 
 /// <summary>
-/// Convert latitude / longitude to left-handed cartesian coordinate system
-/// Radius is used as scaled earth radius
-/// 
-/// Source:
-/// https://vvvv.org/blog/polar-spherical-and-geographic-coordinates
+/// Precompute sin and cos values for lat/lon
+/// and reuse them for 
+/// ConvertVectorToCartesianLHSystem or
+/// ConvertToCartesianLHSystem
 /// </summary>
-/// <param name="radius"></param>
 /// <returns></returns>
-std::tuple<MyRealType, MyRealType, MyRealType> Coordinate::ConvertToCartesianLHSystem(MyRealType radius)
+Coordinate::PrecomputedSinCos Coordinate::PrecomputeSinCos() const
 {
-	MyRealType cosLat = std::cos(lat.rad());
-	
-	MyRealType x = radius * cosLat * std::sin(lon.rad());
-	MyRealType y = radius * std::sin(lat.rad());
-	MyRealType z = -radius * cosLat * std::cos(lon.rad());
-
-	return { x, y, z };
+	Coordinate::PrecomputedSinCos tmp;
+	tmp.sinLat = std::sin(lat.rad());
+	tmp.cosLat = std::cos(lat.rad());
+	tmp.sinLon = std::sin(lon.rad());
+	tmp.cosLon = std::cos(lon.rad());
+	return tmp;
 }
 
+//=============================================================================
 
 /// <summary>
 /// Load reprojection info from file
@@ -126,3 +125,5 @@ void Reprojection::SaveToFile(const std::string & fileName)
     fclose(f);
     
 }
+
+//=============================================================================

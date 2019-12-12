@@ -20,6 +20,10 @@
 
 namespace Projections
 {
+	//================================================================================================
+	//================================================================================================
+	//================================================================================================
+
 
 	typedef enum PROJECTION
     {
@@ -33,11 +37,17 @@ namespace Projections
 		GOES_PROJ = 6
 	} PROJECTION;
 
+
 	typedef enum STEP_TYPE
     {
 		PIXEL_BORDER = 0,
 		PIXEL_CENTER = 1
 	} STEP_TYPE;
+
+	//================================================================================================
+	//================================================================================================
+	//================================================================================================
+
 
 	template <typename PixelType = int,
     typename = typename std::enable_if<std::is_arithmetic<PixelType>::value, PixelType>::type>
@@ -47,34 +57,52 @@ namespace Projections
         PixelType y;
     };
 
-	struct Coordinate
-    {
+	//================================================================================================
+	//================================================================================================
+	//================================================================================================
+
+
+	struct Coordinate {
+
 		struct PrecomputedSinCos
 		{
-			MyRealType sinLat;
-			MyRealType cosLat;
-			MyRealType sinLon;
-			MyRealType cosLon;
+			double sinLat;
+			double cosLat;
+			double sinLon;
+			double cosLon;
 		};
 
 		Longitude lon;
 		Latitude lat;
 
 		Coordinate() {};
-		Coordinate(Longitude lon, Latitude lat) : lon(lon), lat(lat) {};
+		Coordinate(Longitude lon, Latitude lat) :
+			lon(lon), lat(lat) {};
 
 		PrecomputedSinCos PrecomputeSinCos() const;
 
-		static Coordinate CreateFromCartesianLHSystem(MyRealType x, MyRealType y, MyRealType z);
+		static Coordinate CreateFromCartesianLHSystem(double x, double y, double z);
+		static Coordinate CreateFromCartesianLHSystem(double x, double y, double z, double & radius);
 
-		template <typename T = std::tuple<MyRealType, MyRealType, MyRealType>>
-		T ConvertToCartesianLHSystem(MyRealType radius,
+		template <typename T = std::tuple<double, double, double>>
+		T ConvertToCartesianLHSystem(double radius,
 			const Coordinate::PrecomputedSinCos * precomp = nullptr) const;
 
-		template <typename T = std::tuple<MyRealType, MyRealType, MyRealType>>
+		Coordinate ConvertVectorFromCartesianLHSystem(double dx, double dy, double dz,
+			const Coordinate::PrecomputedSinCos * precomp = nullptr) const;
+
+		Coordinate ConvertVectorFromCartesianLHSystem(double dx, double dy, double dz, double & radius,
+			const Coordinate::PrecomputedSinCos * precomp = nullptr) const;
+
+		template <typename T = std::tuple<double, double, double>>
 		T ConvertVectorToCartesianLHSystem(const Longitude & lonDif, const Latitude & latDif,
 			const Coordinate::PrecomputedSinCos * precomp = nullptr) const;
 	};
+
+	//================================================================================================
+	//================================================================================================
+	//================================================================================================
+
 
 	struct Reprojection
     {
@@ -88,6 +116,11 @@ namespace Projections
 		void SaveToFile(const std::string & fileName);
 
 	};
+
+	//================================================================================================
+	//================================================================================================
+	//================================================================================================
+
 
 	struct ProjectionFrame
 	{
@@ -111,6 +144,11 @@ namespace Projections
 		STEP_TYPE stepType;
 	};
 
+	//================================================================================================
+	//================================================================================================
+	//================================================================================================
+
+
     struct ProjectionConstants
     {
         static const MyRealType PI;
@@ -120,7 +158,9 @@ namespace Projections
         static const MyRealType EARTH_RADIUS;
     };
     
-	//=============================================================================
+	//================================================================================================
+	//================================================================================================
+	//================================================================================================
 
 	/// <summary>
 	/// Convert latitude / longitude to left-handed cartesian coordinate system
@@ -133,9 +173,9 @@ namespace Projections
 	/// <param name="precomp"></param>
 	/// <returns></returns>
 	template <typename T>
-	T Coordinate::ConvertToCartesianLHSystem(MyRealType radius, const Coordinate::PrecomputedSinCos * precomp) const
+	T Coordinate::ConvertToCartesianLHSystem(double radius, const Coordinate::PrecomputedSinCos * precomp) const
 	{
-		MyRealType sinLat, cosLat, sinLon, cosLon;
+		double sinLat, cosLat, sinLon, cosLon;
 
 		if (precomp != nullptr)
 		{
@@ -152,9 +192,9 @@ namespace Projections
 			cosLon = std::cos(lon.rad());
 		}
 
-		MyRealType x = radius * cosLat * sinLon;
-		MyRealType y = radius * sinLat;
-		MyRealType z = -radius * cosLat * cosLon;
+		double x = radius * cosLat * sinLon;
+		double y = radius * sinLat;
+		double z = -radius * cosLat * cosLon;
 
 		return { x, y, z };
 	}
@@ -175,7 +215,7 @@ namespace Projections
 	T Coordinate::ConvertVectorToCartesianLHSystem(const Longitude & lonDif, const Latitude & latDif,
 		const Coordinate::PrecomputedSinCos * precomp) const
 	{
-		MyRealType sinLat, cosLat, sinLon, cosLon;
+		double sinLat, cosLat, sinLon, cosLon;
 
 		if (precomp != nullptr)
 		{
@@ -197,9 +237,9 @@ namespace Projections
 		//double dy = sinLat * (r) + cosLat * (latDif.rad());
 		//double dz = -cosLat * cosLon * (r) + sinLat * cosLon  * (latDif.rad()) + sinLon * (lonDif.rad());
 
-		MyRealType dx = -sinLat * sinLon * (latDif.rad()) + cosLon * (lonDif.rad());
-		MyRealType dy = cosLat * (latDif.rad());
-		MyRealType dz = sinLat * cosLon  * (latDif.rad()) + sinLon * (lonDif.rad());
+		double dx = -sinLat * sinLon * (latDif.rad()) + cosLon * (lonDif.rad());
+		double dy = cosLat * (latDif.rad());
+		double dz = sinLat * cosLon  * (latDif.rad()) + sinLon * (lonDif.rad());
 
 		return { dx, dy, dz };
 	}

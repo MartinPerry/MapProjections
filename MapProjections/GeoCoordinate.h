@@ -1,16 +1,22 @@
 #ifndef GEOCORDINATE_H
 #define GEOCORDINATE_H
 
-#include <math.h>
+#include <cmath>
 
 typedef double MyRealType;
+
+struct AngleUtils
+{
+	static MyRealType radToDeg(MyRealType val) { return val * MyRealType(57.2957795); }
+	static MyRealType degToRad(MyRealType val) { return val * MyRealType(0.0174532925); }
+};
 
 template <typename T>
 struct IAngle
 {
 	IAngle() : valRad(0), valDeg(0) {};
-	static T deg(MyRealType val) { return T(val * MyRealType(0.0174532925), val); };
-	static T rad(MyRealType val) { return T(val, val * MyRealType(57.2957795)); };
+	static T deg(MyRealType val) { return T(AngleUtils::degToRad(val), val); };
+	static T rad(MyRealType val) { return T(val, AngleUtils::radToDeg(val)); };
 	
 	inline MyRealType deg() const { return valDeg; };
 	inline MyRealType rad() const { return valRad; };
@@ -21,29 +27,28 @@ protected:
 	IAngle(MyRealType valRad, MyRealType valDeg) : valRad(valRad), valDeg(valDeg) {};
 	MyRealType valRad;
 	MyRealType valDeg;
-
 };
 
-
-struct Angle : public IAngle<Angle>
+struct AngleValue : public IAngle<AngleValue>
 {
-	Angle() : IAngle() {};
+	AngleValue() : IAngle() {};
 
-	friend struct IAngle<Angle>;
+	friend struct IAngle<AngleValue>;
 
 protected:
-	Angle(MyRealType valRad, MyRealType valDeg) : IAngle(valRad, valDeg) {};
+	AngleValue(MyRealType valRad, MyRealType valDeg) : IAngle(valRad, valDeg) {};
 };
 
 struct Latitude : public IAngle<Latitude>
 {
 	Latitude() : IAngle() {};
-	Latitude(const Angle & a) : IAngle(a.rad(), a.deg()) {};
+	Latitude(const Latitude & a) : IAngle(a.rad(), a.deg()) {};
+	Latitude(const AngleValue & a) : IAngle(a.rad(), a.deg()) {};
 
 	void Normalize()
 	{
 		valDeg = (valDeg > 90) ? (valDeg - 180) : valDeg;
-		valRad = Angle::deg(valDeg).rad();
+		valRad = Latitude::deg(valDeg).rad();
 	};
 
 	friend struct IAngle<Latitude>;
@@ -54,12 +59,13 @@ protected:
 struct Longitude : public IAngle<Longitude>
 {
 	Longitude() : IAngle() {};
-	Longitude(const Angle & a) : IAngle(a.rad(), a.deg()) {};
+	Longitude(const Longitude & a) : IAngle(a.rad(), a.deg()) {};
+	Longitude(const AngleValue & a) : IAngle(a.rad(), a.deg()) {};
 
 	void Normalize()
 	{
 		valDeg = std::fmod(valDeg + 540, 360) - 180;
-		valRad = Angle::deg(valDeg).rad();
+		valRad = Longitude::deg(valDeg).rad();
 	};
 
 	friend struct IAngle<Longitude>;
@@ -72,14 +78,14 @@ protected:
 //String literall operator for Angle only
 //Latitude and longitude can be created from Angle
 
-inline Angle operator "" _deg(long double value)
+inline AngleValue operator "" _deg(long double value)
 {
-	return Angle::deg(value);
+	return AngleValue::deg(value);
 }
 
-inline Angle operator "" _rad(long double value)
+inline AngleValue operator "" _rad(long double value)
 {
-	return  Angle::rad(value);
+	return  AngleValue::rad(value);
 }
 
 

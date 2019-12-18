@@ -66,8 +66,8 @@ namespace Projections
 			p.x = std::atan(-r2 / r1);
 			p.y = std::asin(-r3 / rn);
 									
-			p.x = COFF_COEF + Angle::rad(p.x * LFAC_COEF).deg();
-			p.y = LOFF_COEF + Angle::rad(p.y * CFAC_COEF).deg();
+			p.x = COFF_COEF + AngleUtils::radToDeg(p.x * LFAC_COEF);
+			p.y = LOFF_COEF + AngleUtils::radToDeg(p.y * CFAC_COEF);
 
 			return p;
 		};
@@ -77,8 +77,8 @@ namespace Projections
 			//1.006739501 = RADIUS_EQUATOR^2 / RADIUS_POLAR^2
 			//1737122264 = (SAT_DIST^2 - RADIUS_EQUATOR^2)
 
-			x = Angle::deg((x - COFF_COEF) / LFAC_COEF).rad();
-			y = Angle::deg((y - LOFF_COEF) / CFAC_COEF).rad();
+			x = AngleUtils::degToRad((x - COFF_COEF) / LFAC_COEF);
+			y = AngleUtils::degToRad((y - LOFF_COEF) / CFAC_COEF);
 
 			MyRealType cosX = std::cos(x);
 			MyRealType cosY = std::cos(y);			

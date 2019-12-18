@@ -22,11 +22,11 @@ namespace Projections
 		static const bool INDEPENDENT_LAT_LON = true; //can Lat / Lon be computed separatly. To compute one, we dont need the other
 		static const bool ORTHOGONAL_LAT_LON = true; //lat / lon is orthogonal to each otjer
 
-		Equirectangular() : Equirectangular(0.0_deg) {}
+		Equirectangular() : Equirectangular(Longitude::deg(0.0)) {}
 		Equirectangular(const Longitude & lonCentralMeridian) :
 			ProjectionInfo(PROJECTION::EQUIRECTANGULAR_PROJ),
 			lonCentralMeridian(lonCentralMeridian),
-			standardParallel(0.0_deg),
+			standardParallel(Latitude::deg(0.0)),
 			cosStandardParallel(std::cos(standardParallel.rad()))
 		{ }
 

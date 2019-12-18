@@ -12,7 +12,7 @@ using namespace Projections;
 /// <param name="dist"></param>
 /// <returns></returns>
 Coordinate ProjectionUtils::CalcEndPointShortest(const Coordinate & start,
-	const Angle & bearing, MyRealType dist)
+	const AngleValue & bearing, MyRealType dist)
 {
 
 	MyRealType dr = dist / ProjectionConstants::EARTH_RADIUS;
@@ -49,7 +49,7 @@ Coordinate ProjectionUtils::CalcEndPointShortest(const Coordinate & start,
 /// <param name="dist"></param>
 /// <returns></returns>
 Coordinate ProjectionUtils::CalcEndPointDirect(
-	const Coordinate & start, const Angle & bearing, MyRealType dist)
+	const Coordinate & start, const AngleValue & bearing, MyRealType dist)
 {
 	MyRealType dr = dist / ProjectionConstants::EARTH_RADIUS;
 

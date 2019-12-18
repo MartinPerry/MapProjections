@@ -168,8 +168,8 @@ namespace Projections
 			}
 		};
 	
-		static Coordinate CalcEndPointShortest(const Coordinate & start, const Angle & bearing, MyRealType dist);
-		static Coordinate CalcEndPointDirect(const Coordinate & start, const Angle & bearing, MyRealType dist);
+		static Coordinate CalcEndPointShortest(const Coordinate & start, const AngleValue & bearing, MyRealType dist);
+		static Coordinate CalcEndPointDirect(const Coordinate & start, const AngleValue & bearing, MyRealType dist);
 		static double Distance(const Coordinate & from, const Coordinate & to);
         
         inline static MyRealType cot(MyRealType x) { return 1.0 / std::tan(x); };

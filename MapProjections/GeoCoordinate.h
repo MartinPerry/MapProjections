@@ -45,9 +45,24 @@ struct Latitude : public IAngle<Latitude>
 	Latitude(const Latitude & a) : IAngle(a.rad(), a.deg()) {};
 	Latitude(const AngleValue & a) : IAngle(a.rad(), a.deg()) {};
 
+	/// <summary>
+	/// Normlization will only clamp latitude to [-90, 90] deg interval
+	/// since Latitude has no wrap around
+	/// </summary>
 	void Normalize()
 	{
-		valDeg = (valDeg > 90) ? (valDeg - 180) : valDeg;
+		this->Clamp();
+		//valDeg = (valDeg > 90) ? (valDeg - 180) : valDeg;		
+		valRad = Latitude::deg(valDeg).rad();
+	};
+
+	/// <summary>
+	/// Clamp to [-90, 90] interval
+	/// </summary>
+	void Clamp()
+	{
+		//valDeg = (valDeg > 90) ? (valDeg - 180) : valDeg;
+		valDeg = (valDeg > 90) ? 90.0 : ((valDeg < -90) ? -90.0 : valDeg);
 		valRad = Latitude::deg(valDeg).rad();
 	};
 
@@ -62,10 +77,22 @@ struct Longitude : public IAngle<Longitude>
 	Longitude(const Longitude & a) : IAngle(a.rad(), a.deg()) {};
 	Longitude(const AngleValue & a) : IAngle(a.rad(), a.deg()) {};
 
+	/// <summary>
+	/// Normlize to [-180, 180] interval with a wrap-around
+	/// </summary>
 	void Normalize()
 	{
 		valDeg = std::fmod(valDeg + 540, 360) - 180;
 		valRad = Longitude::deg(valDeg).rad();
+	};
+
+	/// <summary>
+	/// Clamp to [-180, 180] interval
+	/// </summary>
+	void Clamp()
+	{
+		valDeg = (valDeg > 180.0) ? 180.0 : ((valDeg < -180.0) ? -180.0 : valDeg);
+		valRad = Latitude::deg(valDeg).rad();
 	};
 
 	friend struct IAngle<Longitude>;

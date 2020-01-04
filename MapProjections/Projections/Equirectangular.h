@@ -24,7 +24,7 @@ namespace Projections
 
 		Equirectangular() : Equirectangular(Longitude::deg(0.0)) {}
 		Equirectangular(const Longitude & lonCentralMeridian) :
-			ProjectionInfo(PROJECTION::EQUIRECTANGULAR_PROJ),
+			ProjectionInfo(PROJECTION::EQUIRECTANGULAR),
 			lonCentralMeridian(lonCentralMeridian),
 			standardParallel(Latitude::deg(0.0)),
 			cosStandardParallel(std::cos(standardParallel.rad()))

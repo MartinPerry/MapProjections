@@ -25,17 +25,17 @@ namespace Projections
 	//================================================================================================
 
 
-	typedef enum PROJECTION
+	enum class PROJECTION
     {
-		UNKNOWN_PROJ = -1,
-		MERCATOR_PROJ = 0,
-		LAMBERT_CONIC_PROJ = 1,
-		EQUIRECTANGULAR_PROJ = 2,
-		WEB_MERCATOR_PROJ = 3,
-		POLAR_STEREOGRAPHICS_PROJ = 4,
-        MILLER_PROJ = 5,
-		GOES_PROJ = 6
-	} PROJECTION;
+		UNKNOWN = -1,
+		MERCATOR = 0,
+		LAMBERT_CONIC = 1,
+		EQUIRECTANGULAR = 2,
+		WEB_MERCATOR = 3,
+		POLAR_STEREOGRAPHICS = 4,
+        MILLER = 5,
+		GOES = 6
+	};
 
 
 	typedef enum STEP_TYPE
@@ -82,7 +82,8 @@ namespace Projections
 		PrecomputedSinCos PrecomputeSinCos() const;
 
 		static Coordinate CreateFromCartesianLHSystem(double x, double y, double z);
-		static Coordinate CreateFromCartesianLHSystem(double x, double y, double z, double & radius);
+		static Coordinate CreateFromCartesianLHSystem(double x, double y, double z, double * radius);
+		static Coordinate CreateFromCartesianLHSystem(double x, double y, double z, double radius);
 
 		template <typename T = std::tuple<double, double, double>>
 		T ConvertToCartesianLHSystem(double radius,

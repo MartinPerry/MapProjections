@@ -24,7 +24,7 @@ namespace Projections
 		static const bool ORTHOGONAL_LAT_LON = false; //is lat / lon is orthogonal to each other
 
 		PolarSteregographic() : PolarSteregographic(Longitude::deg(10.0), Latitude::deg(60.0)) {}
-		PolarSteregographic(const Longitude & lonCentralMeridian, const Latitude & latCentral) : ProjectionInfo(PROJECTION::POLAR_STEREOGRAPHICS_PROJ),
+		PolarSteregographic(const Longitude & lonCentralMeridian, const Latitude & latCentral) : ProjectionInfo(PROJECTION::POLAR_STEREOGRAPHICS),
 			lonCentralMeridian(lonCentralMeridian),
 			latCentral(latCentral)
 		{ }

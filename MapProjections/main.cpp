@@ -74,7 +74,23 @@ void TestLambertConic()
 
 int main(int argc, const char * argv[]) 
 {
-	TestLambertConic();
+	{
+		Projections::Coordinate bbMin, bbMax;
+
+		bbMin.lat = -89.93_deg; bbMin.lon = -180.06_deg;
+		bbMax.lat = 90.06_deg; bbMax.lon = 179.93_deg;
+
+		//create input projection and set its visible frame
+		Projections::Equirectangular * eq = new Projections::Equirectangular();
+
+		//auto kk = inputImage->ProjectInverseInternal(-899.5, -529.5);
+
+		eq->SetFrame(bbMin, bbMax, 720, 360, Projections::STEP_TYPE::PIXEL_BORDER, false);
+		auto f = eq->GetFrame();
+		printf(".");
+	}
+
+	//TestLambertConic();
 
 	return 0;
 	//=======

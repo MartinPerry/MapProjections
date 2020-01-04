@@ -67,7 +67,7 @@ std::tuple<double, double, double, double> ProjectionInfo<Proj>::GetFrameBotLeft
 
 template <typename Proj>
 void ProjectionInfo<Proj>::SetFrame(const ProjectionFrame & frame)
-{
+{	
 	this->frame.h = frame.h;
 	this->frame.w = frame.w;
 	this->frame.hAR = frame.hAR;
@@ -76,9 +76,15 @@ void ProjectionInfo<Proj>::SetFrame(const ProjectionFrame & frame)
 	this->frame.wPadding = frame.wPadding;
 	this->frame.minPixelOffsetX = frame.minPixelOffsetX;
     this->frame.minPixelOffsetY = frame.minPixelOffsetY;
+
 	this->frame.projPrecomX = frame.projPrecomX;
 	this->frame.projPrecomY = frame.projPrecomY;
 	this->frame.stepType = frame.stepType;
+
+	//set some default values from old frame,
+	//but they will be recomputed in ComputeAABB
+	this->frame.min = frame.min;
+	this->frame.max = frame.max;
 
 	this->ComputeAABB(this->frame.min, this->frame.max);
 }
@@ -121,13 +127,12 @@ void ProjectionInfo<Proj>::SetFrame(const ProjectionFrame & frame)
 /// if yes, data are enlarged beyond AABB to keep AR
 /// </param>
 template <typename Proj>
-void ProjectionInfo<Proj>::SetFrame(const Coordinate & botLeft, const Coordinate & topRight,
+void ProjectionInfo<Proj>::SetRawFrame(const Coordinate & botLeft, const Coordinate & topRight,
 	MyRealType w, MyRealType h, STEP_TYPE stepType, bool keepAR)
-{		
-	
+{
 	//calculate minimum internal projection value				
 
-	auto [minX, minY, maxX, maxY] = static_cast<Proj*>(this)->GetFrameBotLeftTopRight(botLeft, topRight);
+	auto[minX, minY, maxX, maxY] = static_cast<Proj*>(this)->GetFrameBotLeftTopRight(botLeft, topRight);
 
 	this->frame.stepType = stepType;
 
@@ -138,16 +143,16 @@ void ProjectionInfo<Proj>::SetFrame(const Coordinate & botLeft, const Coordinate
 	//Calculate width / height of internal projection		
 	MyRealType projW = maxX - frame.minPixelOffsetX;
 	MyRealType projH = maxY - frame.minPixelOffsetY;
-			
+
 	//----------------------------------------------------------
-		
+
 	this->frame.w = w;
 	this->frame.h = h;
 
 	//calculate scale in width and height
 	this->frame.wAR = (this->frame.w - stepType) / projW;
 	this->frame.hAR = (this->frame.h - stepType) / projH;
-	
+
 	this->frame.wPadding = 0;
 	this->frame.hPadding = 0;
 
@@ -164,10 +169,30 @@ void ProjectionInfo<Proj>::SetFrame(const Coordinate & botLeft, const Coordinate
 		this->frame.wPadding = ((this->frame.w - stepType) - (this->frame.wAR * projW)) * MyRealType(0.5);
 		this->frame.hPadding = ((this->frame.h - stepType) - (this->frame.hAR * projH)) * MyRealType(0.5);
 	}
-	
+
 	this->frame.projPrecomX = -this->frame.wPadding + this->frame.wAR * this->frame.minPixelOffsetX;
 	this->frame.projPrecomY = -(this->frame.h - stepType) + this->frame.hPadding - this->frame.hAR * this->frame.minPixelOffsetY;
 
+	this->frame.min = botLeft;
+	this->frame.max = topRight;
+}
+
+/// <summary>
+/// Same logic as SetRawFrame
+/// BUT: min/max coordinate of frame is calculated as AABB 
+/// using inverse projection
+/// </summary>
+/// <param name="botLeft"></param>
+/// <param name="topRight"></param>
+/// <param name="w"></param>
+/// <param name="h"></param>
+/// <param name="stepType"></param>
+/// <param name="keepAR"></param>
+template <typename Proj>
+void ProjectionInfo<Proj>::SetFrame(const Coordinate & botLeft, const Coordinate & topRight,
+	MyRealType w, MyRealType h, STEP_TYPE stepType, bool keepAR)
+{				
+	this->SetRawFrame(botLeft, topRight, w, h, stepType, keepAR);
 	this->ComputeAABB(this->frame.min, this->frame.max);
 }
 

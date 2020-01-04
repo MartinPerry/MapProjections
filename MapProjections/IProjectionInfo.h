@@ -45,6 +45,7 @@ namespace Projections
 
 		virtual void SetFrame(const ProjectionFrame & frame) = 0;		
 		virtual void SetFrame(const Coordinate & botLeft, const Coordinate & topRight, MyRealType w, MyRealType h, STEP_TYPE stepType, bool keepAR = true) = 0;
+		virtual void SetRawFrame(const Coordinate & botLeft, const Coordinate & topRight, MyRealType w, MyRealType h, STEP_TYPE stepType, bool keepAR = true) = 0;
 		virtual void SetFrameFromAABB(const Coordinate & min, const Coordinate & max, MyRealType w, MyRealType h, STEP_TYPE stepType, bool keepAR = true) = 0;
 
 		virtual Coordinate GetTopLeftCorner() const = 0;

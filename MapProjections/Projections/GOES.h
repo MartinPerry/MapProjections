@@ -23,7 +23,7 @@ namespace Projections
 		static const bool INDEPENDENT_LAT_LON = false; //can Lat / Lon be computed separatly. To compute one, we dont need the other
 		static const bool ORTHOGONAL_LAT_LON = false; //is lat / lon is orthogonal to each other
 
-		GOES(const Longitude & sateliteLon) : ProjectionInfo(PROJECTION::GOES_PROJ),
+		GOES(const Longitude & sateliteLon) : ProjectionInfo(PROJECTION::GOES),
 			satLon(sateliteLon)
 		{}
 	

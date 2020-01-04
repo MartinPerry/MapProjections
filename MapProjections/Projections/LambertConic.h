@@ -23,7 +23,7 @@ namespace Projections
 		static const bool ORTHOGONAL_LAT_LON = false; //is lat / lon is orthogonal to each other
 
 		LambertConic(const Latitude & latProjOrigin, const Longitude & lonCentMeridian, const Latitude & stanParallel) :
-			ProjectionInfo(PROJECTION::LAMBERT_CONIC_PROJ),
+			ProjectionInfo(PROJECTION::LAMBERT_CONIC),
 			latProjectionOrigin(latProjOrigin),
 			lonCentralMeridian(lonCentMeridian),
 			standardParallel1(stanParallel),

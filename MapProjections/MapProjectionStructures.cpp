@@ -36,7 +36,7 @@ const double ProjectionConstants::EARTH_RADIUS = double(6371);
 Coordinate Coordinate::CreateFromCartesianLHSystem(double x, double y, double z)
 {
 	double radius;
-	return Coordinate::CreateFromCartesianLHSystem(x, y, z, radius);
+	return Coordinate::CreateFromCartesianLHSystem(x, y, z, &radius);
 };
 
 /// <summary>
@@ -53,9 +53,26 @@ Coordinate Coordinate::CreateFromCartesianLHSystem(double x, double y, double z)
 /// <param name="z"></param>
 /// <param name="radius"></param>
 /// <returns></returns>
-Coordinate Coordinate::CreateFromCartesianLHSystem(double x, double y, double z, double & radius)
+Coordinate Coordinate::CreateFromCartesianLHSystem(double x, double y, double z, double * radius)
 {
-	radius = std::sqrt(x * x + y * y + z * z);
+	*radius = std::sqrt(x * x + y * y + z * z);
+	return Coordinate::CreateFromCartesianLHSystem(x, y, z, *radius);
+}
+
+/// <summary>
+/// Create Coordinate from cartexian [x, y, z] and precomputed radius
+/// Input is assumed to be in left-handed coordinate system
+/// 
+/// Source:
+/// https://vvvv.org/blog/polar-spherical-and-geographic-coordinates
+/// </summary>
+/// <param name="x"></param>
+/// <param name="y"></param>
+/// <param name="z"></param>
+/// <param name="radius"></param>
+/// <returns></returns>
+Coordinate Coordinate::CreateFromCartesianLHSystem(double x, double y, double z, double radius)
+{
 	double lat = std::asin(y / radius);
 	double lon = std::atan2(x, -z);
 	return Coordinate(Longitude::rad(lon), Latitude::rad(lat));

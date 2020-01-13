@@ -101,6 +101,9 @@
     <ClInclude Include="Projections\GOES.h">
       <Filter>Header Files\Projections</Filter>
     </ClInclude>
+    <ClInclude Include="simd\neon_math_float.h">
+      <Filter>Header Files\SIMD</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\README.md">

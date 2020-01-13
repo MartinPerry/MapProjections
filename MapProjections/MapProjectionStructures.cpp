@@ -13,6 +13,10 @@
 #define MY_LOG_ERROR(...) printf(__VA_ARGS__)
 #endif
 
+#ifdef HAVE_NEON
+#	include "./Simd/neon_math_float.h"
+#endif
+
 using namespace Projections;
 
 const double ProjectionConstants::PI = double(std::acos(-1));
@@ -129,10 +133,11 @@ Coordinate Coordinate::ConvertVectorFromCartesianLHSystem(double dx, double dy, 
 	}
 	else
 	{
-		sinLat = std::sin(lat.rad());
-		cosLat = std::cos(lat.rad());
-		sinLon = std::sin(lon.rad());
-		cosLon = std::cos(lon.rad());
+		Coordinate::PrecomputedSinCos tmp = this->PrecomputeSinCos();
+		sinLat = tmp.sinLat;
+		cosLat = tmp.cosLat;
+		sinLon = tmp.sinLon;
+		cosLon = tmp.cosLon;
 	}
 
 	rDif = cosLat * sinLon * dx + sinLat * dy - cosLat * cosLon * dz;
@@ -151,10 +156,36 @@ Coordinate Coordinate::ConvertVectorFromCartesianLHSystem(double dx, double dy, 
 Coordinate::PrecomputedSinCos Coordinate::PrecomputeSinCos() const
 {
 	Coordinate::PrecomputedSinCos tmp;
+
+#ifdef HAVE_NEON
+	//we can use neon only to calculate 2 sin/cos at once
+	//other two possible calculations are not used
+	float32x4_t v = { 
+		static_cast<float32_t>(lat.rad()), 
+		static_cast<float32_t>(lon.rad()),
+		static_cast<float32_t>(0.0), 
+		static_cast<float32_t>(0.0) 
+	};
+
+	float32x4_t ysin;
+	float32x4_t ycos;
+	sincos_ps(v, &ysin, &ycos);
+
+	float values[4];
+	vst1q_f32(values, ysin);
+	tmp.sinLat = values[0];
+	tmp.sinLon = values[1];
+
+	vst1q_f32(values, ycos);
+	tmp.cosLat = values[0];
+	tmp.cosLon = values[1];
+
+#else
 	tmp.sinLat = std::sin(lat.rad());
 	tmp.cosLat = std::cos(lat.rad());
 	tmp.sinLon = std::sin(lon.rad());
 	tmp.cosLon = std::cos(lon.rad());
+#endif
 	return tmp;
 }
 

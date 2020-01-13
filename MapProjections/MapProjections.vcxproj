@@ -311,6 +311,7 @@
     <ClInclude Include="simd\avx_math_float.h" />
     <ClInclude Include="simd\MapProjectionStructures_simd.h" />
     <ClInclude Include="simd\MapProjectionUtils_simd.h" />
+    <ClInclude Include="simd\neon_math_float.h" />
     <ClInclude Include="simd\ProjectionInfo_simd.h" />
     <ClInclude Include="simd\Projections\Mercator_simd.h" />
     <ClInclude Include="simd\Projections\Miller_simd.h" />

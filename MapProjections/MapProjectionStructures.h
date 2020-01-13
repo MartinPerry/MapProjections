@@ -187,10 +187,11 @@ namespace Projections
 		}
 		else
 		{
-			sinLat = std::sin(lat.rad());
-			cosLat = std::cos(lat.rad());
-			sinLon = std::sin(lon.rad());
-			cosLon = std::cos(lon.rad());
+			Coordinate::PrecomputedSinCos tmp = this->PrecomputeSinCos();
+			sinLat = tmp.sinLat;
+			cosLat = tmp.cosLat;
+			sinLon = tmp.sinLon;
+			cosLon = tmp.cosLon;
 		}
 
 		double x = radius * cosLat * sinLon;
@@ -227,10 +228,11 @@ namespace Projections
 		}
 		else
 		{
-			sinLat = std::sin(lat.rad());
-			cosLat = std::cos(lat.rad());
-			sinLon = std::sin(lon.rad());
-			cosLon = std::cos(lon.rad());
+			Coordinate::PrecomputedSinCos tmp = this->PrecomputeSinCos();
+			sinLat = tmp.sinLat;
+			cosLat = tmp.cosLat;
+			sinLon = tmp.sinLon;
+			cosLon = tmp.cosLon;
 		}
 
 		//full calculation if vector contains also movement in radius direction

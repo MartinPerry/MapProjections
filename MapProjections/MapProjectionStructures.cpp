@@ -29,6 +29,84 @@ const double ProjectionConstants::EARTH_RADIUS = double(6371);
 /// <summary>
 /// Create Coordinate from cartexian [x, y, z]. 
 /// Input is assumed to be in left-handed coordinate system
+/// IS HAVE_NEON is defined - calculate 4 coordinates at once
+/// 
+/// Source:
+/// https://vvvv.org/blog/polar-spherical-and-geographic-coordinates
+/// </summary>
+/// <param name="x"></param>
+/// <param name="y"></param>
+/// <param name="z"></param>
+/// <returns></returns>
+std::array<Coordinate, 4> Coordinate::CreateFromCartesianLHSystem(
+	const std::array<double, 4> & vx,
+	const std::array<double, 4> & vy,
+	const std::array<double, 4> & vz)
+{
+	std::array<Coordinate, 4> res;
+
+#ifdef HAVE_NEON
+	float32x4_t x =
+	{
+		static_cast<float32_t>(vx[0]),
+		static_cast<float32_t>(vx[1]),
+		static_cast<float32_t>(vx[2]),
+		static_cast<float32_t>(vx[3])
+};
+
+	float32x4_t y =
+	{
+		static_cast<float32_t>(vy[0]),
+		static_cast<float32_t>(vy[1]),
+		static_cast<float32_t>(vy[2]),
+		static_cast<float32_t>(vy[3])
+	};
+
+	float32x4_t z =
+	{
+		static_cast<float32_t>(vz[0]),
+		static_cast<float32_t>(vz[1]),
+		static_cast<float32_t>(vz[2]),
+		static_cast<float32_t>(vz[3])
+	};
+
+
+	float32x4_t sum = vmulq_f32(x, x);
+	sum = vaddq_f32(sum, vmulq_f32(y, y));
+	sum = vaddq_f32(sum, vmulq_f32(z, z));
+
+#if defined(__aarch64__) || defined(__arm64__) || (defined(vdivq_f32) && defined(vsqrtq_f32))
+	float32x4_t radius = vsqrtq_f32(sum);
+	float32x4_t rInv = vdivq_f32(vmovq_n_f32(1), radius);
+#else
+	float32x4_t radius = vmulq_f32(vrsqrteq_f32(sum), sum);
+	float32x4_t rInv = vrecpeq_f32(radius); //estimate 1.0 / radius
+#endif	
+
+	float32x4_t lat = my_asin_f32(vmulq_f32(y, rInv));
+	float32x4_t lon = my_atan2_f32(x, vmulq_n_f32(z, -1.0f));
+
+	float resLat[4];
+	float resLon[4];
+	vst1q_f32(resLat, lat);
+	vst1q_f32(resLon, lon);
+	
+	res[0] = Coordinate(Longitude::rad(resLon[0]), Latitude::rad(resLat[0]));
+	res[1] = Coordinate(Longitude::rad(resLon[1]), Latitude::rad(resLat[1]));
+	res[2] = Coordinate(Longitude::rad(resLon[2]), Latitude::rad(resLat[2]));
+	res[3] = Coordinate(Longitude::rad(resLon[3]), Latitude::rad(resLat[3]));
+#else
+	res[0] = Coordinate::CreateFromCartesianLHSystem(vx[0], vy[0], vz[0]);
+	res[1] = Coordinate::CreateFromCartesianLHSystem(vx[1], vy[1], vz[1]);
+	res[2] = Coordinate::CreateFromCartesianLHSystem(vx[2], vy[2], vz[2]);
+	res[3] = Coordinate::CreateFromCartesianLHSystem(vx[3], vy[3], vz[3]);
+#endif
+	return res;
+}
+
+/// <summary>
+/// Create Coordinate from cartexian [x, y, z]. 
+/// Input is assumed to be in left-handed coordinate system
 /// 
 /// Source:
 /// https://vvvv.org/blog/polar-spherical-and-geographic-coordinates

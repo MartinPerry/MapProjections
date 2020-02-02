@@ -5,6 +5,7 @@
 #include <vector>
 #include <string>
 #include <tuple>
+#include <array>
 
 #include "GeoCoordinate.h"
 
@@ -80,6 +81,11 @@ namespace Projections
 			lon(lon), lat(lat) {};
 
 		PrecomputedSinCos PrecomputeSinCos() const;
+
+		static std::array<Coordinate, 4> CreateFromCartesianLHSystem(
+			const std::array<double, 4> & x,
+			const std::array<double, 4> & y,
+			const std::array<double, 4> & z);
 
 		static Coordinate CreateFromCartesianLHSystem(double x, double y, double z);
 		static Coordinate CreateFromCartesianLHSystem(double x, double y, double z, double * radius);

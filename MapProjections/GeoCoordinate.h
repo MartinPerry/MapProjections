@@ -82,7 +82,15 @@ struct Longitude : public IAngle<Longitude>
 	/// </summary>
 	void Normalize()
 	{
-		valDeg = std::fmod(valDeg + 540, 360) - 180;
+		while (valDeg < -180)
+		{
+			valDeg += 360;
+		}
+		while (valDeg > 180)
+		{
+			valDeg -= 360;
+		}
+		//valDeg = std::fmod(std::fmod(valDeg, 360) + 540, 360) - 180;		
 		valRad = Longitude::deg(valDeg).rad();
 	};
 

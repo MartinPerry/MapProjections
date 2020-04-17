@@ -74,9 +74,25 @@ void TestLambertConic()
 
 int main(int argc, const char * argv[]) 
 {
+
+	{
+
+
+		Projections::Coordinate bbMin, bbMax;
+	
+		bbMin.lat = 10.0_deg; bbMin.lon = -134.0_deg;
+		bbMax.lat = 50.0_deg; bbMax.lon = -61.0_deg;
+
+		Projections::Mercator * eq = new Projections::Mercator();
+
+		eq->SetFrame(bbMin, bbMax, 5400, 0, Projections::STEP_TYPE::PIXEL_BORDER, false);
+		auto f = eq->GetFrame();
+		printf("x");
+	}
+
 	{
 		Projections::Coordinate bbMin, bbMax;
-
+	
 		bbMin.lat = -89.93_deg; bbMin.lon = -180.06_deg;
 		bbMax.lat = 90.06_deg; bbMax.lon = 179.93_deg;
 

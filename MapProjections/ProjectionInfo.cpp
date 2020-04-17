@@ -99,6 +99,9 @@ void ProjectionInfo<Proj>::SetFrame(const ProjectionFrame & frame)
 /// These corners do not have to correspond to AABB of coordinates
 /// For example: Lambert - image is square but corners are not AABB
 /// 
+/// If width or heigth is zero, the size is determined based on
+/// other dimension. In this case, it is always expected to keepAR
+/// 
 /// StepType - determine, where coordinate botLeft and topRight is positioned within the pixel
 /// It can be at pixel center or on its border
 /// First position [0, 0] is always correct,
@@ -146,14 +149,31 @@ void ProjectionInfo<Proj>::SetRawFrame(const Coordinate & botLeft, const Coordin
 
 	//----------------------------------------------------------
 
-	this->frame.w = w;
-	this->frame.h = h;
+	//calculate scale in width and height		
+	if (w != 0)
+	{
+		this->frame.w = w;
+	}
+	else
+	{
+		MyRealType wAr = projW / projH;
+		this->frame.w = h * wAr;
+	}
 
-	//calculate scale in width and height
+	if (h != 0)
+	{
+		this->frame.h = h;		
+	}
+	else 
+	{
+		MyRealType hAr = projH / projW;
+		this->frame.h = w * hAr;
+	}
+
 	this->frame.wAR = (this->frame.w - stepType) / projW;
-	this->frame.hAR = (this->frame.h - stepType) / projH;
-
 	this->frame.wPadding = 0;
+
+	this->frame.hAR = (this->frame.h - stepType) / projH;
 	this->frame.hPadding = 0;
 
 	// Using different ratios for width and height will cause the map to be stretched,

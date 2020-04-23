@@ -16,20 +16,22 @@ namespace Projections
 	{
 	public:
 
-		typedef enum RenderImageType 
+		enum class RenderImageType 
 		{
-			GREY = 1,
+			GRAY = 1,
 			RGB = 3,
 			RGBA = 4
+		};
 
-		} RenderImageType;
-
-		static void ReprojectImage(uint8_t * fromData, RenderImageType fromType, 
-			uint8_t * toData, RenderImageType toType, const Reprojection & reproj);
+		template <typename ReprojType>
+		static void ReprojectImage(const uint8_t * fromData, RenderImageType fromType, 
+			uint8_t * toData, RenderImageType toType, const Reprojection<ReprojType> & reproj);
 
 		template <typename Proj>
-		ProjectionRenderer(Proj * proj, RenderImageType type = GREY);
+		ProjectionRenderer(Proj * proj, RenderImageType type = RenderImageType::GRAY);
 		~ProjectionRenderer();
+
+		const uint8_t * GetRawData() const;
 
 		template <typename Proj>
 		void SetProjection(Proj * proj);
@@ -48,8 +50,10 @@ namespace Projections
 		void DrawLines(const std::vector<Coordinate> & points);
 
 		template <typename Proj>
-		void DrawImage(uint8_t * imData, RenderImageType imType, int w, int h, Proj * imProj);
-		void DrawImage(uint8_t * imData, RenderImageType imType, const Reprojection & reproj);
+		void DrawImage(const uint8_t * imData, RenderImageType imType, int w, int h, Proj * imProj);
+
+		template <typename ReprojType>
+		void DrawImage(const uint8_t * imData, RenderImageType imType, const Reprojection<ReprojType> & reproj);
 
 		void SetPixel(const Pixel<int> & p, uint8_t val);
 
@@ -139,7 +143,7 @@ namespace Projections
 	/// <param name="h"></param>
 	/// <param name="imProj"></param>
 	template <typename Proj>
-	void ProjectionRenderer::DrawImage(uint8_t * imData, RenderImageType imType, int w, int h, Proj * imProj)
+	void ProjectionRenderer::DrawImage(const uint8_t * imData, RenderImageType imType, int w, int h, Proj * imProj)
 	{
 		if (imType != this->type)
 		{
@@ -172,6 +176,52 @@ namespace Projections
 
 	};
 
+	/// <summary>
+	/// Draw image based on re-projection pixels
+	/// e.g.: currentData[index] = imData[reprojection[index]]
+	/// </summary>
+	/// <param name="imData"></param>
+	/// <param name="imType"></param>
+	/// <param name="reproj"></param>
+	template <typename ReprojType>
+	void ProjectionRenderer::DrawImage(const uint8_t * imData, RenderImageType imType,
+		const Reprojection<ReprojType> & reproj)
+	{
+		ProjectionRenderer::ReprojectImage(imData, imType, this->rawData, this->type, reproj);
+	}
+
+	template <typename ReprojType>
+	void ProjectionRenderer::ReprojectImage(const uint8_t * fromData, RenderImageType fromType,
+		uint8_t * toData, RenderImageType toType, const Reprojection<ReprojType> & reproj)
+	{
+
+		if (fromType != toType)
+		{
+			return;
+		}
+
+		for (int y = 0; y < reproj.outH; y++)
+		{
+			int yw = y * reproj.outW;
+			for (int x = 0; x < reproj.outW; x++)
+			{
+				int index = x + yw;
+				if ((reproj.pixels[index].x == -1) || (reproj.pixels[index].y == -1))
+				{
+					continue;
+				}
+
+
+				int origIndex = (reproj.pixels[index].x + reproj.pixels[index].y * reproj.inW) * static_cast<int>(fromType);
+				int outIndex = index * static_cast<int>(toType);
+
+				for (int k = 0; k < static_cast<int>(toType); k++)
+				{
+					toData[outIndex + k] = fromData[origIndex + k];
+				}
+			}
+		}
+	}
 };
 
 #endif

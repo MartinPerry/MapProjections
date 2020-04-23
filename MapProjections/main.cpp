@@ -8,7 +8,7 @@
 #include "./Projections/Mercator.h"
 #include "./Projections/Miller.h"
 #include "./Projections/LambertConic.h"
-#include "./Projections/GOES.h"
+#include "./Projections/GEOS.h"
 #include "ProjectionRenderer.h"
 #include "lodepng.h"
 
@@ -60,11 +60,9 @@ void TestLambertConic()
 	ProjectionRenderer pd(outputImage);
 	//compute mapping from input -> output projection   
 	Reprojection reprojection = Projections::ProjectionUtils::CreateReprojection(inputImage, outputImage);
-
-
-
+	
 	pd.Clear();
-	pd.DrawImage(&imgRawData[0], ProjectionRenderer::GREY, reprojection);
+	pd.DrawImage(&imgRawData[0], ProjectionRenderer::RenderImageType::GRAY, reprojection);
 	pd.DrawBorders();
 	pd.SaveToFile("D://xxx2.png");
 
@@ -136,7 +134,7 @@ int main(int argc, const char * argv[])
     bbMax.lat = 90.0_deg; bbMax.lon = 180.0_deg;
     
 
-	GOES g(140.7_deg);
+	GEOS g(140.7_deg, 5500.5, 5500.0);
 	g.SetFrame(bbMin, bbMax, w, h, Projections::STEP_TYPE::PIXEL_CENTER, false);
 
 	Coordinate c;
@@ -188,7 +186,7 @@ int main(int argc, const char * argv[])
 
 
 	pd.Clear();
-	pd.DrawImage(&imgRawData[0], ProjectionRenderer::GREY, reprojection);
+	pd.DrawImage(&imgRawData[0], ProjectionRenderer::RenderImageType::GRAY, reprojection);
 	pd.DrawBorders();
 	pd.SaveToFile("D://xxx.png");
 	

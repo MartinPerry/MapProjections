@@ -21,25 +21,56 @@ namespace Projections
 		/// <param name="inputData"></param>
 		/// <param name="NO_VALUE"></param>
 		/// <returns></returns>
-		template <typename DataType>
-		static DataType * ReprojectData(const Reprojection & reproj, DataType * inputData, DataType NO_VALUE)
-		{			
+		template <typename DataType, typename ReprojType = int, typename Out = DataType * , size_t ChannelsCount = 1>
+		static Out ReprojectData(const Reprojection<ReprojType> & reproj, DataType * inputData, const DataType NO_VALUE)
+		{
 			size_t count = reproj.outW * reproj.outH;
 
-			DataType * output = new DataType[count];
+			Out output;
+
+			if constexpr (std::is_same<Out, DataType *>::value)
+			{
+				output = new DataType[count * ChannelsCount];
+			}
+			else if constexpr (std::is_same<Out, std::vector<DataType>>::value)
+			{
+				output.resize(count * ChannelsCount);
+			}
 
 			for (size_t index = 0; index < count; index++)
 			{
 				if ((reproj.pixels[index].x == -1) || (reproj.pixels[index].y == -1))
 				{
 					//outside of the model - no data - put there NO_VALUE
-					output[index] = NO_VALUE;
-					continue;
+					if constexpr (ChannelsCount == 1)
+					{
+						output[index] = NO_VALUE;
+					}
+					else
+					{
+						for (size_t i = 0; i < ChannelsCount; i++)
+						{
+							output[index * ChannelsCount + i] = NO_VALUE;
+						}
+					}					
 				}
-				size_t origIndex = reproj.pixels[index].x + reproj.pixels[index].y * reproj.inW;
-				output[index] = inputData[origIndex];
+				else
+				{
+					size_t origIndex = reproj.pixels[index].x + reproj.pixels[index].y * reproj.inW;
+					if constexpr (ChannelsCount == 1)
+					{
+						output[index] = inputData[origIndex];
+					}
+					else
+					{
+						for (size_t i = 0; i < ChannelsCount; i++)
+						{
+							output[index * ChannelsCount + i] = inputData[origIndex * ChannelsCount + i];
+						}
+					}
+				}
 			}
-			
+
 			return output;
 		}
 
@@ -49,39 +80,40 @@ namespace Projections
 		/// </summary>
 		/// <param name="imProj"></param>
 		/// <returns></returns>	
-		template <typename FromProjection, typename ToProjection>
-		static Reprojection CreateReprojection(FromProjection * from, ToProjection * to)
+		template <typename FromProjection, typename ToProjection, typename ReprojType = int>
+		static Reprojection<ReprojType> CreateReprojection(FromProjection * from, ToProjection * to)
 		{
 			
-			Reprojection reprojection;
+			Reprojection<ReprojType> reprojection;
 			reprojection.pixels.resize(to->GetFrameHeight() * to->GetFrameWidth(), { -1, -1 });
 
 			//if x and y are independent, simplify
 			if ((from->INDEPENDENT_LAT_LON) && (to->INDEPENDENT_LAT_LON))
 			{
-				std::vector<int> cacheX;
+				std::vector<ReprojType> cacheX;
 				cacheX.resize(to->GetFrameWidth());
-				std::vector<int> cacheY;
+				std::vector<ReprojType> cacheY;
 				cacheY.resize(to->GetFrameHeight());
 				
 				for (int x = 0; x < to->GetFrameWidth(); x++)
 				{
-					Projections::Pixel<int> p = Projections::ProjectionUtils::ReProject<int, int>({ x, 0 }, from, to);
+					Projections::Pixel<ReprojType> p = Projections::ProjectionUtils::ReProject<int, ReprojType>({ x, 0 }, from, to);
 					cacheX[x] = p.x;
 				}
 				
 				for (int y = 0; y < to->GetFrameHeight(); y++)
 				{
-					Projections::Pixel<int> p = Projections::ProjectionUtils::ReProject<int, int>({ 0, y }, from, to);
+					Projections::Pixel<ReprojType> p = Projections::ProjectionUtils::ReProject<int, ReprojType>({ 0, y }, from, to);
 					cacheY[y] = p.y;
 
 				}
 
 				for (int y = 0; y < to->GetFrameHeight(); y++)
 				{
+					int yw = y * to->GetFrameWidth();
 					for (int x = 0; x < to->GetFrameWidth(); x++)
 					{
-						Pixel<int> p;
+						Pixel<ReprojType> p;
 						p.x = cacheX[x];
 						p.y = cacheY[y];
 
@@ -90,7 +122,7 @@ namespace Projections
 						if (p.x >= from->GetFrameWidth()) continue;
 						if (p.y >= from->GetFrameHeight()) continue;
 
-						reprojection.pixels[x + y * to->GetFrameWidth()] = p;
+						reprojection.pixels[x + yw] = p;
 
 					}
 				}
@@ -99,16 +131,17 @@ namespace Projections
 			{
 				for (int y = 0; y < to->GetFrameHeight(); y++)
 				{
+					int yw = y * to->GetFrameWidth();
 					for (int x = 0; x < to->GetFrameWidth(); x++)
 					{
-						Pixel<int> p = ProjectionUtils::ReProject<int, int>({ x, y }, from, to);
+						Pixel<ReprojType> p = ProjectionUtils::ReProject<int, ReprojType>({ x, y }, from, to);
 
 						if (p.x < 0) continue;
 						if (p.y < 0) continue;
 						if (p.x >= from->GetFrameWidth()) continue;
 						if (p.y >= from->GetFrameHeight()) continue;
 
-						reprojection.pixels[x + y * to->GetFrameWidth()] = p;
+						reprojection.pixels[x + yw] = p;
 
 					}
 				}

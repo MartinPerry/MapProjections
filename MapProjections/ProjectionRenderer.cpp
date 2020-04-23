@@ -1,6 +1,10 @@
 #include "ProjectionRenderer.h"
 
-#include "./lodepng.h"
+#if __has_include("./lodepng.h")
+#	include "./lodepng.h"
+#else
+#	include "../Compression/3rdParty/lodepng.h"
+#endif
 #include "MapProjectionStructures.h"
 
 using namespace Projections;
@@ -23,6 +27,10 @@ ProjectionRenderer::~ProjectionRenderer()
 	}
 }
 
+const uint8_t * ProjectionRenderer::GetRawData() const
+{
+	return this->rawData;
+}
 
 
 /// <summary>
@@ -62,7 +70,7 @@ void ProjectionRenderer::SetRawDataTarget(uint8_t * target, RenderImageType targ
 /// <param name="fileName"></param>
 void ProjectionRenderer::SaveToFile(const char * fileName)
 {
-	if (type == RenderImageType::GREY)
+	if (type == RenderImageType::GRAY)
 	{
 		lodepng::encode(fileName, this->rawData,
 			static_cast<int>(frame.w), static_cast<int>(frame.h),
@@ -319,48 +327,7 @@ void ProjectionRenderer::DrawLines(const std::vector<Coordinate> & points)
 }
 
 
-/// <summary>
-/// Draw image based on re-projection pixels
-/// e.g.: currentData[index] = imData[reprojection[index]]
-/// </summary>
-/// <param name="imData"></param>
-/// <param name="imType"></param>
-/// <param name="reproj"></param>
-void ProjectionRenderer::DrawImage(uint8_t * imData, RenderImageType imType, const Reprojection & reproj)
-{		
-	ProjectionRenderer::ReprojectImage(imData, imType, this->rawData, this->type, reproj);
-}
 
-void ProjectionRenderer::ReprojectImage(uint8_t * fromData, RenderImageType fromType, 
-	uint8_t * toData, RenderImageType toType, const Reprojection & reproj)
-{
-
-	if (fromType != toType)
-	{
-		return;
-	}
-
-	for (int y = 0; y < reproj.outH; y++)
-	{
-		for (int x = 0; x < reproj.outW; x++)
-		{
-			int index = x + y * reproj.outW;
-			if ((reproj.pixels[index].x == -1) || (reproj.pixels[index].y == -1))
-			{
-				continue;
-			}
-
-
-			int origIndex = (reproj.pixels[index].x + reproj.pixels[index].y * reproj.inW) * static_cast<int>(fromType);
-			int outIndex = index * static_cast<int>(toType);
-
-			for (int k = 0; k < static_cast<int>(toType); k++)
-			{
-				toData[outIndex + k] = fromData[origIndex + k];
-			}			
-		}
-	}
-}
 
 /// <summary>
 /// Set pixel value

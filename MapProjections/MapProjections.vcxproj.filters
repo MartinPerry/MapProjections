@@ -98,11 +98,11 @@
     <ClInclude Include="simd\Projections\Miller_simd.h">
       <Filter>Header Files\SIMD\Projections</Filter>
     </ClInclude>
-    <ClInclude Include="Projections\GOES.h">
-      <Filter>Header Files\Projections</Filter>
-    </ClInclude>
     <ClInclude Include="simd\neon_math_float.h">
       <Filter>Header Files\SIMD</Filter>
+    </ClInclude>
+    <ClInclude Include="Projections\GEOS.h">
+      <Filter>Header Files\Projections</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

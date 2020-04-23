@@ -35,7 +35,7 @@ namespace Projections
 		WEB_MERCATOR = 3,
 		POLAR_STEREOGRAPHICS = 4,
         MILLER = 5,
-		GOES = 6
+		GEOS = 6
 	};
 
 
@@ -110,20 +110,38 @@ namespace Projections
 	//================================================================================================
 	//================================================================================================
 
-
+	/// <summary>
+	/// Reprojection structure
+	/// It holds info needed to reproject data from one projection
+	/// to another
+	/// pixels - reprojection info
+	/// pixels[to] = from
+	/// 
+	/// Template type is type of reprojection Pixel
+	/// By default its int -> reprojection can be in range of int
+	/// However in many cases we dont have such big images
+	/// and we can use short
+	/// </summary>
+/*
+	template <typename T = int,
+		typename = typename std::enable_if<
+		std::is_same<T, int>::value ||
+		std::is_same<T, short>::value>::type
+	>
+*/
+	template <typename T>
 	struct Reprojection
     {
 		int inW;
 		int inH;
 		int outW;
 		int outH;
-		std::vector<Pixel<int>> pixels; //[to] = from
+		std::vector<Pixel<T>> pixels; //[to] = from
 
-		static Reprojection CreateFromFile(const std::string & fileName);
+		static Reprojection<T> CreateFromFile(const std::string & fileName);
 		void SaveToFile(const std::string & fileName);
-
 	};
-
+	
 	//================================================================================================
 	//================================================================================================
 	//================================================================================================

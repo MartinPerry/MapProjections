@@ -22,11 +22,11 @@ namespace Projections::Simd
         /// <param name="imProj"></param>
         /// <returns></returns>
         template <typename FromProjection, typename ToProjection>
-        static Reprojection CreateReprojection(FromProjection * from, ToProjection * to)
+        static Reprojection<int> CreateReprojection(FromProjection * from, ToProjection * to)
         {
             //Latitude (y) is usually more complex to calculate
 			
-			Reprojection reprojection;
+			Reprojection<int> reprojection;
 			reprojection.pixels.resize(to->GetFrameHeight() * to->GetFrameWidth(), { -1, -1 });
 
 			int wRest8 = to->GetFrameWidth() % 8;

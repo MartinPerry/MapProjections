@@ -274,7 +274,8 @@ Coordinate::PrecomputedSinCos Coordinate::PrecomputeSinCos() const
 /// </summary>
 /// <param name="fileName"></param>
 /// <returns></returns>
-Reprojection Reprojection::CreateFromFile(const std::string & fileName)
+template <typename T>
+Reprojection<T> Reprojection<T>::CreateFromFile(const std::string & fileName)
 {
 	Reprojection r;
 	r.inH = 0;
@@ -301,8 +302,8 @@ Reprojection Reprojection::CreateFromFile(const std::string & fileName)
 	fread(&(r.outW), sizeof(int), 1, f);
 	fread(&(r.outH), sizeof(int), 1, f);
 
-	r.pixels.resize(dataSize / sizeof(Pixel<int>));
-	fread(&r.pixels[0], sizeof(Pixel<int>), r.pixels.size(), f);
+	r.pixels.resize(dataSize / sizeof(Pixel<T>));
+	fread(&r.pixels[0], sizeof(Pixel<T>), r.pixels.size(), f);
 
 	fclose(f);
 
@@ -313,7 +314,8 @@ Reprojection Reprojection::CreateFromFile(const std::string & fileName)
 /// Save reprojection info to file
 /// </summary>
 /// <param name="fileName"></param>
-void Reprojection::SaveToFile(const std::string & fileName)
+template <typename T>
+void Reprojection<T>::SaveToFile(const std::string & fileName)
 {
 	FILE * f = nullptr;
 	//my_fopen(&f, fileName.c_str(), "wb");
@@ -328,7 +330,10 @@ void Reprojection::SaveToFile(const std::string & fileName)
 	fwrite(&this->inH, sizeof(int), 1, f);
 	fwrite(&this->outW, sizeof(int), 1, f);
 	fwrite(&this->outH, sizeof(int), 1, f);
-	fwrite(this->pixels.data(), sizeof(Pixel<int>), this->pixels.size(), f);
+	fwrite(this->pixels.data(), sizeof(Pixel<T>), this->pixels.size(), f);
 	fclose(f);
 
 }
+
+template struct Reprojection<int>;
+template struct Reprojection<short>;

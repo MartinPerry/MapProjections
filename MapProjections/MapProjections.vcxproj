@@ -303,7 +303,7 @@
     <ClInclude Include="ProjectionInfo.h" />
     <ClInclude Include="ProjectionRenderer.h" />
     <ClInclude Include="Projections\Equirectangular.h" />
-    <ClInclude Include="Projections\GOES.h" />
+    <ClInclude Include="Projections\GEOS.h" />
     <ClInclude Include="Projections\LambertConic.h" />
     <ClInclude Include="Projections\Mercator.h" />
     <ClInclude Include="Projections\Miller.h" />

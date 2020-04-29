@@ -134,7 +134,7 @@ int main(int argc, const char * argv[])
     bbMax.lat = 90.0_deg; bbMax.lon = 180.0_deg;
     
 
-	GEOS g(140.7_deg, 5500.5, 5500.0);
+	GEOS g(GEOS::SatelliteSettings::Himawari8());
 	g.SetFrame(bbMin, bbMax, w, h, Projections::STEP_TYPE::PIXEL_CENTER, false);
 
 	Coordinate c;

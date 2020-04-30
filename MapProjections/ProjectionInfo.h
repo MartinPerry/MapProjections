@@ -153,8 +153,8 @@ namespace Projections
 		ProjectedValue rawPixel = static_cast<const Proj*>(this)->ProjectInternal(c);
 
 		Pixel<PixelType> p;
-		p.x = static_cast<PixelType>(std::round(-this->frame.projPrecomX + rawPixel.x * this->frame.wAR));
-		p.y = static_cast<PixelType>(std::round(-this->frame.projPrecomY - rawPixel.y * this->frame.hAR));
+		p.x = static_cast<PixelType>(std::round(rawPixel.x * this->frame.wAR - this->frame.projPrecomX));
+		p.y = static_cast<PixelType>(std::round(-rawPixel.y * this->frame.hAR - this->frame.projPrecomY));
 
 
 		//rawPixel.x = rawPixel.x - this->frame.minPixelOffsetX;
@@ -176,8 +176,8 @@ namespace Projections
 		ProjectedValue rawPixel = static_cast<const Proj*>(this)->ProjectInternal(c);
 
 		Pixel<PixelType> p;
-		p.x = static_cast<PixelType>(-this->frame.projPrecomX + rawPixel.x * this->frame.wAR);
-		p.y = static_cast<PixelType>(-this->frame.projPrecomY - rawPixel.y * this->frame.hAR);
+		p.x = static_cast<PixelType>(rawPixel.x * this->frame.wAR - this->frame.projPrecomX);
+		p.y = static_cast<PixelType>(-rawPixel.y * this->frame.hAR - this->frame.projPrecomY);
 
 
 		//move our pseoude pixel to "origin"

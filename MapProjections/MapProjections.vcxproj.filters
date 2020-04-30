@@ -104,6 +104,9 @@
     <ClInclude Include="Projections\GEOS.h">
       <Filter>Header Files\Projections</Filter>
     </ClInclude>
+    <ClInclude Include="simd\Projections\GEOS_simd.h">
+      <Filter>Header Files\SIMD\Projections</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\README.md">

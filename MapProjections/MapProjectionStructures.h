@@ -151,10 +151,7 @@ namespace Projections
 	{
 		Coordinate min;
 		Coordinate max;
-
-		MyRealType minPixelOffsetX; //offset to move min corner to [0,0] and other corners accordingly
-        MyRealType minPixelOffsetY;
-        
+	   
 		MyRealType w; //current frame width
 		MyRealType h; //current frame height
 

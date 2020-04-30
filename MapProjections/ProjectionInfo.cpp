@@ -26,9 +26,7 @@ using namespace Projections;
 template <typename Proj>
 ProjectionInfo<Proj>::ProjectionInfo(PROJECTION curProjection)
 	: IProjectionInfo(curProjection)		
-{
-	this->frame.minPixelOffsetX = std::numeric_limits<MyRealType>::max();
-	this->frame.minPixelOffsetY = std::numeric_limits<MyRealType>::max();
+{	
 	this->frame.w = 0;
 	this->frame.h = 0;
 	this->frame.wPadding = 0;
@@ -74,9 +72,7 @@ void ProjectionInfo<Proj>::SetFrame(const ProjectionFrame & frame)
 	this->frame.wAR = frame.wAR;
 	this->frame.hPadding = frame.hPadding;
 	this->frame.wPadding = frame.wPadding;
-	this->frame.minPixelOffsetX = frame.minPixelOffsetX;
-    this->frame.minPixelOffsetY = frame.minPixelOffsetY;
-
+	
 	this->frame.projPrecomX = frame.projPrecomX;
 	this->frame.projPrecomY = frame.projPrecomY;
 	this->frame.stepType = frame.stepType;
@@ -139,13 +135,9 @@ void ProjectionInfo<Proj>::SetRawFrame(const Coordinate & botLeft, const Coordin
 
 	this->frame.stepType = stepType;
 
-	//store minimal value of [x, y] from internal projection
-	frame.minPixelOffsetX = minX;
-	frame.minPixelOffsetY = minY;
-
 	//Calculate width / height of internal projection		
-	MyRealType projW = maxX - frame.minPixelOffsetX;
-	MyRealType projH = maxY - frame.minPixelOffsetY;
+	MyRealType projW = maxX - minX;
+	MyRealType projH = maxY - minY;
 
 	//----------------------------------------------------------
 
@@ -190,8 +182,8 @@ void ProjectionInfo<Proj>::SetRawFrame(const Coordinate & botLeft, const Coordin
 		this->frame.hPadding = ((this->frame.h - stepType) - (this->frame.hAR * projH)) * MyRealType(0.5);
 	}
 
-	this->frame.projPrecomX = -this->frame.wPadding + this->frame.wAR * this->frame.minPixelOffsetX;
-	this->frame.projPrecomY = -(this->frame.h - stepType) + this->frame.hPadding - this->frame.hAR * this->frame.minPixelOffsetY;
+	this->frame.projPrecomX = -this->frame.wPadding + this->frame.wAR * minX;
+	this->frame.projPrecomY = -(this->frame.h - stepType) + this->frame.hPadding - this->frame.hAR * minY;
 
 	this->frame.min = botLeft;
 	this->frame.max = topRight;

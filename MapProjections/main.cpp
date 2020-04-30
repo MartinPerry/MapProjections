@@ -15,6 +15,7 @@
 #include "./simd/ProjectionInfo_simd.h"
 #include "./simd/Projections/Miller_simd.h"
 #include "./simd/Projections/Mercator_simd.h"
+#include "./simd/Projections/GEOS_simd.h"
 #include "./simd/MapProjectionUtils_simd.h"
 
 using namespace Projections;
@@ -69,9 +70,93 @@ void TestLambertConic()
 }
 
 
+void TestGEOS_Simd()
+{
+	unsigned w = 600;
+	unsigned h = 600;
+	std::vector<uint8_t> imgRawData;
+	std::vector<uint8_t> fileData;
+	lodepng::load_file(fileData, "D://ttt.png");
+	lodepng::decode(imgRawData, w, h, fileData, LodePNGColorType::LCT_GREY);
+
+
+	Projections::Coordinate bbMin, bbMax;
+	bbMin.lat = -45.0_deg; bbMin.lon = -135.0_deg;
+	bbMax.lat = 45.0_deg; bbMax.lon = -10.0_deg;
+	
+	ns::Mercator mercator;
+	mercator.SetFrame(bbMin, bbMax, 4200, 0, Projections::STEP_TYPE::PIXEL_CENTER, false);
+
+	// Coordinate bbMin, bbMax;	
+	bbMin.lat = -90.0_deg; bbMin.lon = -180.0_deg;
+	bbMax.lat = 90.0_deg; bbMax.lon = 180.0_deg;
+
+	ns::GEOS geos(GEOS::SatelliteSettings::Goes16());
+	geos.SetFrame(bbMin, bbMax, w, h, Projections::STEP_TYPE::PIXEL_CENTER, false);
+	
+
+	
+	Projections::Reprojection<short> reproj = ns::ProjectionUtils::CreateReprojection<ns::GEOS, ns::Mercator, short>(&geos, &mercator);
+
+	std::vector<uint8_t> rawData = Projections::ProjectionUtils::ReprojectData<uint8_t, short, std::vector<uint8_t>, 1>(reproj, imgRawData.data(), 0);
+
+	
+	ProjectionRenderer pd(&mercator, ProjectionRenderer::RenderImageType::GRAY);
+	pd.AddBorders("D://borders.csv", 5);
+	//pd.Clear();	
+	pd.SetRawDataTarget(rawData.data(), ProjectionRenderer::RenderImageType::GRAY);
+	pd.DrawBorders();
+	pd.SaveToFile("D://yyy_simd.png");
+	
+}
+
+void TestGEOS()
+{
+
+	unsigned w = 600;
+	unsigned h = 600;
+	std::vector<uint8_t> imgRawData;
+	std::vector<uint8_t> fileData;
+	lodepng::load_file(fileData, "D://ttt.png");
+	lodepng::decode(imgRawData, w, h, fileData, LodePNGColorType::LCT_GREY);
+
+
+	Projections::Coordinate bbMin, bbMax;
+	bbMin.lat = -45.0_deg; bbMin.lon = -135.0_deg;
+	bbMax.lat = 45.0_deg; bbMax.lon = -10.0_deg;
+
+	Mercator mercator;
+	mercator.SetFrame(bbMin, bbMax, 4200, 0, Projections::STEP_TYPE::PIXEL_CENTER, false);
+
+	// Coordinate bbMin, bbMax;	
+	bbMin.lat = -90.0_deg; bbMin.lon = -180.0_deg;
+	bbMax.lat = 90.0_deg; bbMax.lon = 180.0_deg;
+
+	GEOS geos(GEOS::SatelliteSettings::Goes16());
+	geos.SetFrame(bbMin, bbMax, w, h, Projections::STEP_TYPE::PIXEL_CENTER, false);
+
+	
+	Projections::Reprojection<short> reproj = Projections::ProjectionUtils::CreateReprojection<GEOS, Mercator, short>(&geos, &mercator);
+
+	std::vector<uint8_t> rawData = Projections::ProjectionUtils::ReprojectData<uint8_t, short, std::vector<uint8_t>, 1>(reproj, imgRawData.data(), 0);
+
+
+	ProjectionRenderer pd(&mercator, ProjectionRenderer::RenderImageType::GRAY);
+	pd.AddBorders("D://borders.csv", 5);
+	//pd.Clear();	
+	pd.SetRawDataTarget(rawData.data(), ProjectionRenderer::RenderImageType::GRAY);
+	pd.DrawBorders();
+	pd.SaveToFile("D://yyy.png");
+	
+}
+
+
 
 int main(int argc, const char * argv[]) 
 {
+	TestGEOS();
+	TestGEOS_Simd();
+	return 0;
 
 	{
 

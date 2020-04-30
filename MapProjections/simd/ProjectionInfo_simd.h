@@ -73,28 +73,14 @@ namespace Projections::Simd
         //project value and get "pseudo" pixel coordinate
         auto raw = tmp->ProjectInternal(p.lonRad, p.latRad);
         
-        //========
-        //move our pseoude pixel to "origin"
-        raw.x = _mm256_sub_ps(raw.x, _mm256_set1_ps(static_cast<float>(frame.minPixelOffsetX)));
-        raw.y = _mm256_sub_ps(raw.y, _mm256_set1_ps(static_cast<float>(frame.minPixelOffsetY)));
-        
-        PixelSimd res;
-        
-        res.x = _mm256_mul_ps(raw.x, _mm256_set1_ps(static_cast<float>(frame.wAR)));
-        res.x = _mm256_add_ps(res.x, _mm256_set1_ps(static_cast<float>(frame.wPadding)));
-        
-        res.y = _mm256_mul_ps(raw.y, _mm256_set1_ps(static_cast<float>(frame.hAR)));
-        res.y = _mm256_sub_ps(_mm256_set1_ps(static_cast<float>((frame.h - frame.stepType) - frame.hPadding)), res.y);
-        
-        //move our pseoude pixel to "origin"
-        //rawPixel.x = rawPixel.x - frame.minPixelOffset.x;
-        //rawPixel.y = rawPixel.y - frame.minPixelOffset.y;
-        
-        //calculate pixel in final frame
-        //p.x = static_cast<PixelType>(frame.wPadding + (rawPixel.x * frame.wAR));
-        //p.y = static_cast<PixelType>(frame.h - frame.hPadding - (rawPixel.y * frame.hAR));
-        //=======
-        
+		PixelSimd res;
+
+		res.x = _mm256_mul_ps(raw.x, _mm256_set1_ps(static_cast<float>(frame.wAR)));
+		res.x = _mm256_sub_ps(res.x, _mm256_set1_ps(static_cast<float>(frame.projPrecomX)));
+
+		res.y = _mm256_mul_ps(raw.y, _mm256_set1_ps(static_cast<float>(-frame.hAR)));
+		res.y = _mm256_sub_ps(res.y, _mm256_set1_ps(static_cast<float>(frame.projPrecomY)));
+		       
         return res;
     }
     
@@ -130,24 +116,14 @@ namespace Projections::Simd
         __m256 x = p.x;
         __m256 y = p.y;
         
-        x = _mm256_add_ps(x, _mm256_set1_ps(static_cast<float>(frame.projInvPrecomW)));
+        x = _mm256_add_ps(x, _mm256_set1_ps(static_cast<float>(frame.projPrecomX)));
         x = _mm256_div_ps(x, _mm256_set1_ps(static_cast<float>(frame.wAR)));
         
-        y = _mm256_add_ps(y, _mm256_set1_ps(static_cast<float>(frame.projInvPrecomH)));
+        y = _mm256_add_ps(y, _mm256_set1_ps(static_cast<float>(frame.projPrecomY)));
         y = _mm256_div_ps(y, _mm256_set1_ps(static_cast<float>(-frame.hAR)));
         
         auto pi = tmp->ProjectInverseInternal(x, y);
-        
-        /*
-         MyRealType xx = (static_cast<MyRealType>(p.x) + this->frame.projInvPrecomW);
-         xx /= this->frame.wAR;
-         
-         MyRealType yy = (static_cast<MyRealType>(p.y) + this->frame.projInvPrecomH);
-         yy /= -this->frame.hAR;
-         
-         ProjectedValueInverse pi = static_cast<const Proj*>(this)->ProjectInverseInternal(xx, yy);
-         */
-        
+                
         CoordinateSimd c;
         c.lonRad = pi.lonRad;
         c.latRad = pi.latRad;

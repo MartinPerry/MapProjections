@@ -21,12 +21,12 @@ namespace Projections::Simd
         /// </summary>
         /// <param name="imProj"></param>
         /// <returns></returns>
-        template <typename FromProjection, typename ToProjection>
-        static Reprojection<int> CreateReprojection(FromProjection * from, ToProjection * to)
+        template <typename FromProjection, typename ToProjection, typename ReprojType = int>
+        static Reprojection<ReprojType> CreateReprojection(FromProjection * from, ToProjection * to)
         {
             //Latitude (y) is usually more complex to calculate
 			
-			Reprojection<int> reprojection;
+			Reprojection<ReprojType> reprojection;
 			reprojection.pixels.resize(to->GetFrameHeight() * to->GetFrameWidth(), { -1, -1 });
 
 			int wRest8 = to->GetFrameWidth() % 8;
@@ -38,9 +38,9 @@ namespace Projections::Simd
 			//if x and y are independent, simplify
 			if ((from->INDEPENDENT_LAT_LON) && (to->INDEPENDENT_LAT_LON))
 			{
-				std::vector<int> cacheX;
+				std::vector<ReprojType> cacheX;
 				cacheX.resize(to->GetFrameWidth());
-				std::vector<int> cacheY;
+				std::vector<ReprojType> cacheY;
 				cacheY.resize(to->GetFrameHeight());
 
 				for (int x = 0; x < w8; x += 8)
@@ -55,7 +55,7 @@ namespace Projections::Simd
 					p[6] = { x + 6, 0 };
 					p[7] = { x + 7, 0 };
 
-					std::array<Projections::Pixel<int>, 8> o = ReProject<int, int>(p, from, to);
+					std::array<Projections::Pixel<ReprojType>, 8> o = ReProject<int, ReprojType>(p, from, to);
 					for (size_t i = 0; i < o.size(); i++)
 					{
 						cacheX[(x + i)] = o[i].x;
@@ -64,7 +64,7 @@ namespace Projections::Simd
 
 				for (int x = w8; x < to->GetFrameWidth(); x++)
 				{
-					Projections::Pixel<int> p = Projections::ProjectionUtils::ReProject<int, int>({ x, 0 }, from, to);
+					Projections::Pixel<ReprojType> p = Projections::ProjectionUtils::ReProject<int, ReprojType>({ x, 0 }, from, to);
 					cacheX[x] = p.x;
 				}
 
@@ -81,7 +81,7 @@ namespace Projections::Simd
 					p[6] = { 0, y + 6 };
 					p[7] = { 0, y + 7 };
 					
-					std::array<Projections::Pixel<int>, 8> o = ReProject<int, int>(p, from, to);
+					std::array<Projections::Pixel<ReprojType>, 8> o = ReProject<int, ReprojType>(p, from, to);
 					for (size_t i = 0; i < o.size(); i++)
 					{
 						cacheY[(y + i)] = o[i].y;
@@ -90,7 +90,7 @@ namespace Projections::Simd
 
 				for (int y = h8; y < to->GetFrameHeight(); y++)
 				{
-					Projections::Pixel<int> p = Projections::ProjectionUtils::ReProject<int, int>({ 0, y }, from, to);
+					Projections::Pixel<ReprojType> p = Projections::ProjectionUtils::ReProject<int, ReprojType>({ 0, y }, from, to);
 					cacheY[y] = p.y;
 
 				}
@@ -100,7 +100,7 @@ namespace Projections::Simd
 				{
 					for (int x = 0; x < to->GetFrameWidth(); x++)
 					{
-						Pixel<int> p;
+						Pixel<ReprojType> p;
 						p.x = cacheX[x];
 						p.y = cacheY[y];
 
@@ -130,7 +130,7 @@ namespace Projections::Simd
 						p[6] = { x + 6,y };
 						p[7] = { x + 7,y };
 
-						std::array<Projections::Pixel<int>, 8> o = ReProject<int, int>(p, from, to);
+						std::array<Projections::Pixel<ReprojType>, 8> o = ReProject<int, ReprojType>(p, from, to);
 
 						for (size_t i = 0; i < o.size(); i++)
 						{
@@ -145,7 +145,7 @@ namespace Projections::Simd
 
 					for (int x = w8; x < to->GetFrameWidth(); x++)
 					{
-						Projections::Pixel<int> p = Projections::ProjectionUtils::ReProject<int, int>({ x, y }, from, to);
+						Projections::Pixel<ReprojType> p = Projections::ProjectionUtils::ReProject<int, ReprojType>({ x, y }, from, to);
 
 						if (p.x < 0) continue;
 						if (p.y < 0) continue;

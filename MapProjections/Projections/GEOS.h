@@ -134,13 +134,15 @@ namespace Projections
 			//0.993305616 = RADIUS_POLAR^2 / RADIUS_EQUATOR^2
 			//0.00669438444 = (RADIUS_EQUATOR^2 - RADIUS_POLAR^2) / RADIUS_EQUATOR^2 
 
+			MyRealType lonDif = c.lon.rad() - sat.lon.rad();
+
 			MyRealType cLat = std::atan(0.993305616 * std::tan(c.lat.rad()));
 			MyRealType cosCLat = std::cos(cLat);
 
 			MyRealType r = RADIUS_POLAR / std::sqrt(1 - 0.00669438444 * cosCLat * cosCLat);
 
-			MyRealType r1 = SAT_DIST - r * cosCLat * std::cos(c.lon.rad() - sat.lon.rad());
-			MyRealType r2 = -r * cosCLat * std::sin(c.lon.rad() - sat.lon.rad());
+			MyRealType r1 = SAT_DIST - r * cosCLat * std::cos(lonDif);
+			MyRealType r2 = r * cosCLat * std::sin(lonDif);
 			MyRealType r3 = r * std::sin(cLat);
 			
 			ProjectedValue p;
@@ -148,13 +150,13 @@ namespace Projections
 			if (sat.sweepY)
 			{
 				MyRealType rn = std::sqrt(r1 * r1 + r2 * r2 + r3 * r3);
-				p.x = std::atan(-r2 / r1);
+				p.x = std::atan(r2 / r1);
 				p.y = std::asin(-r3 / rn);
 			}
 			else
 			{
 				MyRealType rn = std::sqrt(r1 * r1 + r3 * r3);
-				p.x = std::atan(-r2 / rn);
+				p.x = std::atan(r2 / rn);
 				p.y = std::atan(-r3 / r1);
 			}
 			
@@ -165,7 +167,7 @@ namespace Projections
 		};
 
 		ProjectedValueInverse ProjectInverseInternal(MyRealType x, MyRealType y) const
-		{
+		{			
 			//1.006739501 = RADIUS_EQUATOR^2 / RADIUS_POLAR^2
 			//1737122264 = (SAT_DIST^2 - RADIUS_EQUATOR^2)
 

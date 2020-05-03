@@ -247,7 +247,7 @@ Coordinate::PrecomputedSinCos Coordinate::PrecomputeSinCos() const
 
 	float32x4_t ysin;
 	float32x4_t ycos;
-	sincos_ps(v, &ysin, &ycos);
+	my_sincos_f32(v, &ysin, &ycos);
 
 	float values[4];
 	vst1q_f32(values, ysin);

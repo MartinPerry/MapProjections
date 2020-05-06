@@ -57,7 +57,7 @@ namespace Projections::Simd
 			tmp1 = _mm256_mul_ps(r, tmp1);			
 			__m256 r1 = _mm256_sub_ps(_mm256_set1_ps(static_cast<float>(SAT_DIST)), tmp1);
 
-			tmp1 = _mm256_sub_ps(lonRad, _mm256_set1_ps(sat.lon.rad()));
+			tmp1 = _mm256_sub_ps(lonRad, _mm256_set1_ps(static_cast<float>(sat.lon.rad())));
 			tmp1 = _my_mm256_sin_ps(lonDif);
 			tmp1 = _mm256_mul_ps(cosCLat, tmp1);
 			__m256 r2 = _mm256_mul_ps(r, tmp1);

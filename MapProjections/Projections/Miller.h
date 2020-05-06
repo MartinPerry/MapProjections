@@ -27,20 +27,19 @@ namespace Projections
 
 	protected:
 		ProjectedValue ProjectInternal(const Coordinate & c) const
-		{
-			ProjectedValue p;
-			p.x = c.lon.rad();
-			p.y = 1.25 * std::log(std::tan(ProjectionConstants::PI_4 + 0.4 * c.lat.rad()));
-
-			return p;
+		{			
+			return {
+				c.lon.rad(),
+				1.25 * std::log(std::tan(ProjectionConstants::PI_4 + 0.4 * c.lat.rad()))
+			};
 		};
 
 		ProjectedValueInverse ProjectInverseInternal(MyRealType x, MyRealType y) const
 		{
-			ProjectedValueInverse c;
-			c.lon = Longitude::rad(x);
-			c.lat = Latitude::rad(2.5 * std::atan(std::pow(ProjectionConstants::E, 0.8 * y)) - 0.625 * ProjectionConstants::PI);
-			return c;
+			return {
+				Latitude::rad(2.5 * std::atan(std::pow(ProjectionConstants::E, 0.8 * y)) - 0.625 * ProjectionConstants::PI),
+				Longitude::rad(x)
+			};
 		};
 
 	};

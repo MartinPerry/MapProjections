@@ -40,21 +40,18 @@ namespace Projections
 
 		ProjectedValue ProjectInternal(const Coordinate & c) const
 		{
-			ProjectedValue p;
-			p.x = (c.lon.rad() - lonCentralMeridian.rad()) * cosStandardParallel;
-			p.y = c.lat.rad() - standardParallel.rad();
-
-			return p;
+			return {
+				(c.lon.rad() - lonCentralMeridian.rad()) * cosStandardParallel,
+				c.lat.rad() - standardParallel.rad()
+			};
 		};
 
 		ProjectedValueInverse ProjectInverseInternal(MyRealType x, MyRealType y) const
-		{
-			ProjectedValueInverse c;
-
-			c.lat = Latitude::rad(y / cosStandardParallel + lonCentralMeridian.rad());
-			c.lon = Longitude::rad(x + standardParallel.rad());
-
-			return c;
+		{			
+			return {
+				Latitude::rad(y / cosStandardParallel + lonCentralMeridian.rad()),
+				Longitude::rad(x + standardParallel.rad())
+			};
 		};
 
 	};

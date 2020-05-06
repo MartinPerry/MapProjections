@@ -70,10 +70,7 @@ namespace Projections
 			MyRealType x = phi * std::sin(n * (c.lon.rad() - lonCentralMeridian.rad()));
 			MyRealType y = phi0 - phi * std::cos(n * (c.lon.rad() - lonCentralMeridian.rad()));
 
-			ProjectedValue p;
-			p.x = x;
-			p.y = y;
-			return p;
+			return { x, y };			
 		};
 
 		ProjectedValueInverse ProjectInverseInternal(MyRealType x, MyRealType y) const
@@ -86,11 +83,10 @@ namespace Projections
 			MyRealType lat = 2.0 * std::atan(t) - ProjectionConstants::PI_2;
 			MyRealType lon = lonCentralMeridian.rad() + delta / n;
 
-			ProjectedValueInverse c;
-			c.lat = Latitude::rad(lat);
-			c.lon = Longitude::rad(lon);
-
-			return c;
+			return {
+				Latitude::rad(lat),
+				Longitude::rad(lon)
+			};
 		};
 
 	};

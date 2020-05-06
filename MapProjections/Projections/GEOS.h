@@ -202,11 +202,10 @@ namespace Projections
 			}
 			MyRealType sxy = std::sqrt(s1 * s1 + s2 * s2);
 
-			ProjectedValueInverse c;
-			c.lon = Longitude::rad(std::atan(s2 / s1) + sat.lon.rad());
-			c.lat = Latitude::rad(std::atan(1.006739501 * s3 / sxy));
-
-			return c;
+			return {
+				Latitude::rad(std::atan(1.006739501 * s3 / sxy)),
+				Longitude::rad(std::atan(s2 / s1) + sat.lon.rad())
+			};			
 		};
 	};
 }

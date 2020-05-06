@@ -41,27 +41,23 @@ namespace Projections
 			MyRealType m = (1.0 + std::sin(latCentral.rad())) / (1.0 + std::sin(c.lat.rad()));
 			MyRealType cosLat = std::cos(c.lat.rad());
 
-			ProjectedValue p;
-			p.x = +ProjectionConstants::EARTH_RADIUS * m * cosLat * std::sin(c.lon.rad() - lonCentralMeridian.rad());
-			p.y = -ProjectionConstants::EARTH_RADIUS * m * cosLat * std::cos(c.lon.rad() - lonCentralMeridian.rad());
-
-			return p;
+			return {
+				ProjectionConstants::EARTH_RADIUS * m * cosLat * std::sin(c.lon.rad() - lonCentralMeridian.rad()),
+				-ProjectionConstants::EARTH_RADIUS * m * cosLat * std::cos(c.lon.rad() - lonCentralMeridian.rad())
+			};			
 		};
 
 		ProjectedValueInverse ProjectInverseInternal(MyRealType x, MyRealType y) const
-		{
-			ProjectedValueInverse c;
-
-			c.lon = Longitude::rad(std::atan(-x / y) + lonCentralMeridian.rad());
-
+		{			
 			MyRealType tmpSin = std::sin(latCentral.rad());
 			MyRealType tmp = ProjectionConstants::EARTH_RADIUS * ProjectionConstants::EARTH_RADIUS * (1.0 + tmpSin) * (1.0 + tmpSin);
 			MyRealType tmp1 = tmp - (x * x + y * y);
 			MyRealType tmp2 = tmp + (x * x + y * y);
-			c.lat = Latitude::rad(std::asin(tmp1 / tmp2));
-
-
-			return c;
+		
+			return {
+				Latitude::rad(std::asin(tmp1 / tmp2)),
+				Longitude::rad(std::atan(-x / y) + lonCentralMeridian.rad())
+			};
 		};
 
 	};

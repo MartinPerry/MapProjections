@@ -267,7 +267,57 @@ Coordinate::PrecomputedSinCos Coordinate::PrecomputeSinCos() const
 	return tmp;
 }
 
+/// <summary>
+/// Prepare precalculated sin/cos - faster for NEON because we can utilise all
+/// calculations
+/// </summary>
+/// <param name="coords"></param>
+/// <returns></returns>
+std::array<Coordinate::PrecomputedSinCos, 4> Coordinate::PrecalcMultipleSinCos(
+	const std::array<Coordinate, 4> & coords)
+{
+	std::array<Coordinate::PrecomputedSinCos, 4> res;
 
+#ifdef HAVE_NEON
+	for (size_t i = 0; i < 4; i += 2)
+	{
+		float32x4_t v = {
+			static_cast<float32_t>(coords[i].lat.rad()),
+			static_cast<float32_t>(coords[i].lon.rad()),
+			static_cast<float32_t>(coords[i + 1].lat.rad()),
+			static_cast<float32_t>(coords[i + 1].lon.rad())
+		};
+
+		float32x4_t ysin;
+		float32x4_t ycos;
+		my_sincos_f32(v, &ysin, &ycos);
+
+		float values[4];
+		vst1q_f32(values, ysin);
+		res[i].sinLat = values[0];
+		res[i].sinLon = values[1];
+		res[i + 1].sinLat = values[2];
+		res[i + 1].sinLon = values[3];
+
+		vst1q_f32(values, ycos);
+		res[i].cosLat = values[0];
+		res[i].cosLon = values[1];
+		res[i + 1].cosLat = values[2];
+		res[i + 1].cosLon = values[3];
+	}
+
+#else
+	for (size_t i = 0; i < 4; i++)
+	{
+		res[i].sinLat = std::sin(coords[i].lat.rad());
+		res[i].cosLat = std::cos(coords[i].lat.rad());
+		res[i].sinLon = std::sin(coords[i].lon.rad());
+		res[i].cosLon = std::cos(coords[i].lon.rad());
+	}
+#endif
+
+	return res;
+}
 
 /// <summary>
 /// Load reprojection info from file
@@ -335,5 +385,5 @@ void Reprojection<T>::SaveToFile(const std::string & fileName)
 
 }
 
-template struct Reprojection<int>;
-template struct Reprojection<short>;
+template struct Projections::Reprojection<int>;
+template struct Projections::Reprojection<short>;

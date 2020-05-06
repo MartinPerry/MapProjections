@@ -152,10 +152,10 @@ namespace Projections
 
 		ProjectedValue rawPixel = static_cast<const Proj*>(this)->ProjectInternal(c);
 
-		Pixel<PixelType> p;
-		p.x = static_cast<PixelType>(std::round(rawPixel.x * this->frame.wAR - this->frame.projPrecomX));
-		p.y = static_cast<PixelType>(std::round(-rawPixel.y * this->frame.hAR - this->frame.projPrecomY));
-
+		Pixel<PixelType> p{
+			static_cast<PixelType>(std::round(rawPixel.x * this->frame.wAR - this->frame.projPrecomX)),
+			static_cast<PixelType>(std::round(-rawPixel.y * this->frame.hAR - this->frame.projPrecomY))
+		};
 
 		//rawPixel.x = rawPixel.x - this->frame.minPixelOffsetX;
 		//rawPixel.y = rawPixel.y - this->frame.minPixelOffsetY;
@@ -175,10 +175,10 @@ namespace Projections
 		//project value and get "pseudo" pixel coordinate
 		ProjectedValue rawPixel = static_cast<const Proj*>(this)->ProjectInternal(c);
 
-		Pixel<PixelType> p;
-		p.x = static_cast<PixelType>(rawPixel.x * this->frame.wAR - this->frame.projPrecomX);
-		p.y = static_cast<PixelType>(-rawPixel.y * this->frame.hAR - this->frame.projPrecomY);
-
+		Pixel<PixelType> p{
+			static_cast<PixelType>(rawPixel.x * this->frame.wAR - this->frame.projPrecomX),
+			static_cast<PixelType>(-rawPixel.y * this->frame.hAR - this->frame.projPrecomY)
+		};
 
 		//move our pseoude pixel to "origin"
 		//rawPixel.x = rawPixel.x - this->frame.minPixelOffsetX;

@@ -314,6 +314,7 @@
     <ClInclude Include="simd\neon_math_float.h" />
     <ClInclude Include="simd\neon_utils.h" />
     <ClInclude Include="simd\ProjectionInfo_simd.h" />
+    <ClInclude Include="simd\Projections\Equirectangular_simd.h" />
     <ClInclude Include="simd\Projections\GEOS_simd.h" />
     <ClInclude Include="simd\Projections\Mercator_simd.h" />
     <ClInclude Include="simd\Projections\Miller_simd.h" />

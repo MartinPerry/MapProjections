@@ -36,7 +36,7 @@ namespace Projections
 
 		const Longitude lonCentralMeridian;
 		const Latitude standardParallel;
-		const double cosStandardParallel;
+		const MyRealType cosStandardParallel;
 
 		ProjectedValue ProjectInternal(const Coordinate & c) const
 		{

@@ -16,6 +16,14 @@ namespace Projections
 		/// Reproject inputData based on reproj.
 		/// Output array has size reproj.outW * reproj.outH
 		/// Output array must be released with delete[]
+		/// 
+		/// Template parameters:
+		/// DataType - type of input data
+		/// ReprojType - type of reprojected positions - 
+		///				 each pixel has coordinate of this type
+		/// Out - output structure - can be raw array of std::vector
+		/// ChannelsCount - number of channels in input / output data
+	
 		/// </summary>
 		/// <param name="reproj"></param>
 		/// <param name="inputData"></param>

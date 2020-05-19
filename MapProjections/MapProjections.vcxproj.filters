@@ -110,6 +110,9 @@
     <ClInclude Include="simd\neon_utils.h">
       <Filter>Header Files\SIMD</Filter>
     </ClInclude>
+    <ClInclude Include="simd\Projections\Equirectangular_simd.h">
+      <Filter>Header Files\SIMD\Projections</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\README.md">

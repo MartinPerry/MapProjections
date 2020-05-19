@@ -16,6 +16,7 @@
 #include "./simd/Projections/Miller_simd.h"
 #include "./simd/Projections/Mercator_simd.h"
 #include "./simd/Projections/GEOS_simd.h"
+#include "./simd/Projections/Equirectangular_simd.h"
 #include "./simd/MapProjectionUtils_simd.h"
 
 using namespace Projections;
@@ -150,25 +151,74 @@ void TestGEOS()
 	
 }
 
+void ReprojectNightImage() 
+{
+	unsigned w = 13500;
+	unsigned h = 6750;
+	
 
+	Projections::Coordinate bbMin, bbMax;
+	bbMin.lat = -90.0_deg; bbMin.lon = -180.0_deg;
+	bbMax.lat = 90.0_deg; bbMax.lon = 180.0_deg;
+
+	ns::Equirectangular eq;
+	eq.SetFrame(bbMin, bbMax, w, h, Projections::STEP_TYPE::PIXEL_CENTER, false);
+
+	// Coordinate bbMin, bbMax;	
+	bbMin.lat = -70.0_deg; bbMin.lon = -20.0_deg;
+	bbMax.lat = 70.0_deg; bbMax.lon = 78.0_deg;
+
+	ns::Mercator mercator;
+	mercator.SetFrame(bbMin, bbMax, 2232, 0, Projections::STEP_TYPE::PIXEL_CENTER, false);
+
+
+
+	Projections::Reprojection<short> reproj = 
+		ns::ProjectionUtils::CreateReprojection<ns::Equirectangular, ns::Mercator, short>(&eq, &mercator);
+
+	//==========================================================
+
+	std::vector<uint8_t> imgRawData;
+	std::vector<uint8_t> fileData;
+	lodepng::load_file(fileData, "D://BlackMarble_2016_3km.png");
+	lodepng::decode(imgRawData, w, h, fileData, LodePNGColorType::LCT_RGB);
+
+
+	std::vector<uint8_t> rawData = 
+		Projections::ProjectionUtils::ReprojectData<uint8_t, short, std::vector<uint8_t>, 3>(
+			reproj, imgRawData.data(), 0
+		);
+
+
+	ProjectionRenderer pd(&mercator, ProjectionRenderer::RenderImageType::RGB);
+	pd.AddBorders("D://borders.csv", 5);
+	//pd.Clear();	
+	pd.SetRawDataTarget(rawData.data(), ProjectionRenderer::RenderImageType::RGB);
+	//pd.DrawBorders();
+	pd.SaveToFile("D://yyy_simd2.png");
+
+}
 
 int main(int argc, const char * argv[]) 
 {
-	TestGEOS();
-	TestGEOS_Simd();
+	ReprojectNightImage();
 	return 0;
+
+	//TestGEOS();
+	//TestGEOS_Simd();
+	//return 0;
 
 	{
 
 
 		Projections::Coordinate bbMin, bbMax;
-	
-		bbMin.lat = 10.0_deg; bbMin.lon = -134.0_deg;
-		bbMax.lat = 50.0_deg; bbMax.lon = -61.0_deg;
+		
+		bbMin.lat = -70.0_deg; bbMin.lon = 34.0_deg;
+		bbMax.lat = 70.0_deg; bbMax.lon = 78.0_deg;
 
 		Projections::Mercator * eq = new Projections::Mercator();
 
-		eq->SetFrame(bbMin, bbMax, 5400, 0, Projections::STEP_TYPE::PIXEL_BORDER, false);
+		eq->SetFrame(bbMin, bbMax, 1002, 0, Projections::STEP_TYPE::PIXEL_BORDER, false);
 		auto f = eq->GetFrame();
 		printf("x");
 	}

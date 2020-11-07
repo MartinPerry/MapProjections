@@ -201,9 +201,77 @@ void ReprojectNightImage()
 
 int main(int argc, const char * argv[]) 
 {
-	ReprojectNightImage();
+	
+	{
+		Projections::Coordinate bbMin, bbMax;
+
+		bbMin.lat = -89.93_deg; bbMin.lon = -180.06_deg;
+		bbMax.lat = 90.06_deg; bbMax.lon = 179.93_deg;
+
+		//create input projection and set its visible frame
+		Projections::Equirectangular * eq = new Projections::Equirectangular();
+
+		//auto kk = inputImage->ProjectInverseInternal(-899.5, -529.5);
+
+		eq->SetFrame(bbMin, bbMax, 2880, 1441, Projections::STEP_TYPE::PIXEL_BORDER, false);
+		auto f = eq->GetFrame();
+		auto gps = eq->ProjectInverse({ 1437, 330 });
+
+		//{ {1349, 224}, {1337, 341}, {1455, 341}, {1455, 241} }
+
+		std::vector<double> areas;
+		double avg = 0;
+		for (int y = 0; y < eq->GetFrameHeight() - 10; y += 10)		
+		{
+			for (int x = 0; x < eq->GetFrameWidth() - 10; x += 10)
+			{
+				double area = ProjectionUtils::CalcArea(
+					std::vector<Pixel<int>>({ {x, y}, {x + 10, y}, {x + 10, y + 10}, {x, y + 10} }),
+					eq
+				);
+				areas.push_back(area / (1000 * 1000));
+				avg += areas.back();
+			}
+		}
+
+		avg /= areas.size();
+
+		int n = areas.size() / 2;
+		std::nth_element(areas.begin(), areas.begin() + n, areas.end());
+		double medianArea = areas[n];
+
+		double area = ProjectionUtils::CalcArea(
+			std::vector<Pixel<int>>({ {1337, 224}, {1337, 341}, {1455, 341}, {1455, 241} }),
+			eq
+		);
+
+		double area2 = ProjectionUtils::CalcArea(
+			std::vector<Pixel<int>>({ {0, 424}, {0, 541}, {118, 541}, {118, 441} }),
+			eq
+		);
+
+		unsigned w = 600;
+		unsigned h = 600;
+		std::vector<uint8_t> imgRawData;
+		std::vector<uint8_t> fileData;
+		lodepng::load_file(fileData, "D://orig_icon_global_single-level_2020102400_012_PMSL.png");
+		//lodepng::load_file(fileData, "D://full_disk_ahi_true_color.png");	
+		lodepng::decode(imgRawData, w, h, fileData, LodePNGColorType::LCT_GREY);
+
+
+		ProjectionRenderer pd(eq);
+		pd.AddBorders("D://borders.csv", 5);
+		pd.Clear();
+		pd.DrawImage(&imgRawData[0], ProjectionRenderer::RenderImageType::GRAY, w, h, eq);
+		pd.DrawBorders();
+		pd.SaveToFile("D://xxx2.png");
+
+		printf(".");
+	}
+
 	return 0;
 
+	//ReprojectNightImage();
 	//TestGEOS();
 	//TestGEOS_Simd();
 	//return 0;
@@ -223,21 +291,7 @@ int main(int argc, const char * argv[])
 		printf("x");
 	}
 
-	{
-		Projections::Coordinate bbMin, bbMax;
 	
-		bbMin.lat = -89.93_deg; bbMin.lon = -180.06_deg;
-		bbMax.lat = 90.06_deg; bbMax.lon = 179.93_deg;
-
-		//create input projection and set its visible frame
-		Projections::Equirectangular * eq = new Projections::Equirectangular();
-
-		//auto kk = inputImage->ProjectInverseInternal(-899.5, -529.5);
-
-		eq->SetFrame(bbMin, bbMax, 720, 360, Projections::STEP_TYPE::PIXEL_BORDER, false);
-		auto f = eq->GetFrame();
-		printf(".");
-	}
 
 	//TestLambertConic();
 

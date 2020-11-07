@@ -106,3 +106,40 @@ double ProjectionUtils::Distance(const Coordinate & from, const Coordinate & to)
 
 	return d;
 };
+
+/// <summary>
+/// Calculate area of polygon
+/// https://stackoverflow.com/questions/2861272/polygon-area-calculation-using-latitude-and-longitude-generated-from-cartesian-s
+/// </summary>
+/// <param name="pts"></param>
+/// <returns></returns>
+double ProjectionUtils::CalcArea(const std::vector<Coordinate> & pts)
+{
+	double area = 0.0;
+
+	if (pts.size() > 2)
+	{
+		for (size_t i = 0; i < pts.size() - 1; i++)
+		{
+			Coordinate p1 = pts[i];
+			Coordinate p2 = pts[i + 1];
+			
+			double lonDif = p2.lon.rad() - p1.lon.rad();
+			area += lonDif * (2 + std::sin(p1.lat.rad()) + std::sin(p2.lat.rad()));
+		}
+
+		//last and first point to enclose polygon
+		Coordinate p1 = pts[pts.size() - 1];
+		Coordinate p2 = pts[0];
+
+		double lonDif = p2.lon.rad() - p1.lon.rad();
+		area += lonDif * (2 + std::sin(p1.lat.rad()) + std::sin(p2.lat.rad()));
+		//-------
+
+
+		//6378137 - earth radius in m
+		area = area * 6378137 * 6378137 / 2;
+	}
+
+	return abs(area);
+}

@@ -2,6 +2,7 @@
 #include <iostream>
 #include <array>
 #include <vector>
+#include <algorithm>
 
 #include "ProjectionInfo.h"
 #include "./Projections/Equirectangular.h"

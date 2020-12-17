@@ -4,7 +4,9 @@
 #include <vector>
 #include <algorithm>
 
-#include "ProjectionInfo.h"
+#include "./ProjectionInfo.h"
+#include "./Reprojection.h"
+
 #include "./Projections/Equirectangular.h"
 #include "./Projections/Mercator.h"
 #include "./Projections/Miller.h"
@@ -19,6 +21,7 @@
 #include "./simd/Projections/GEOS_simd.h"
 #include "./simd/Projections/Equirectangular_simd.h"
 #include "./simd/MapProjectionUtils_simd.h"
+#include "./simd/Reprojection_simd.h"
 
 using namespace Projections;
 
@@ -62,7 +65,7 @@ void TestLambertConic()
 
 	ProjectionRenderer pd(outputImage);
 	//compute mapping from input -> output projection   
-	Reprojection reprojection = Projections::ProjectionUtils::CreateReprojection(inputImage, outputImage);
+	Reprojection reprojection = Reprojection<int>::CreateReprojection(inputImage, outputImage);
 	
 	pd.Clear();
 	pd.DrawImage(&imgRawData[0], ProjectionRenderer::RenderImageType::GRAY, reprojection);
@@ -98,9 +101,9 @@ void TestGEOS_Simd()
 	
 
 	
-	Projections::Reprojection<short> reproj = ns::ProjectionUtils::CreateReprojection<ns::GEOS, ns::Mercator, short>(&geos, &mercator);
+	Projections::Reprojection<short> reproj = ns::Reprojection<short>::CreateReprojection<ns::GEOS, ns::Mercator>(&geos, &mercator);
 
-	std::vector<uint8_t> rawData = Projections::ProjectionUtils::ReprojectData<uint8_t, short, std::vector<uint8_t>, 1>(reproj, imgRawData.data(), 0);
+	std::vector<uint8_t> rawData = reproj.ReprojectData<uint8_t, std::vector<uint8_t>, 1>(imgRawData.data(), 0);
 
 	
 	ProjectionRenderer pd(&mercator, ProjectionRenderer::RenderImageType::GRAY);
@@ -138,9 +141,9 @@ void TestGEOS()
 	geos.SetFrame(bbMin, bbMax, w, h, Projections::STEP_TYPE::PIXEL_CENTER, false);
 
 	
-	Projections::Reprojection<short> reproj = Projections::ProjectionUtils::CreateReprojection<GEOS, Mercator, short>(&geos, &mercator);
+	Projections::Reprojection<short> reproj = Reprojection<short>::CreateReprojection<GEOS, Mercator>(&geos, &mercator);
 
-	std::vector<uint8_t> rawData = Projections::ProjectionUtils::ReprojectData<uint8_t, short, std::vector<uint8_t>, 1>(reproj, imgRawData.data(), 0);
+	std::vector<uint8_t> rawData = reproj.ReprojectData<uint8_t, std::vector<uint8_t>, 1>(imgRawData.data(), 0);
 
 
 	ProjectionRenderer pd(&mercator, ProjectionRenderer::RenderImageType::GRAY);
@@ -175,7 +178,7 @@ void ReprojectNightImage()
 
 
 	Projections::Reprojection<short> reproj = 
-		ns::ProjectionUtils::CreateReprojection<ns::Equirectangular, ns::Mercator, short>(&eq, &mercator);
+		ns::Reprojection<short>::CreateReprojection<ns::Equirectangular, ns::Mercator>(&eq, &mercator);
 
 	//==========================================================
 
@@ -186,8 +189,8 @@ void ReprojectNightImage()
 
 
 	std::vector<uint8_t> rawData = 
-		Projections::ProjectionUtils::ReprojectData<uint8_t, short, std::vector<uint8_t>, 3>(
-			reproj, imgRawData.data(), 0
+		reproj.ReprojectData<uint8_t, std::vector<uint8_t>, 3>(
+			imgRawData.data(), 0
 		);
 
 
@@ -200,9 +203,71 @@ void ReprojectNightImage()
 
 }
 
+
+void LambertConicPressureEu()
+{
+	unsigned w = 600;
+	unsigned h = 600;
+
+	std::vector<uint8_t> imgRawData;
+	std::vector<uint8_t> fileData;
+	lodepng::load_file(fileData, "D://BRA_1_2017031700_45.png");
+	//lodepng::load_file(fileData, "D://full_disk_ahi_true_color.png");	
+	lodepng::decode(imgRawData, w, h, fileData, LodePNGColorType::LCT_GREY);
+
+
+
+	Projections::Coordinate bbMin, bbMax;
+
+	//======= lambert conic
+
+	//min: 82.940;-39.023
+	//max: 18.229;7.998
+
+	bbMax.lat = 82.940_deg; 
+	bbMin.lat = 18.229_deg;
+
+	bbMin.lon = -39.023_deg;		
+	bbMax.lon = 7.998_deg;
+
+	//create input projection and set its visible frame
+	Projections::LambertConic* inputImage = new Projections::LambertConic(38.5_deg, -97.5_deg, 38.5_deg);
+
+	//auto kk = inputImage->ProjectInverseInternal(-899.5, -529.5);
+
+	inputImage->SetFrame(bbMin, bbMax, w, h, Projections::STEP_TYPE::PIXEL_CENTER, false);
+
+
+	ProjectionRenderer pd(inputImage);
+	//compute mapping from input -> output projection   
+		
+	pd.Clear();
+	pd.SetRawDataTarget(&imgRawData[0], ProjectionRenderer::RenderImageType::GRAY);
+	pd.DrawBorders();
+	pd.SaveToFile("D://xxx2.png");
+	return;
+
+
+	Projections::Equirectangular* outputImage = new Projections::Equirectangular();
+	outputImage->SetFrame(inputImage, false); //same resolution as ipImage frame
+
+
+	ProjectionRenderer pd2(outputImage);
+	//compute mapping from input -> output projection   
+	Reprojection reprojection = Reprojection<int>::CreateReprojection(inputImage, outputImage);
+
+	pd2.Clear();
+	pd2.DrawImage(&imgRawData[0], ProjectionRenderer::RenderImageType::GRAY, reprojection);
+	pd.DrawBorders();
+	pd2.SaveToFile("D://xxx2.png");
+}
+
 int main(int argc, const char * argv[]) 
 {
 	
+	LambertConicPressureEu();
+	return 0;
+
 	{
 		Projections::Coordinate bbMin, bbMax;
 
@@ -364,7 +429,7 @@ int main(int argc, const char * argv[])
 
 	ProjectionRenderer pd(mercator);
 	//compute mapping from input -> output projection   
-	Reprojection reprojection = Projections::ProjectionUtils::CreateReprojection(&g, mercator);
+	Reprojection reprojection = Reprojection<int>::CreateReprojection(&g, mercator);
 	
 		
 

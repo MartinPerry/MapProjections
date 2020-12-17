@@ -6,8 +6,8 @@
 #include <string>
 #include <unordered_map>
 
-
-#include "ProjectionInfo.h"
+#include "./ProjectionInfo.h"
+#include "./Reprojection.h"
 
 namespace Projections
 {
@@ -42,6 +42,7 @@ namespace Projections
 		void AddBorders(const char * fileName, int useEveryNthPoint = 1);
 		void DrawBorders();
 		void DrawParalells();
+		void DrawParalells(MyRealType lonStep, MyRealType latStep);
 
 		void DrawLine(Coordinate start, Coordinate end, int stepCount = 20);
 

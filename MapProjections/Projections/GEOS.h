@@ -123,6 +123,11 @@ namespace Projections
 		const MyRealType RADIUS_POLAR = MyRealType(6356.7523); //in km
 		const MyRealType TWO_POW_MINUS_16 = std::pow(2, -16);
 
+		const char* GetNameInternal() const
+		{
+			return "GEOS";
+		}
+
 		std::tuple<double, double, double, double>
 			GetFrameBotLeftTopRight(const Coordinate & botLeft, const Coordinate & topRight)
 		{

@@ -293,6 +293,7 @@
     <ClCompile Include="MapProjectionsUtils.cpp" />
     <ClCompile Include="ProjectionInfo.cpp" />
     <ClCompile Include="ProjectionRenderer.cpp" />
+    <ClCompile Include="Reprojection.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="GeoCoordinate.h" />
@@ -308,6 +309,7 @@
     <ClInclude Include="Projections\Mercator.h" />
     <ClInclude Include="Projections\Miller.h" />
     <ClInclude Include="Projections\PolarSteregographic.h" />
+    <ClInclude Include="Reprojection.h" />
     <ClInclude Include="simd\avx_math_float.h" />
     <ClInclude Include="simd\MapProjectionStructures_simd.h" />
     <ClInclude Include="simd\MapProjectionUtils_simd.h" />
@@ -318,6 +320,7 @@
     <ClInclude Include="simd\Projections\GEOS_simd.h" />
     <ClInclude Include="simd\Projections\Mercator_simd.h" />
     <ClInclude Include="simd\Projections\Miller_simd.h" />
+    <ClInclude Include="simd\Reprojection_simd.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\README.md" />

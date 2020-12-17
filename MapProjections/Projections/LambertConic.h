@@ -62,6 +62,11 @@ namespace Projections
 		double n;
 		double phi0;
 
+		const char* GetNameInternal() const
+		{
+			return "LambertConic";
+		}
+
 		ProjectedValue ProjectInternal(const Coordinate & c) const
 		{
 			MyRealType t = ProjectionUtils::cot(ProjectionConstants::PI_4 + 0.5 * c.lat.rad());

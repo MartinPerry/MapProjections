@@ -36,6 +36,11 @@ namespace Projections
 		const Longitude lonCentralMeridian;
 		const Latitude latCentral;
 
+		const char* GetNameInternal() const
+		{
+			return "PolarSteregographic";
+		}
+
 		ProjectedValue ProjectInternal(const Coordinate & c) const
 		{
 			MyRealType m = (1.0 + std::sin(latCentral.rad())) / (1.0 + std::sin(c.lat.rad()));

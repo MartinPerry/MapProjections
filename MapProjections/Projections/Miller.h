@@ -26,6 +26,12 @@ namespace Projections
 		friend class ProjectionInfo<Miller>;
 
 	protected:
+
+		const char* GetNameInternal() const
+		{
+			return "Miller";
+		}
+
 		ProjectedValue ProjectInternal(const Coordinate & c) const
 		{			
 			return {

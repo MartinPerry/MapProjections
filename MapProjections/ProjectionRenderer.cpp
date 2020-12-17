@@ -224,9 +224,12 @@ void ProjectionRenderer::DrawBorders()
 /// Draw parallels
 /// </summary>
 void ProjectionRenderer::DrawParalells()
+{	
+	this->DrawParalells(10, 5);
+}
+
+void ProjectionRenderer::DrawParalells(MyRealType lonStep, MyRealType latStep)
 {
-	MyRealType lonStep = 10;
-	MyRealType latStep = 5;
 
 	for (MyRealType lat = -90; lat <= 90; lat += latStep)
 	{
@@ -237,15 +240,21 @@ void ProjectionRenderer::DrawParalells()
 			p.lon = Longitude::deg(lon);
 
 			Coordinate p1;
-			p1.lat = Latitude::deg(lat);
+			p1.lat = p.lat;
 			p1.lon = Longitude::deg(lon + lonStep);
-			
+
 			Pixel<int> pp1 = this->projectCallback(p);
 			Pixel<int> pp2 = this->projectCallback(p1);
 
 
 			this->CohenSutherlandLineClipAndDraw(pp1.x, pp1.y, pp2.x, pp2.y);
-			//this->DrawLine(pp1.x, pp1.y, pp2.x, pp2.y);
+
+			p1.lat = Latitude::deg(lat + latStep);
+			p1.lon = p.lon;
+
+			pp1 = this->projectCallback(p);
+			pp2 = this->projectCallback(p1);
+			this->CohenSutherlandLineClipAndDraw(pp1.x, pp1.y, pp2.x, pp2.y);
 		}
 	}
 }

@@ -38,6 +38,11 @@ namespace Projections
 		const Latitude standardParallel;
 		const MyRealType cosStandardParallel;
 
+		const char* GetNameInternal() const
+		{
+			return "Equirectangular";
+		}
+
 		ProjectedValue ProjectInternal(const Coordinate & c) const
 		{
 			return {

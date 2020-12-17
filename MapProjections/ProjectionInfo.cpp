@@ -16,11 +16,18 @@
 
 using namespace Projections;
 
+/// <summary>
+/// Get name of projection
+/// </summary>
+/// <returns></returns>
+template <typename Proj>
+const char* ProjectionInfo<Proj>::GetName() const
+{
+	return static_cast<const Proj*>(this)->GetNameInternal();
+}
 
 //=======================================================================
-//
 // Main interface
-//
 //=======================================================================
 
 template <typename Proj>

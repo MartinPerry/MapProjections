@@ -26,10 +26,10 @@ namespace Projections
 	template <typename Proj>
 	class ProjectionInfo : public IProjectionInfo
 	{
-	public:		
-		
-
+	public:				
 		virtual ~ProjectionInfo() = default;
+
+		const char* GetName() const;
 
 		template <typename PixelType = int>
 		RET_VAL(PixelType, std::is_integral) Project(const Coordinate & c) const;

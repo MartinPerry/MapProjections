@@ -30,6 +30,12 @@ namespace Projections
 		friend class ProjectionInfo<Mercator>;
 
 	protected:
+
+		const char* GetNameInternal() const
+		{
+			return "Mercator";
+		}
+
 		ProjectedValue ProjectInternal(const Coordinate & c) const
 		{
 			return {

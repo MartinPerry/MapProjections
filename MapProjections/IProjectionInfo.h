@@ -8,9 +8,9 @@
 //#define USE_VIRTUAL_INTERFACE
 
 #ifdef USE_VIRTUAL_INTERFACE
-#define OVERRIDE override
+#	define OVERRIDE override
 #else
-#define OVERRIDE
+#	define OVERRIDE
 #endif
 
 namespace Projections 
@@ -22,6 +22,11 @@ namespace Projections
 		const PROJECTION curProjection;
 
 		virtual ~IProjectionInfo() = default;
+
+		virtual const char* GetName() const
+		{
+			return "";
+		}
 
 #ifdef USE_VIRTUAL_INTERFACE
 		/*
@@ -47,7 +52,8 @@ namespace Projections
 		virtual void SetFrame(const Coordinate & botLeft, const Coordinate & topRight, MyRealType w, MyRealType h, STEP_TYPE stepType, bool keepAR = true) = 0;
 		virtual void SetRawFrame(const Coordinate & botLeft, const Coordinate & topRight, MyRealType w, MyRealType h, STEP_TYPE stepType, bool keepAR = true) = 0;
 		virtual void SetFrameFromAABB(const Coordinate & min, const Coordinate & max, MyRealType w, MyRealType h, STEP_TYPE stepType, bool keepAR = true) = 0;
-
+		
+		
 		virtual Coordinate GetTopLeftCorner() const = 0;
 		virtual Coordinate GetDeltaStep() const = 0;
 		virtual const ProjectionFrame & GetFrame() const = 0;

@@ -4,6 +4,7 @@
 #	define MY_LOG_ERROR(...) printf(__VA_ARGS__)
 #endif
 
+#include <string.h>
 
 using namespace Projections;
 

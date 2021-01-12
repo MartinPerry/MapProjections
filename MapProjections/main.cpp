@@ -264,8 +264,32 @@ void LambertConicPressureEu()
 
 int main(int argc, const char * argv[]) 
 {
+
+	{		
+		Projections::Coordinate bbMin, bbMax;
+
+		bbMin.lat = -89.93_deg; 
+		//bbMin.lon = -180.06_deg;
+		bbMin.lon = 100.0_deg;
+
+		bbMax.lat = 90.06_deg; 
+		bbMax.lon = -150.93_deg;
+
+		//create input projection and set its visible frame
+		Projections::Equirectangular* eq = new Projections::Equirectangular();	
+		eq->SetFrame(bbMin, bbMax, 2880, 1441, Projections::STEP_TYPE::PIXEL_BORDER, false);
+
+		ProjectionRenderer pd(eq);
+		pd.AddBorders("D://borders.csv", 5);
+		pd.Clear();		
+		pd.DrawBorders();
+		pd.SaveToFile("D://wrap.png");
+
+
+	}
+
 	
-	LambertConicPressureEu();
+	//LambertConicPressureEu();
 	return 0;
 
 	{

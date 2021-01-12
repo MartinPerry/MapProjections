@@ -1,5 +1,5 @@
-#ifndef _PROJECTION_DEBUGGER_H_
-#define _PROJECTION_DEBUGGER_H_
+#ifndef PROJECTION_DEBUGGER_H
+#define PROJECTION_DEBUGGER_H
 
 #include <cstdint>
 #include <vector>
@@ -46,7 +46,7 @@ namespace Projections
 
 		void DrawLine(Coordinate start, Coordinate end, int stepCount = 20);
 
-		void DrawPoint(Coordinate p);
+		void DrawPoint(Coordinate p, int size = 5);
 
 		void DrawLines(const std::vector<Coordinate> & points);
 
@@ -82,6 +82,8 @@ namespace Projections
 
 		int ComputeOutCode(MyRealType x, MyRealType y);
 		void CohenSutherlandLineClipAndDraw(MyRealType x0, MyRealType y0, MyRealType x1, MyRealType y1);
+
+		void DrawLine(Pixel<int> pp1, Pixel<int> pp2);
 
 		std::vector<std::string> Split(const std::string &s, char delim);
 		std::string LoadFromFile(const char * filePath);

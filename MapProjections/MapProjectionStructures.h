@@ -63,7 +63,8 @@ namespace Projections
 	//================================================================================================
 
 
-	struct Coordinate {
+	struct Coordinate 
+	{
 
 		struct PrecomputedSinCos
 		{
@@ -133,6 +134,31 @@ namespace Projections
 		MyRealType projPrecomY;
 
 		STEP_TYPE stepType;
+
+
+		MyRealType repeatNegCount;
+		MyRealType repeatPosCount;
+
+		MyRealType ww; //width of single full projected world
+		MyRealType hh; //height of single full projected world
+
+		ProjectionFrame() : 
+			min(Coordinate(Longitude::deg(-180.0), Latitude::deg(-90.0))),
+			max(Coordinate(Longitude::deg(180.0), Latitude::deg(90.0))),
+			w(0),
+			h(0),
+			wPadding(0),
+			hPadding(0),
+			wAR(1),
+			hAR(1),
+			projPrecomX(0),
+			projPrecomY(0),
+			stepType(STEP_TYPE::PIXEL_CENTER),
+			repeatNegCount(0),
+			repeatPosCount(0),
+			ww(0),
+			hh(0)
+		{}
 	};
 
 	//================================================================================================

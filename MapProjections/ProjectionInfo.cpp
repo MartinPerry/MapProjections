@@ -34,21 +34,7 @@ template <typename Proj>
 ProjectionInfo<Proj>::ProjectionInfo(PROJECTION curProjection)
 	: IProjectionInfo(curProjection)		
 {	
-	this->frame.w = 0;
-	this->frame.h = 0;
-	this->frame.wPadding = 0;
-	this->frame.hPadding = 0;
-	this->frame.wAR = 1;
-	this->frame.hAR = 1;
-	this->frame.projPrecomX = 0.0;
-	this->frame.projPrecomY = 0.0;
-	this->frame.stepType = STEP_TYPE::PIXEL_CENTER;
 
-	this->frame.min.lat = -90.0_deg;
-	this->frame.max.lat = 90.0_deg;
-
-	this->frame.min.lon = -180.0_deg;
-	this->frame.max.lon = 180.0_deg;
 }
 
 template <typename Proj>
@@ -84,11 +70,17 @@ void ProjectionInfo<Proj>::SetFrame(const ProjectionFrame & frame)
 	this->frame.projPrecomY = frame.projPrecomY;
 	this->frame.stepType = frame.stepType;
 
+	this->frame.repeatNegCount = frame.repeatNegCount;
+	this->frame.repeatPosCount = frame.repeatPosCount;
+	this->frame.ww = frame.ww;
+	this->frame.hh = frame.hh;
+
 	//set some default values from old frame,
 	//but they will be recomputed in ComputeAABB
 	this->frame.min = frame.min;
 	this->frame.max = frame.max;
 
+	
 	this->ComputeAABB(this->frame.min, this->frame.max);
 }
 
@@ -135,7 +127,7 @@ void ProjectionInfo<Proj>::SetFrame(const ProjectionFrame & frame)
 template <typename Proj>
 void ProjectionInfo<Proj>::SetRawFrame(const Coordinate & botLeft, const Coordinate & topRight,
 	MyRealType w, MyRealType h, STEP_TYPE stepType, bool keepAR)
-{
+{		
 	//calculate minimum internal projection value				
 
 	auto[minX, minY, maxX, maxY] = static_cast<Proj*>(this)->GetFrameBotLeftTopRight(botLeft, topRight);
@@ -194,6 +186,77 @@ void ProjectionInfo<Proj>::SetRawFrame(const Coordinate & botLeft, const Coordin
 
 	this->frame.min = botLeft;
 	this->frame.max = topRight;
+
+	this->CalculateWrapRepeat(botLeft, topRight);
+}
+
+/// <summary>
+/// Calculate wrap around counts
+/// - How many times are coordinates wrapped around the world
+/// in longitude
+/// - for orthogonal projections
+/// </summary>
+/// <param name="botLeft"></param>
+/// <param name="topRight"></param>
+template <typename Proj>
+void ProjectionInfo<Proj>::CalculateWrapRepeat(const Coordinate& botLeft, const Coordinate& topRight)
+{
+	if (Proj::ORTHOGONAL_LAT_LON == false)
+	{
+		//cannot repeat for non-orthogonal lat/lon projections
+		return;
+	}
+
+	//calculate repeat count
+	this->frame.repeatNegCount = 0;
+	this->frame.repeatPosCount = 0;
+
+	MyRealType lon = botLeft.lon.deg();
+	if (lon < -180.0)
+	{
+		while (lon < -360.0)
+		{
+			this->frame.repeatNegCount++;
+			lon += 360.0;
+		}
+
+		//map range to 0 - 1
+		lon += 360.0;
+		MyRealType in01 = (lon - -180.0) * (1.0) / 360.0;
+
+		this->frame.repeatNegCount += (1.0 - in01);
+	}
+
+	lon = topRight.lon.deg();
+	if (lon > 180.0)
+	{
+		while (lon > 360.0)
+		{
+			this->frame.repeatPosCount++;
+			lon -= 360.0;
+		}
+
+		//map range to 0 - 1
+		lon -= 360.0;
+		MyRealType in01 = (lon - -180.0) * (1.0) / 360.0;
+
+		this->frame.repeatPosCount += in01;
+	}
+
+	Projections::Coordinate bbMin, bbMax;
+
+	bbMin.lat = -90.0_deg;
+	bbMin.lon = -180.0_deg;
+	
+	bbMax.lat = 90.06_deg;
+	bbMax.lon = 180.0_deg;
+	
+	Pixel<MyRealType> pp1 = this->Project<MyRealType>(bbMin);
+	Pixel<MyRealType> pp2 = this->Project<MyRealType>(bbMax);
+
+	this->frame.ww = pp2.x - pp1.x;
+	this->frame.hh = pp1.y - pp2.y;
+
 }
 
 /// <summary>

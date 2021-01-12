@@ -193,29 +193,62 @@ void ProjectionRenderer::AddBorders(const char * fileName, int useEveryNthPoint)
 
 }
 
+void ProjectionRenderer::DrawLine(Pixel<int> pp1, Pixel<int> pp2)
+{
+	this->CohenSutherlandLineClipAndDraw(pp1.x, pp1.y, pp2.x, pp2.y);
+
+	//process world possible wrapping around and repeting
+	{
+		int p1x = pp1.x;
+		int p2x = pp2.x;
+
+		MyRealType nc = this->frame.repeatNegCount;
+		int offset = static_cast<int>(frame.ww);
+		while (nc > 0)
+		{
+			pp1.x -= offset;
+			pp2.x -= offset;
+
+			this->CohenSutherlandLineClipAndDraw(pp1.x, pp1.y, pp2.x, pp2.y);
+			nc--;
+		}
+
+		pp1.x = p1x;
+		pp2.x = p2x;
+
+		MyRealType pc = this->frame.repeatPosCount;
+		offset = static_cast<int>(frame.ww);
+		while (pc > 0)
+		{
+			pp1.x += offset;
+			pp2.x += offset;
+
+			this->CohenSutherlandLineClipAndDraw(pp1.x, pp1.y, pp2.x, pp2.y);
+			pc--;
+		}
+	}
+}
+
 /// <summary>
 /// Draw borders
 /// </summary>
 void ProjectionRenderer::DrawBorders()
-{
-
-	for (auto it : this->debugBorder)
+{	
+	for (const auto & it : this->debugBorder)
 	{
-		std::vector<Coordinate> & b = it.second;
+		const std::vector<Coordinate> & b = it.second;
 
 		for (size_t i = 0; i < b.size(); i++)
 		{
 			Coordinate p = b[i % b.size()];
 			Coordinate p1 = b[(i + 1) % b.size()];
 
-
-
 			Pixel<int> pp1 = this->projectCallback(p);
 			Pixel<int> pp2 = this->projectCallback(p1);
-
-
-			this->CohenSutherlandLineClipAndDraw(pp1.x, pp1.y, pp2.x, pp2.y);
+			
+			this->DrawLine(pp1, pp2);
 		}
+
 
 	}
 }
@@ -245,16 +278,14 @@ void ProjectionRenderer::DrawParalells(MyRealType lonStep, MyRealType latStep)
 
 			Pixel<int> pp1 = this->projectCallback(p);
 			Pixel<int> pp2 = this->projectCallback(p1);
-
-
-			this->CohenSutherlandLineClipAndDraw(pp1.x, pp1.y, pp2.x, pp2.y);
+			this->DrawLine(pp1, pp2);
 
 			p1.lat = Latitude::deg(lat + latStep);
 			p1.lon = p.lon;
 
 			pp1 = this->projectCallback(p);
 			pp2 = this->projectCallback(p1);
-			this->CohenSutherlandLineClipAndDraw(pp1.x, pp1.y, pp2.x, pp2.y);
+			this->DrawLine(pp1, pp2);
 		}
 	}
 }
@@ -285,7 +316,7 @@ void ProjectionRenderer::DrawLine(Coordinate start, Coordinate end, int stepCoun
 		Pixel<int> pp1 = this->projectCallback(p);
 		Pixel<int> pp2 = this->projectCallback(p1);
 
-		this->CohenSutherlandLineClipAndDraw(pp1.x, pp1.y, pp2.x, pp2.y);
+		this->DrawLine(pp1, pp2);
 
 		p = p1;
 	}
@@ -295,9 +326,8 @@ void ProjectionRenderer::DrawLine(Coordinate start, Coordinate end, int stepCoun
 /// Draw point - point is represented by small square
 /// </summary>
 /// <param name="p"></param>
-void ProjectionRenderer::DrawPoint(Coordinate p)
-{
-	int size = 5;
+void ProjectionRenderer::DrawPoint(Coordinate p, int size)
+{	
 	Pixel<int> center = this->projectCallback(p);
 
 	Pixel<int> a = center;
@@ -310,10 +340,10 @@ void ProjectionRenderer::DrawPoint(Coordinate p)
 	c.x += size; c.y += size;
 	d.x -= size; d.y += size;
 
-	this->CohenSutherlandLineClipAndDraw(a.x, a.y, b.x, b.y);
-	this->CohenSutherlandLineClipAndDraw(b.x, b.y, c.x, c.y);
-	this->CohenSutherlandLineClipAndDraw(c.x, c.y, d.x, d.y);
-	this->CohenSutherlandLineClipAndDraw(d.x, d.y, a.x, a.y);
+	this->DrawLine(a, b);
+	this->DrawLine(b, c);
+	this->DrawLine(c, d);
+	this->DrawLine(d, a);
 
 }
 

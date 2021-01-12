@@ -99,7 +99,8 @@ namespace Projections
 		std::tuple<double, double, double, double> 
 			GetFrameBotLeftTopRight(const Coordinate & botLeft, const Coordinate & topRight);
 
-		
+		void CalculateWrapRepeat(const Coordinate& botLeft, const Coordinate& topRight);
+
 		ProjectionInfo(PROJECTION curProjection);
 	};
 

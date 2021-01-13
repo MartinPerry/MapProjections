@@ -57,7 +57,6 @@ template <typename T>
 void Reprojection<T>::SaveToFile(const std::string& fileName)
 {
 	FILE* f = nullptr;
-	//my_fopen(&f, fileName.c_str(), "wb");
 	my_fopen(&f, fileName.c_str(), "wb");
 
 	if (f == nullptr)

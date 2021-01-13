@@ -263,32 +263,54 @@ void LambertConicPressureEu()
 	pd2.SaveToFile("D://xxx2.png");
 }
 
+void TestWrapAround()
+{
+	unsigned w = 0;
+	unsigned h = 0;
+
+	std::vector<uint8_t> imgRawData;
+	std::vector<uint8_t> fileData;
+	lodepng::load_file(fileData, "D://8081_earthmap2k.png");
+	lodepng::decode(imgRawData, w, h, fileData, LodePNGColorType::LCT_GREY);
+
+
+
+	Projections::Coordinate bbMin, bbMax;
+
+	bbMin.lat = -80.93_deg;
+	bbMin.lon = -650.0_deg;
+	//bbMin.lon = 70.0_deg;
+
+	bbMax.lat = 80.06_deg;
+	bbMax.lon = -150.0_deg;
+	//bbMax.lon = 610.0_deg;
+
+	//create input projection and set its visible frame
+	auto merc = new Projections::Mercator();
+	merc->SetFrame(bbMin, bbMax, 2880, 1441, Projections::STEP_TYPE::PIXEL_BORDER, true);
+
+	bbMin.lat = -90.0_deg;
+	bbMin.lon = -180.0_deg;
+
+	bbMax.lat = 90.0_deg;
+	bbMax.lon = 180.0_deg;
+	auto eq = new Projections::Equirectangular();
+	eq->SetFrame(bbMin, bbMax, w, h, Projections::STEP_TYPE::PIXEL_BORDER, false);
+
+	auto repro = Reprojection<int>::CreateReprojection(eq, merc);
+
+	ProjectionRenderer pd(merc);
+	pd.AddBorders("D://borders.csv", 5);
+	pd.Clear();
+	pd.DrawImage(imgRawData.data(), ProjectionRenderer::RenderImageType::GRAY, repro);
+	pd.DrawBorders();
+	pd.SaveToFile("D://wrap.png");
+}
+
 int main(int argc, const char * argv[]) 
 {
 
-	{		
-		Projections::Coordinate bbMin, bbMax;
-
-		bbMin.lat = -80.93_deg; 		
-		bbMin.lon = -650.0_deg;
-		//bbMin.lon = 70.0_deg;
-
-		bbMax.lat = 80.06_deg; 
-		bbMax.lon = -150.0_deg;
-		//bbMax.lon = 610.0_deg;
-
-		//create input projection and set its visible frame
-		auto eq = new Projections::Mercator();
-		eq->SetFrame(bbMin, bbMax, 2880, 1441, Projections::STEP_TYPE::PIXEL_BORDER, false);
-		
-		ProjectionRenderer pd(eq);
-		pd.AddBorders("D://borders.csv", 5);
-		pd.Clear();		
-		pd.DrawBorders();		
-		pd.SaveToFile("D://wrap.png");
-
-
-	}
+	TestWrapAround();
 
 	
 	//LambertConicPressureEu();

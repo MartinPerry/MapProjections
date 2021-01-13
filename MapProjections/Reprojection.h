@@ -40,6 +40,14 @@ namespace Projections
 		int outH;
 		std::vector<Pixel<T>> pixels; //[to] = from
 
+		Reprojection() : 
+			inW(0),
+			inH(0),
+			outW(0),
+			outH(0)
+		{
+		}
+
 		/// <summary>
 		/// Create cache name in format:
 		/// reproj_from_w_h_to_w_h
@@ -88,11 +96,89 @@ namespace Projections
 		{
 
 			Reprojection<T> reprojection;
-			reprojection.pixels.resize(to->GetFrameHeight() * to->GetFrameWidth(), { -1, -1 });
+			reprojection.pixels.resize(to->GetFrameWidth() * to->GetFrameHeight(), { -1, -1 });
 
-			//if x and y are independent, simplify
-			if ((from->INDEPENDENT_LAT_LON) && (to->INDEPENDENT_LAT_LON))
+			const auto& f = to->GetFrame();
+
+			if ((f.repeatNegCount != 0) || (f.repeatPosCount != 0))
 			{
+				//we have multiple wrap around of the world
+
+				//calculate full size of from projection image
+				Projections::Coordinate bbMin, bbMax;
+
+				bbMin.lat = -90.0_deg;
+				bbMin.lon = -180.0_deg;
+
+				bbMax.lat = 90.06_deg;
+				bbMax.lon = 180.0_deg;
+
+				Pixel<MyRealType> pp1 = from->Project<MyRealType>(bbMin);
+				Pixel<MyRealType> pp2 = from->Project<MyRealType>(bbMax);
+
+				MyRealType ww = pp2.x - pp1.x;
+				MyRealType hh = pp1.y - pp2.y;
+				
+				for (int y = 0; y < to->GetFrameHeight(); y++)
+				{
+					int yw = y * to->GetFrameWidth();
+					for (int x = 0; x < to->GetFrameWidth(); x++)
+					{
+						Pixel<T> p = Reprojection<T>::ReProject<int, T>({ x, y }, from, to);
+
+						if ((p.x >= 0) &&
+							(p.y >= 0) &&
+							(p.x < from->GetFrameWidth()) &&
+							(p.y < from->GetFrameHeight()))
+						{
+							reprojection.pixels[x + yw] = p;
+						}
+
+
+						int offset = static_cast<int>(ww);
+
+						int px = p.x;
+
+						MyRealType nc = f.repeatNegCount;						
+						while (nc > 0)
+						{
+							p.x += offset;
+
+							if ((p.x >= 0) &&
+								(p.y >= 0) &&
+								(p.x < from->GetFrameWidth()) &&
+								(p.y < from->GetFrameHeight()))
+							{
+								reprojection.pixels[x + yw] = p;
+							}
+							nc--;
+						}
+
+						p.x = px; //restore p.x
+
+						MyRealType pc = f.repeatPosCount;						
+						while (pc > 0)
+						{
+							p.x -= offset;
+
+							if ((p.x >= 0) &&
+								(p.y >= 0) &&
+								(p.x < from->GetFrameWidth()) &&
+								(p.y < from->GetFrameHeight()))
+							{
+								reprojection.pixels[x + yw] = p;
+							}
+							pc--;
+						}
+
+					}
+				}
+
+			}						
+			else if ((from->INDEPENDENT_LAT_LON) && (to->INDEPENDENT_LAT_LON))
+			{
+				//if x and y are independent, simplify
+
 				std::vector<T> cacheX;
 				cacheX.resize(to->GetFrameWidth());
 
@@ -130,9 +216,9 @@ namespace Projections
 
 					}
 				}
-			}
-			else
-			{
+			}			
+			else 
+			{				
 				for (int y = 0; y < to->GetFrameHeight(); y++)
 				{
 					int yw = y * to->GetFrameWidth();
@@ -140,13 +226,13 @@ namespace Projections
 					{
 						Pixel<T> p = Reprojection<T>::ReProject<int, T>({ x, y }, from, to);
 
-						if (p.x < 0) continue;
-						if (p.y < 0) continue;
-						if (p.x >= from->GetFrameWidth()) continue;
-						if (p.y >= from->GetFrameHeight()) continue;
-
-						reprojection.pixels[x + yw] = p;
-
+						if ((p.x >= 0) && 
+							(p.y >= 0) && 
+							(p.x < from->GetFrameWidth()) &&
+							(p.y < from->GetFrameHeight()))
+						{
+							reprojection.pixels[x + yw] = p;
+						}						
 					}
 				}
 			}
@@ -159,6 +245,7 @@ namespace Projections
 			return reprojection;
 		};
 
+		
 		
 		/// <summary>
 		/// Save reprojection to file

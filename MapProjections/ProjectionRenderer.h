@@ -209,13 +209,16 @@ namespace Projections
 			for (int x = 0; x < reproj.outW; x++)
 			{
 				int index = x + yw;
-				if ((reproj.pixels[index].x == -1) || (reproj.pixels[index].y == -1))
+
+				const auto& px = reproj.pixels[index];
+
+				if ((px.x == -1) || (px.y == -1))
 				{
 					continue;
 				}
 
-
-				int origIndex = (reproj.pixels[index].x + reproj.pixels[index].y * reproj.inW) * static_cast<int>(fromType);
+				
+				int origIndex = (px.x + px.y * reproj.inW) * static_cast<int>(fromType);
 				int outIndex = index * static_cast<int>(toType);
 
 				for (int k = 0; k < static_cast<int>(toType); k++)

@@ -2,6 +2,7 @@
 #define MAP_PROJECTION_UTILS_H
 
 #include <vector>
+#include <array>
 
 
 #include "./MapProjectionStructures.h"
@@ -13,36 +14,15 @@ namespace Projections
 	struct ProjectionUtils
 	{
 		
+		static void ComputeAABB(const std::vector<Coordinate>& c, 
+			Coordinate& min, Coordinate& max);
+			
+		static void ComputeAABB(const Coordinate& center, MyRealType dist,
+			Coordinate& min, Coordinate& max);
 
-		/*
-		template <typename InPixelType, typename OutPixelType,
-			typename FromProjection, typename ToProjection>
-		static Pixel<OutPixelType> ReProject(Pixel<InPixelType> p,
-			const FromProjection & from, const ToProjection & to);
-		*/
+		static void ComputeAABB_LessAccurateNearPoles(const Coordinate& center, MyRealType dist,
+			Coordinate& min, Coordinate& max);
 
-		static void ComputeAABB(const std::vector<Coordinate> & c,
-			Coordinate & min, Coordinate & max)
-		{
-			if (c.size() == 0)
-			{				
-				return;
-			}
-
-			min = c[0];
-			max = c[0];
-			for (size_t i = 1; i < c.size(); i++)
-			{
-				if (c[i].lat.rad() < min.lat.rad()) min.lat = c[i].lat;
-				if (c[i].lon.rad() < min.lon.rad()) min.lon = c[i].lon;
-
-
-				if (c[i].lat.rad() > max.lat.rad()) max.lat = c[i].lat;
-				if (c[i].lon.rad() > max.lon.rad()) max.lon = c[i].lon;
-
-			}
-		};
-	
 		static Coordinate CalcEndPointShortest(const Coordinate & start, const AngleValue & bearing, MyRealType dist);
 		static Coordinate CalcEndPointDirect(const Coordinate & start, const AngleValue & bearing, MyRealType dist);
 		static double Distance(const Coordinate & from, const Coordinate & to);
@@ -67,11 +47,17 @@ namespace Projections
 			return CalcArea(pts);
 		}
 
+		static std::array<Latitude, 2> EarthLatitudeRange(Latitude lat, double earthRadius, double distance);
+		static std::array<Longitude, 2> EarthLongitudeRange(Latitude lat, Longitude lng, double earthRadius, int distance);
+		static double CalcEarthRadiusAtLat(Latitude latitude);
+
         inline static MyRealType cot(MyRealType x) { return 1.0 / std::tan(x); };
         inline static MyRealType sec(MyRealType x) { return 1.0 / std::cos(x); };
         inline static MyRealType sinc(MyRealType x) { return std::sin(x) / x; };
         inline static MyRealType sgn(MyRealType x) { return (x < 0) ? -1 : (x > 0); };
-              
+          
+
+
 	};
 
 };

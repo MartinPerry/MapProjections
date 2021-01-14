@@ -14,6 +14,7 @@
 #include "./Projections/PolarSteregographic.h"
 #include "./Projections/GEOS.h"
 #include "ProjectionRenderer.h"
+#include "MapProjectionUtils.h"
 #include "lodepng.h"
 
 #include "./simd/ProjectionInfo_simd.h"
@@ -309,8 +310,30 @@ void TestWrapAround()
 
 int main(int argc, const char * argv[]) 
 {
+	
+	{
+		Coordinate min, max;
+		Coordinate min2, max2;
+		Coordinate c;
+		c.lat = -78.0_deg;
+		c.lon = -179.0_deg;
+		float d = 2000;
 
-	TestWrapAround();
+		c = Projections::Coordinate(Longitude::deg(14), Latitude::deg(50));
+
+		ProjectionUtils::ComputeAABB_LessAccurateNearPoles(c, d, min, max);
+		ProjectionUtils::ComputeAABB(c, d, min2, max2);
+
+		auto dist = ProjectionUtils::Distance(min, max);
+		auto dist2 = ProjectionUtils::Distance(min2, max2);
+
+
+		float d2 = sqrt( 4 *d * d +  4 *d * d);
+
+		printf("x");
+	}
+	
+	//TestWrapAround();
 
 	
 	//LambertConicPressureEu();

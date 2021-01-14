@@ -1,7 +1,79 @@
 #include "./MapProjectionUtils.h"
 
+#include "./MapProjectionStructures.h"
 
 using namespace Projections;
+
+
+void ProjectionUtils::ComputeAABB(const std::vector<Coordinate>& c,
+	Coordinate& min, Coordinate& max)
+{
+	if (c.size() == 0)
+	{
+		return;
+	}
+
+	min = c[0];
+	max = c[0];
+	for (size_t i = 1; i < c.size(); i++)
+	{
+		if (c[i].lat.rad() < min.lat.rad()) min.lat = c[i].lat;
+		if (c[i].lon.rad() < min.lon.rad()) min.lon = c[i].lon;
+
+
+		if (c[i].lat.rad() > max.lat.rad()) max.lat = c[i].lat;
+		if (c[i].lon.rad() > max.lon.rad()) max.lon = c[i].lon;
+
+	}
+}
+
+
+/// <summary>
+/// https://stackoverflow.com/questions/1689096/calculating-bounding-box-a-certain-distance-away-from-a-lat-long-coordinate-in-j
+/// http://janmatuschek.de/LatitudeLongitudeBoundingCoordinates
+/// </summary>
+/// <param name="center"></param>
+/// <param name="dist"></param>
+/// <param name="min"></param>
+/// <param name="max"></param>
+void ProjectionUtils::ComputeAABB_LessAccurateNearPoles(const Coordinate& center, MyRealType dist,
+	Coordinate& min, Coordinate& max)
+{
+
+	static const double MIN_LAT = -ProjectionConstants::PI_2;  // -PI/2
+	static const double MAX_LAT = ProjectionConstants::PI_2;   //  PI/2
+	static const double MIN_LON = -ProjectionConstants::PI; // -PI
+	static const double MAX_LON = ProjectionConstants::PI;  //  PI
+
+	// angular distance in radians on a great circle
+	MyRealType radDist = dist / ProjectionConstants::EARTH_RADIUS;
+
+	MyRealType minLat = center.lat.rad() - radDist;
+	MyRealType maxLat = center.lat.rad() + radDist;
+
+	double minLon, maxLon;
+	if (minLat > MIN_LAT && maxLat < MAX_LAT) 
+	{
+		double deltaLon = asin(sin(radDist) / cos(center.lat.rad()));
+
+		minLon = center.lon.rad() - deltaLon;
+		if (minLon < MIN_LON) minLon += 2.0 * ProjectionConstants::PI;
+
+		maxLon = center.lon.rad() + deltaLon;
+		if (maxLon > MAX_LON) maxLon -= 2.0 * ProjectionConstants::PI;
+	}
+	else 
+	{
+		// a pole is within the distance
+		minLat = std::max(minLat, MIN_LAT);
+		maxLat = std::min(maxLat, MAX_LAT);
+		minLon = MIN_LON;
+		maxLon = MAX_LON;
+	}
+
+	min = Coordinate(Longitude::rad(minLon), Latitude::rad(minLat));
+	max = Coordinate(Longitude::rad(maxLon), Latitude::rad(maxLat));
+}
 
 /// <summary>
 /// Calculate end point based on shortest path (on real earth surface)
@@ -142,4 +214,112 @@ double ProjectionUtils::CalcArea(const std::vector<Coordinate> & pts)
 	}
 
 	return abs(area);
+}
+
+
+
+/// <summary>
+/// Calculate latitude range based on earths radius at a given point
+/// </summary>
+/// <param name="lat"></param>
+/// <param name="radius"></param>
+/// <param name="distance"></param>
+/// <returns></returns>
+std::array<Latitude, 2> ProjectionUtils::EarthLatitudeRange(Latitude lat, double earthRadius, double distance) 
+{
+	// Estimate the min and max latitudes within distance of a given location.
+
+	double angle = distance / earthRadius;
+	double minlat = lat.rad() - angle;
+	double maxlat = lat.rad() + angle;
+	double rightangle = ProjectionConstants::PI / 2;
+	// Wrapped around the south pole.
+	if (minlat < -rightangle) 
+	{
+		double overshoot = -minlat - rightangle;
+		minlat = -rightangle + overshoot;
+		if (minlat > maxlat) {
+			maxlat = minlat;
+		}
+		minlat = -rightangle;
+	}
+	// Wrapped around the north pole.
+	if (maxlat > rightangle) 
+	{
+		double overshoot = maxlat - rightangle;
+		maxlat = rightangle - overshoot;
+		if (maxlat < minlat) {
+			minlat = maxlat;
+		}
+		maxlat = rightangle;
+	}
+		
+	return { Latitude::rad(minlat), Latitude::rad(maxlat) };
+}
+
+/// <summary>
+/// Calculate longitude range based on earths radius at a given point
+/// </summary>
+/// <param name="lat"></param>
+/// <param name="lng"></param>
+/// <param name="earth_radius"></param>
+/// <param name="distance"></param>
+/// <returns></returns>
+std::array<Longitude, 2> ProjectionUtils::EarthLongitudeRange(Latitude lat, Longitude lng, double earthRadius, int distance)
+{
+	// Estimate the min and max longitudes within distance of a given location.
+	double radius = earthRadius * cos(lat.rad());
+
+	double angle;
+	if (radius > 0) 
+	{
+		angle = abs(distance / radius);
+		angle = std::min(angle, ProjectionConstants::PI);
+	}
+	else 
+	{
+		angle = ProjectionConstants::PI;
+	}
+	double minlong = lng.rad() - angle;
+	double maxlong = lng.rad() + angle;
+	if (minlong < -ProjectionConstants::PI) 
+	{
+		minlong = minlong + ProjectionConstants::PI * 2;
+	}
+	if (maxlong > ProjectionConstants::PI) 
+	{
+		maxlong = maxlong - ProjectionConstants::PI * 2;
+	}
+	
+	return { Longitude::rad(minlong), Longitude::rad(maxlong) };
+}
+
+/// <summary>
+/// Calculate earth radius at given latitude
+/// </summary>
+/// <param name="latitude"></param>
+/// <returns></returns>
+double ProjectionUtils::CalcEarthRadiusAtLat(Latitude latitude)
+{
+	// Estimate the Earth's radius at a given latitude.
+	// Default to an approximate average radius for the United States.
+	double lat = latitude.rad();
+
+	double x = cos(lat) / 6378137.0;
+	double y = sin(lat) / (6378137.0 * (1 - (1 / 298.257223563)));
+
+	//Make sure earth's radius is in km , not meters
+	return (1 / (sqrt(x * x + y * y))) / 1000;
+}
+
+
+void ProjectionUtils::ComputeAABB(const Coordinate& center, MyRealType dist,
+	Coordinate& min, Coordinate& max)
+{	
+	double radius = ProjectionUtils::CalcEarthRadiusAtLat(center.lat);
+	auto retLats = ProjectionUtils::EarthLatitudeRange(center.lat, radius, dist);
+	auto retLngs = ProjectionUtils::EarthLongitudeRange(center.lat, center.lon, radius, dist);
+
+	min = Coordinate(retLngs[0], retLats[0]);
+	max = Coordinate(retLngs[1], retLats[1]);
 }

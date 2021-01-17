@@ -113,8 +113,8 @@ namespace Projections
 				bbMax.lat = 90.06_deg;
 				bbMax.lon = 180.0_deg;
 
-				Pixel<MyRealType> pp1 = from->Project<MyRealType>(bbMin);
-				Pixel<MyRealType> pp2 = from->Project<MyRealType>(bbMax);
+				Pixel<MyRealType> pp1 = from->template Project<MyRealType>(bbMin);
+				Pixel<MyRealType> pp2 = from->template Project<MyRealType>(bbMax);
 
 				MyRealType ww = pp2.x - pp1.x;
 				MyRealType hh = pp1.y - pp2.y;

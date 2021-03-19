@@ -255,7 +255,7 @@ namespace Projections
 
 
 		/// <summary>
-		/// Reproject inputData based on reproj.
+		/// Reproject inputData based on reproj with Nerest Neighbor interpolation.
 		/// Output array has size reproj.outW * reproj.outH
 		/// Output array must be released with delete[]
 		/// 
@@ -269,7 +269,7 @@ namespace Projections
 		/// <param name="NO_VALUE"></param>
 		/// <returns></returns>
 		template <typename DataType, typename Out = DataType*, size_t ChannelsCount = 1>
-		Out ReprojectData(DataType* inputData, const DataType NO_VALUE) const
+		Out ReprojectDataNerestNeighbor(DataType* inputData, const DataType NO_VALUE) const
 		{
 			size_t count = this->outW * this->outH;
 
@@ -286,7 +286,10 @@ namespace Projections
 
 			for (size_t index = 0; index < count; index++)
 			{
-				if ((this->pixels[index].x == -1) || (this->pixels[index].y == -1))
+				T x = static_cast<int>(this->pixels[index].x);
+				T y = static_cast<int>(this->pixels[index].y);
+
+				if ((x == -1) || (y == -1))
 				{
 					//outside of the model - no data - put there NO_VALUE
 					if constexpr (ChannelsCount == 1)
@@ -303,7 +306,7 @@ namespace Projections
 				}
 				else
 				{
-					size_t origIndex = this->pixels[index].x + this->pixels[index].y * this->inW;
+					size_t origIndex = x + y * this->inW;
 					if constexpr (ChannelsCount == 1)
 					{
 						output[index] = inputData[origIndex];
@@ -321,7 +324,248 @@ namespace Projections
 			return output;
 		}
 
-		
+		/// <summary>
+		/// Reproject inputData based on reproj with Bilinear interpolation.
+		/// Note: Usable only if T is nor int number
+		/// 
+		/// Output array has size reproj.outW * reproj.outH
+		/// Output array must be released with delete[]
+		/// 
+		/// Template parameters:
+		/// DataType - type of input data		
+		/// Out - output structure - can be raw array of std::vector
+		/// ChannelsCount - number of channels in input / output data
+		/// </summary>
+		/// <param name="reproj"></param>
+		/// <param name="inputData"></param>
+		/// <param name="NO_VALUE"></param>
+		/// <returns></returns>
+		template <typename DataType, typename Out = DataType*, size_t ChannelsCount = 1>
+		Out ReprojectDataBilinear(DataType* inputData, const DataType NO_VALUE) const
+		{
+			size_t count = this->outW * this->outH;
+
+			Out output;
+
+			if constexpr (std::is_same<Out, DataType*>::value)
+			{
+				output = new DataType[count * ChannelsCount];
+			}
+			else if constexpr (std::is_same<Out, std::vector<DataType>>::value)
+			{
+				output.resize(count * ChannelsCount);
+			}
+			
+			for (size_t index = 0; index < count; index++)
+			{
+				T x = this->pixels[index].x;
+				T y = this->pixels[index].y;
+
+				if ((x == -1) || (y == -1))
+				{
+					//outside of the model - no data - put there NO_VALUE
+					if constexpr (ChannelsCount == 1)
+					{
+						output[index] = NO_VALUE;
+					}
+					else
+					{
+						for (size_t i = 0; i < ChannelsCount; i++)
+						{
+							output[index * ChannelsCount + i] = NO_VALUE;
+						}
+					}
+				}
+				else
+				{		
+					//no floor, just cast, because values x and y are non-negative
+					int px = static_cast<int>(x);
+					int py = static_cast<int>(y);
+
+					double tx = x - px;
+					double ty = y - py;
+
+					int x1p = (px + 1 >= this->inW) ? this->inW - 1 : px + 1;
+					int y1p = (py + 1 >= this->inH) ? this->inH - 1 : py + 1;
+
+					const DataType* c00 = &inputData[(px + py * this->inW) * ChannelsCount];
+					const DataType* c10 = &inputData[(x1p + py * this->inW) * ChannelsCount];
+					const DataType* c01 = &inputData[(px + y1p * this->inW) * ChannelsCount];
+					const DataType* c11 = &inputData[(x1p + y1p * this->inW) * ChannelsCount];
+
+
+
+					for (size_t i = 0; i < ChannelsCount; i++)
+					{
+						auto a = c00[i] * (1 - tx) + c10[i] * tx;
+						auto b = c01[i] * (1 - tx) + c11[i] * tx;
+						auto res = a * (1 - ty) + b * ty;
+						
+						output[index * ChannelsCount + i] = res;						
+					}
+				}
+			}
+
+
+			return output;
+		}
+
+
+		/// <summary>
+		/// Reproject inputData based on reproj with Bicubic interpolation.
+		/// Note: Usable only if T is nor int number
+		/// 
+		/// Output array has size reproj.outW * reproj.outH
+		/// Output array must be released with delete[]
+		/// 
+		/// Template parameters:
+		/// DataType - type of input data		
+		/// Out - output structure - can be raw array of std::vector
+		/// ChannelsCount - number of channels in input / output data
+		/// </summary>
+		/// <param name="reproj"></param>
+		/// <param name="inputData"></param>
+		/// <param name="NO_VALUE"></param>
+		/// <returns></returns>
+		template <typename DataType, typename Out = DataType*, size_t ChannelsCount = 1>
+		Out ReprojectDataBicubic(DataType* inputData, const DataType NO_VALUE) const
+		{
+			size_t count = this->outW * this->outH;
+
+			Out output;
+
+			if constexpr (std::is_same<Out, DataType*>::value)
+			{
+				output = new DataType[count * ChannelsCount];
+			}
+			else if constexpr (std::is_same<Out, std::vector<DataType>>::value)
+			{
+				output.resize(count * ChannelsCount);
+			}
+
+			for (size_t index = 0; index < count; index++)
+			{
+				T x = this->pixels[index].x;
+				T y = this->pixels[index].y;
+
+				if ((x == -1) || (y == -1))
+				{
+					//outside of the model - no data - put there NO_VALUE
+					if constexpr (ChannelsCount == 1)
+					{
+						output[index] = NO_VALUE;
+					}
+					else
+					{
+						for (size_t i = 0; i < ChannelsCount; i++)
+						{
+							output[index * ChannelsCount + i] = NO_VALUE;
+						}
+					}
+				}
+				else
+				{
+					//no floor, just cast, because values x and y are non-negative
+					int px = static_cast<int>(x);
+					int py = static_cast<int>(y);
+
+					double fx = x - px;
+					double fy = y - py;
+				
+
+					//we'll need the second and third powers
+					//of f to compute our filter weights
+					double f2x = fx * fx;
+					double f3x = f2x * fx;
+
+					double f2y = fy * fy;
+					double f3y = f2y * fy;
+					
+					double fmpF1x = (1.0f - fx);
+					double f12x = fmpF1x * fmpF1x;
+					double f13x = f12x * fmpF1x;
+
+					double fmpF1y = (1.0f - fy);
+					double f12y = fmpF1y * fmpF1y;
+					double f13y = f12y * fmpF1y;
+
+
+					//compute the filter weights
+
+					double w0x = (f13x);
+					double w1x = (4.0f + 3.0f * f3x - 6.0f * f2x);
+					double w2x = (4.0f + 3.0f * f13x - 6.0f * f12x);
+					double w3x = (f3x);
+
+					double w0y = (f13y);
+					double w1y = (4.0f + 3.0f * f3y - 6.0f * f2y);
+					double w2y = (4.0f + 3.0f * f13y - 6.0f * f12y);
+					double w3y = (f3y);
+
+
+					int x1m = (px < 1) ? 0 : px - 1;
+					int x1p = (px + 1 >= this->inW) ? this->inW - 1 : px + 1;
+					int x2p = (px + 2 >= this->inW) ? this->inW - 2 : px + 2;
+
+					int y1m = (py < 1) ? 0 : py - 1;
+					int y1p = (py + 1 >= this->inH) ? this->inH - 1 : py + 1;
+					int y2p = (py + 2 >= this->inH) ? this->inH - 2 : py + 2;
+
+					
+					const DataType* p00 = &inputData[(x1m + y1m * this->inW) * ChannelsCount];
+					const DataType* p10 = &inputData[(px + y1m * this->inW) * ChannelsCount];
+					const DataType* p20 = &inputData[(x1p + y1m * this->inW) * ChannelsCount];
+					const DataType* p30 = &inputData[(x2p + y1m * this->inW) * ChannelsCount];
+
+					const DataType* p01 = &inputData[(x1m + py * this->inW) * ChannelsCount];
+					const DataType* p11 = &inputData[(px + py * this->inW) * ChannelsCount];
+					const DataType* p21 = &inputData[(x1p + py * this->inW) * ChannelsCount];
+					const DataType* p31 = &inputData[(x2p + py * this->inW) * ChannelsCount];
+
+					const DataType* p02 = &inputData[(x1m + y1p * this->inW) * ChannelsCount];
+					const DataType* p12 = &inputData[(px + y1p * this->inW) * ChannelsCount];
+					const DataType* p22 = &inputData[(x1p + y1p * this->inW) * ChannelsCount];
+					const DataType* p32 = &inputData[(x2p + y1p * this->inW) * ChannelsCount];
+
+					const DataType* p03 = &inputData[(x1m + y2p * this->inW) * ChannelsCount];
+					const DataType* p13 = &inputData[(px + y2p * this->inW) * ChannelsCount];
+					const DataType* p23 = &inputData[(x1p + y2p * this->inW) * ChannelsCount];
+					const DataType* p33 = &inputData[(x2p + y2p * this->inW) * ChannelsCount];
+
+
+					for (size_t i = 0; i < ChannelsCount; i++)
+					{
+												
+						double res = (1.0 / 36.0) * (
+							w0y * (p00[i] * w0x
+								+ p10[i] * w1x
+								+ p20[i] * w2x
+								+ p30[i] * w3x)
+
+							+ w1y * (p01[i] * w0x
+								+ p11[i] * w1x
+								+ p21[i] * w2x
+								+ p31[i] * w3x)
+
+							+ w2y * (p02[i] * w0x
+								+ p12[i] * w1x
+								+ p22[i] * w2x
+								+ p32[i] * w3x)
+
+							+ w3y * (p03[i] * w0x
+								+ p13[i] * w1x
+								+ p23[i] * w2x
+								+ p33[i] * w3x)
+							);
+
+						output[index * ChannelsCount + i] = static_cast<DataType>(res);
+					}
+				}
+			}
+
+
+			return output;
+		}
 
 		/// <summary>
 		/// Reproject single pixel from -> to

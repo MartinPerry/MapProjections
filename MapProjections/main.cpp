@@ -105,7 +105,7 @@ void TestGEOS_Simd()
 	
 	Projections::Reprojection<short> reproj = ns::Reprojection<short>::CreateReprojection<ns::GEOS, ns::Mercator>(&geos, &mercator);
 
-	std::vector<uint8_t> rawData = reproj.ReprojectData<uint8_t, std::vector<uint8_t>, 1>(imgRawData.data(), 0);
+	std::vector<uint8_t> rawData = reproj.ReprojectDataNerestNeighbor<uint8_t, std::vector<uint8_t>, 1>(imgRawData.data(), 0);
 
 	
 	ProjectionRenderer pd(&mercator, ProjectionRenderer::RenderImageType::GRAY);
@@ -145,7 +145,7 @@ void TestGEOS()
 	
 	Projections::Reprojection<short> reproj = Reprojection<short>::CreateReprojection<GEOS, Mercator>(&geos, &mercator);
 
-	std::vector<uint8_t> rawData = reproj.ReprojectData<uint8_t, std::vector<uint8_t>, 1>(imgRawData.data(), 0);
+	std::vector<uint8_t> rawData = reproj.ReprojectDataNerestNeighbor<uint8_t, std::vector<uint8_t>, 1>(imgRawData.data(), 0);
 
 
 	ProjectionRenderer pd(&mercator, ProjectionRenderer::RenderImageType::GRAY);
@@ -191,7 +191,7 @@ void ReprojectNightImage()
 
 
 	std::vector<uint8_t> rawData = 
-		reproj.ReprojectData<uint8_t, std::vector<uint8_t>, 3>(
+		reproj.ReprojectDataNerestNeighbor<uint8_t, std::vector<uint8_t>, 3>(
 			imgRawData.data(), 0
 		);
 
@@ -310,6 +310,51 @@ void TestWrapAround()
 
 int main(int argc, const char * argv[]) 
 {
+
+	{
+
+		//https://rapidrefresh.noaa.gov/hrrr/HRRR_conus.domain.txt
+		Projections::Coordinate botLeft, topRight;
+		botLeft.lat = 21.1381_deg; botLeft.lon = -122.72_deg;
+		topRight.lat = 47.84364_deg; topRight.lon = -60.90137_deg;
+
+		//create input projection and set its 2D image frame
+		Projections::LambertConic inputImage = Projections::LambertConic(38.5_deg, -97.5_deg, 38.5_deg);
+		inputImage.SetFrame(botLeft, topRight, 1799, 1059,
+			Projections::STEP_TYPE::PIXEL_CENTER, false);
+
+		Projections::Equirectangular outputImage;
+		outputImage.SetFrame(&inputImage, false); //same resolution as ipImage frame
+
+
+		botLeft.lat = -90.0_deg; botLeft.lon = -180.0_deg;
+		topRight.lat = 90.0_deg; topRight.lon = 179.875_deg;
+
+		Projections::Equirectangular inputIconImage;
+		inputIconImage.SetFrame(botLeft, topRight, 2880, 1441,
+			Projections::STEP_TYPE::PIXEL_CENTER, false);
+
+		auto reproj = Projections::Reprojection<int>::CreateReprojection(&inputIconImage, &outputImage);
+				
+		unsigned w = 600;
+		unsigned h = 600;
+		std::vector<uint8_t> imgRawData;
+		std::vector<uint8_t> fileData;
+		lodepng::load_file(fileData, "D://icon_test.png");
+		//lodepng::load_file(fileData, "D://full_disk_ahi_true_color.png");	
+		lodepng::decode(imgRawData, w, h, fileData, LodePNGColorType::LCT_GREY);
+
+
+		ProjectionRenderer pd(&outputImage);
+		pd.AddBorders("D://borders.csv", 5);
+		pd.Clear();
+		//pd.DrawImage(&imgRawData[0], ProjectionRenderer::RenderImageType::GRAY, w, h, &outputImage);
+		pd.DrawImage(&imgRawData[0], ProjectionRenderer::RenderImageType::GRAY, reproj);
+		pd.DrawBorders();
+		pd.SaveToFile("D://xxx2.png");
+
+	}
+
 	
 	{
 		Coordinate min, max;

@@ -41,6 +41,11 @@ void ProjectionRenderer::Clear()
 	memset(rawData, 0, static_cast<int>(frame.w) * static_cast<int>(frame.h) * static_cast<int>(type));
 }
 
+void ProjectionRenderer::SetPixelVal(uint8_t v)
+{
+	this->pixelVal = v;
+}
+
 void ProjectionRenderer::SetRawDataTarget(uint8_t * target, RenderImageType targetType)
 {
 	if (targetType != this->type)
@@ -484,7 +489,7 @@ void ProjectionRenderer::CohenSutherlandLineClipAndDraw(MyRealType x0, MyRealTyp
 
 		lineBresenhamCallback(start, end,
 			[&](int x, int y) -> void {			
-			this->SetPixel({ x, y }, 255);
+			this->SetPixel({ x, y }, this->pixelVal);
 		});
 	}
 }

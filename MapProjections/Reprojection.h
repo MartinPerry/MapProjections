@@ -286,8 +286,8 @@ namespace Projections
 
 			for (size_t index = 0; index < count; index++)
 			{
-				T x = static_cast<int>(this->pixels[index].x);
-				T y = static_cast<int>(this->pixels[index].y);
+				int x = static_cast<int>(this->pixels[index].x);
+				int y = static_cast<int>(this->pixels[index].y);
 
 				if ((x == -1) || (y == -1))
 				{

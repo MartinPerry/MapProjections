@@ -37,6 +37,7 @@ namespace Projections
 		void SetProjection(Proj * proj);
 		void Clear();
 
+		void SetPixelVal(uint8_t v);
 		void SetRawDataTarget(uint8_t * target, RenderImageType targetType);
 
 		void AddBorders(const char * fileName, int useEveryNthPoint = 1);
@@ -73,6 +74,8 @@ namespace Projections
 		RenderImageType type;
 		bool externalData;
 
+		uint8_t pixelVal;
+
 		ProjectionFrame frame;
 		std::function<Pixel<int>(const Coordinate & c)> projectCallback;
 		std::function<Coordinate(const Pixel<int> & p)> projectInverseCallback;
@@ -97,7 +100,7 @@ namespace Projections
 	/// <param name="proj"></param>
 	template <typename Proj>
 	ProjectionRenderer::ProjectionRenderer(Proj * proj, RenderImageType type)
-		: rawData(nullptr), externalData(false), type(type)
+		: rawData(nullptr), externalData(false), type(type), pixelVal(255)
 	{
 		this->SetProjection(proj);
 	};
@@ -210,15 +213,17 @@ namespace Projections
 			{
 				int index = x + yw;
 
-				const auto& px = reproj.pixels[index];
+				int px = static_cast<int>(reproj.pixels[index].x);
+				int py = static_cast<int>(reproj.pixels[index].y);
 
-				if ((px.x == -1) || (px.y == -1))
+
+				if ((px == -1) || (py == -1))
 				{
 					continue;
 				}
 
 				
-				int origIndex = (px.x + px.y * reproj.inW) * static_cast<int>(fromType);
+				int origIndex = (px + py * reproj.inW) * static_cast<int>(fromType);
 				int outIndex = index * static_cast<int>(toType);
 
 				for (int k = 0; k < static_cast<int>(toType); k++)

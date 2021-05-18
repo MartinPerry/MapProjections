@@ -318,6 +318,8 @@ int main(int argc, const char * argv[])
 		botLeft.lat = 21.1381_deg; botLeft.lon = -122.72_deg;
 		topRight.lat = 47.84364_deg; topRight.lon = -60.90137_deg;
 
+		auto minL = std::min(botLeft.lat, topRight.lat);
+
 		//create input projection and set its 2D image frame
 		Projections::LambertConic inputImage = Projections::LambertConic(38.5_deg, -97.5_deg, 38.5_deg);
 		inputImage.SetFrame(botLeft, topRight, 1799, 1059,

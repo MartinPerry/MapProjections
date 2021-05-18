@@ -245,10 +245,10 @@ void ProjectionInfo<Proj>::CalculateWrapRepeat(const Coordinate& botLeft, const 
 
 	Projections::Coordinate bbMin, bbMax;
 
-	bbMin.lat = -90.0_deg;
+	bbMin.lat = botLeft.lat;
 	bbMin.lon = -180.0_deg;
-	
-	bbMax.lat = 90.06_deg;
+
+	bbMax.lat = topRight.lat;
 	bbMax.lon = 180.0_deg;
 	
 	Pixel<MyRealType> pp1 = this->Project<MyRealType>(bbMin);
@@ -447,11 +447,18 @@ void ProjectionInfo<Proj>::ComputeAABB(Coordinate & min, Coordinate & max) const
 
 	if (static_cast<const Proj*>(this)->ORTHOGONAL_LAT_LON)
 	{
-		Coordinate c = this->ProjectInverse({ 0, 0 });
-		border.push_back(std::move(c));
+		Coordinate c0 = this->ProjectInverse({ 0, 0 });
+		border.push_back(c0);
 
-		c = this->ProjectInverse({ ww, hh });
-		border.push_back(std::move(c));
+		Coordinate c1 = this->ProjectInverse({ ww, hh });
+		border.push_back(c1);
+
+		if (c0.lon.rad() > c1.lon.rad())
+		{
+			//wrap around
+			//keep original min/max
+			return;
+		}
 	}
 	else
 	{

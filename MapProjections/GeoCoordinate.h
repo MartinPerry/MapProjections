@@ -18,10 +18,15 @@ struct IAngle
 	static T deg(MyRealType val) { return T(AngleUtils::degToRad(val), val); };
 	static T rad(MyRealType val) { return T(val, AngleUtils::radToDeg(val)); };
 	
-	inline MyRealType deg() const { return valDeg; };
-	inline MyRealType rad() const { return valRad; };
+	inline MyRealType deg() const noexcept { return valDeg; };
+	inline MyRealType rad() const noexcept { return valRad; };
 
 	inline T operator -() { return T(-valRad, -valDeg); };
+
+	inline bool operator<(const IAngle<T>& rhs) const noexcept
+	{		
+		return this->rad() < rhs.rad();
+	}
 
 protected:
 	IAngle(MyRealType valRad, MyRealType valDeg) : valRad(valRad), valDeg(valDeg) {};
@@ -49,7 +54,7 @@ struct Latitude : public IAngle<Latitude>
 	/// Normlization will only clamp latitude to [-90, 90] deg interval
 	/// since Latitude has no wrap around
 	/// </summary>
-	void Normalize()
+	void Normalize() noexcept
 	{
 		this->Clamp();
 		//valDeg = (valDeg > 90) ? (valDeg - 180) : valDeg;		
@@ -59,7 +64,7 @@ struct Latitude : public IAngle<Latitude>
 	/// <summary>
 	/// Clamp to [-90, 90] interval
 	/// </summary>
-	void Clamp()
+	void Clamp() noexcept
 	{
 		//valDeg = (valDeg > 90) ? (valDeg - 180) : valDeg;
 		valDeg = (valDeg > 90) ? 90.0 : ((valDeg < -90) ? -90.0 : valDeg);
@@ -80,7 +85,7 @@ struct Longitude : public IAngle<Longitude>
 	/// <summary>
 	/// Normlize to [-180, 180] interval with a wrap-around
 	/// </summary>
-	void Normalize()
+	void Normalize() noexcept
 	{
 		while (valDeg < -180)
 		{
@@ -97,7 +102,7 @@ struct Longitude : public IAngle<Longitude>
 	/// <summary>
 	/// Clamp to [-180, 180] interval
 	/// </summary>
-	void Clamp()
+	void Clamp() noexcept
 	{
 		valDeg = (valDeg > 180.0) ? 180.0 : ((valDeg < -180.0) ? -180.0 : valDeg);
 		valRad = Latitude::deg(valDeg).rad();

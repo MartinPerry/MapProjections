@@ -124,7 +124,8 @@ void TestGEOS()
 	unsigned h = 600;
 	std::vector<uint8_t> imgRawData;
 	std::vector<uint8_t> fileData;
-	lodepng::load_file(fileData, "D://ttt.png");
+	//lodepng::load_file(fileData, "D://ttt.png");
+	lodepng::load_file(fileData, "d:\\Martin\\Programming\\test\\MapProjections\\TestData\\goes16.png");
 	lodepng::decode(imgRawData, w, h, fileData, LodePNGColorType::LCT_GREY);
 
 
@@ -310,7 +311,8 @@ void TestWrapAround()
 
 int main(int argc, const char * argv[]) 
 {
-
+	TestGEOS();
+	return 0;
 	{
 
 		//https://rapidrefresh.noaa.gov/hrrr/HRRR_conus.domain.txt

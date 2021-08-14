@@ -462,24 +462,30 @@ void ProjectionInfo<Proj>::ComputeAABB(Coordinate & min, Coordinate & max) const
 	}
 	else
 	{
+		//check isnan because in some projections (eg. GEOS) pixels may fall outside mapping range
+
 		this->LineBresenham({ 0,0 }, { 0, hh },
 			[&](int x, int y) -> void {
 				Coordinate c = this->ProjectInverse({ x, y });
+				if (isnan(c.lat.rad()) || isnan(c.lon.rad())) return;
 				border.push_back(std::move(c));
 			});
 		this->LineBresenham({ 0,0 }, { ww, 0 },
 			[&](int x, int y) -> void {
 				Coordinate c = this->ProjectInverse({ x, y });
+				if (isnan(c.lat.rad()) || isnan(c.lon.rad())) return;
 				border.push_back(std::move(c));
 			});
 		this->LineBresenham({ ww, hh }, { 0, hh },
 			[&](int x, int y) -> void {
 				Coordinate c = this->ProjectInverse({ x, y });
+				if (isnan(c.lat.rad()) || isnan(c.lon.rad())) return;
 				border.push_back(std::move(c));
 			});
 		this->LineBresenham({ ww, hh }, { 0, hh },
 			[&](int x, int y) -> void {
 				Coordinate c = this->ProjectInverse({ x, y });
+				if (isnan(c.lat.rad()) || isnan(c.lon.rad())) return;
 				border.push_back(std::move(c));
 			});
 	}

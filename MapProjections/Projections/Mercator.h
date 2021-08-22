@@ -27,6 +27,11 @@ namespace Projections
 		Mercator() : ProjectionInfo(PROJECTION::MERCATOR)
 		{ }
 
+		Mercator(const Mercator& me) : Mercator()
+		{ 
+			this->frame = me.frame;
+		}
+
 		friend class ProjectionInfo<Mercator>;
 
 	protected:

@@ -23,6 +23,11 @@ namespace Projections
 
 		Miller() : ProjectionInfo(PROJECTION::MILLER) {}
 
+		Miller(const Miller& mi) : ProjectionInfo(PROJECTION::MILLER) 
+		{
+			this->frame = mi.frame;
+		}
+
 		friend class ProjectionInfo<Miller>;
 
 	protected:

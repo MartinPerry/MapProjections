@@ -48,6 +48,12 @@ namespace Projections
 			phi0 = f * std::pow(t5, n);
 		}
 
+		LambertConic(const LambertConic& lc) :
+			LambertConic(lc.latProjectionOrigin, lc.lonCentralMeridian, lc.standardParallel1)
+		{
+			this->frame = lc.frame;
+		}
+
 
 		friend class ProjectionInfo<LambertConic>;
 

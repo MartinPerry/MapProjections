@@ -23,12 +23,19 @@ namespace Projections
 		static const bool ORTHOGONAL_LAT_LON = true; //lat / lon is orthogonal to each otjer
 
 		Equirectangular() : Equirectangular(Longitude::deg(0.0)) {}
+
 		Equirectangular(const Longitude & lonCentralMeridian) :
 			ProjectionInfo(PROJECTION::EQUIRECTANGULAR),
 			lonCentralMeridian(lonCentralMeridian),
 			standardParallel(Latitude::deg(0.0)),
 			cosStandardParallel(std::cos(standardParallel.rad()))
 		{ }
+
+		Equirectangular(const Equirectangular& eq) :
+			Equirectangular(eq.lonCentralMeridian)
+		{
+			this->frame = eq.frame;
+		}
 
 		friend class ProjectionInfo<Equirectangular>;
 

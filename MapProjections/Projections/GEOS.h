@@ -112,6 +112,11 @@ namespace Projections
 			sat(sets)
 		{}
 
+		GEOS(const GEOS& ge) :
+			GEOS(ge.sat)
+		{
+			this->frame = ge.frame;
+		}
 
 		friend class ProjectionInfo<GEOS>;
 

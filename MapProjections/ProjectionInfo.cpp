@@ -26,17 +26,29 @@ const char* ProjectionInfo<Proj>::GetName() const
 	return static_cast<const Proj*>(this)->GetNameInternal();
 }
 
+/// <summary>
+/// Get info if projections lat / lon are orthogonal to each other
+/// (eg. Mercator, Equirectangular)
+/// </summary>
+/// <typeparam name="Proj"></typeparam>
+/// <returns></returns>
+template <typename Proj>
+bool ProjectionInfo<Proj>::IsOrthogonalLatLon() const
+{
+	return Proj::ORTHOGONAL_LAT_LON;
+}
+
+
 //=======================================================================
 // Main interface
 //=======================================================================
 
 template <typename Proj>
-ProjectionInfo<Proj>::ProjectionInfo(PROJECTION curProjection)
-	: IProjectionInfo(curProjection)		
+ProjectionInfo<Proj>::ProjectionInfo(PROJECTION curProjection) : 
+	IProjectionInfo(curProjection)		
 {	
 
 }
-
 template <typename Proj>
 std::tuple<double, double, double, double> ProjectionInfo<Proj>::GetFrameBotLeftTopRight(
 	const Coordinate & botLeft, const Coordinate & topRight)

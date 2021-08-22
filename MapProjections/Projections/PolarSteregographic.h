@@ -29,6 +29,13 @@ namespace Projections
 			latCentral(latCentral)
 		{ }
 
+		PolarSteregographic(const PolarSteregographic& po) :
+			PolarSteregographic(po.lonCentralMeridian, po.latCentral)			
+		{ 
+			this->frame = po.frame;
+		}
+
+
 		friend class ProjectionInfo<PolarSteregographic>;
 
 	protected:

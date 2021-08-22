@@ -31,6 +31,8 @@ namespace Projections
 
 		const char* GetName() const;
 
+		bool IsOrthogonalLatLon() const OVERRIDE;
+
 		template <typename PixelType = int>
 		RET_VAL(PixelType, std::is_integral) Project(const Coordinate & c) const;
 

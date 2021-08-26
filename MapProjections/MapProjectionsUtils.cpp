@@ -1,5 +1,7 @@
 #include "./MapProjectionUtils.h"
 
+#include <cstdlib>
+
 #include "./MapProjectionStructures.h"
 
 using namespace Projections;
@@ -52,7 +54,7 @@ void ProjectionUtils::ComputeAABB_LessAccurateNearPoles(const Coordinate& center
 	MyRealType maxLat = center.lat.rad() + radDist;
 
 	double minLon, maxLon;
-	if (minLat > MIN_LAT && maxLat < MAX_LAT) 
+	if (minLat > MIN_LAT && maxLat < MAX_LAT)
 	{
 		double deltaLon = asin(sin(radDist) / cos(center.lat.rad()));
 
@@ -62,7 +64,7 @@ void ProjectionUtils::ComputeAABB_LessAccurateNearPoles(const Coordinate& center
 		maxLon = center.lon.rad() + deltaLon;
 		if (maxLon > MAX_LON) maxLon -= 2.0 * ProjectionConstants::PI;
 	}
-	else 
+	else
 	{
 		// a pole is within the distance
 		minLat = std::max(minLat, MIN_LAT);
@@ -83,8 +85,8 @@ void ProjectionUtils::ComputeAABB_LessAccurateNearPoles(const Coordinate& center
 /// <param name="bearing"></param>
 /// <param name="dist"></param>
 /// <returns></returns>
-Coordinate ProjectionUtils::CalcEndPointShortest(const Coordinate & start,
-	const AngleValue & bearing, MyRealType dist)
+Coordinate ProjectionUtils::CalcEndPointShortest(const Coordinate& start,
+	const AngleValue& bearing, MyRealType dist)
 {
 
 	MyRealType dr = dist / ProjectionConstants::EARTH_RADIUS;
@@ -121,7 +123,7 @@ Coordinate ProjectionUtils::CalcEndPointShortest(const Coordinate & start,
 /// <param name="dist"></param>
 /// <returns></returns>
 Coordinate ProjectionUtils::CalcEndPointDirect(
-	const Coordinate & start, const AngleValue & bearing, MyRealType dist)
+	const Coordinate& start, const AngleValue& bearing, MyRealType dist)
 {
 	MyRealType dr = dist / ProjectionConstants::EARTH_RADIUS;
 
@@ -156,7 +158,7 @@ Coordinate ProjectionUtils::CalcEndPointDirect(
 /// <param name="from"></param>
 /// <param name="to"></param>
 /// <returns></returns>
-double ProjectionUtils::Distance(const Coordinate & from, const Coordinate & to)
+double ProjectionUtils::Distance(const Coordinate& from, const Coordinate& to)
 {
 	MyRealType dlong = to.lon.rad() - from.lon.rad();
 	MyRealType dlat = to.lat.rad() - from.lat.rad();
@@ -185,7 +187,7 @@ double ProjectionUtils::Distance(const Coordinate & from, const Coordinate & to)
 /// </summary>
 /// <param name="pts"></param>
 /// <returns></returns>
-double ProjectionUtils::CalcArea(const std::vector<Coordinate> & pts)
+double ProjectionUtils::CalcArea(const std::vector<Coordinate>& pts)
 {
 	double area = 0.0;
 
@@ -195,7 +197,7 @@ double ProjectionUtils::CalcArea(const std::vector<Coordinate> & pts)
 		{
 			Coordinate p1 = pts[i];
 			Coordinate p2 = pts[i + 1];
-			
+
 			double lonDif = p2.lon.rad() - p1.lon.rad();
 			area += lonDif * (2 + std::sin(p1.lat.rad()) + std::sin(p2.lat.rad()));
 		}
@@ -208,12 +210,11 @@ double ProjectionUtils::CalcArea(const std::vector<Coordinate> & pts)
 		area += lonDif * (2 + std::sin(p1.lat.rad()) + std::sin(p2.lat.rad()));
 		//-------
 
-
 		//6378137 - earth radius in m
-		area = area * 6378137 * 6378137 / 2;
+		area = area * 6378137.0 * (6378137.0 / 2.0);
 	}
 
-	return abs(area);
+	return std::abs(area);
 }
 
 
@@ -225,7 +226,7 @@ double ProjectionUtils::CalcArea(const std::vector<Coordinate> & pts)
 /// <param name="radius"></param>
 /// <param name="distance"></param>
 /// <returns></returns>
-std::array<Latitude, 2> ProjectionUtils::EarthLatitudeRange(Latitude lat, double earthRadius, double distance) 
+std::array<Latitude, 2> ProjectionUtils::EarthLatitudeRange(Latitude lat, double earthRadius, double distance)
 {
 	// Estimate the min and max latitudes within distance of a given location.
 
@@ -234,7 +235,7 @@ std::array<Latitude, 2> ProjectionUtils::EarthLatitudeRange(Latitude lat, double
 	double maxlat = lat.rad() + angle;
 	double rightangle = ProjectionConstants::PI / 2;
 	// Wrapped around the south pole.
-	if (minlat < -rightangle) 
+	if (minlat < -rightangle)
 	{
 		double overshoot = -minlat - rightangle;
 		minlat = -rightangle + overshoot;
@@ -244,7 +245,7 @@ std::array<Latitude, 2> ProjectionUtils::EarthLatitudeRange(Latitude lat, double
 		minlat = -rightangle;
 	}
 	// Wrapped around the north pole.
-	if (maxlat > rightangle) 
+	if (maxlat > rightangle)
 	{
 		double overshoot = maxlat - rightangle;
 		maxlat = rightangle - overshoot;
@@ -253,7 +254,7 @@ std::array<Latitude, 2> ProjectionUtils::EarthLatitudeRange(Latitude lat, double
 		}
 		maxlat = rightangle;
 	}
-		
+
 	return { Latitude::rad(minlat), Latitude::rad(maxlat) };
 }
 
@@ -271,26 +272,26 @@ std::array<Longitude, 2> ProjectionUtils::EarthLongitudeRange(Latitude lat, Long
 	double radius = earthRadius * cos(lat.rad());
 
 	double angle;
-	if (radius > 0) 
+	if (radius > 0)
 	{
-		angle = abs(distance / radius);
+		angle = std::abs(distance / radius);
 		angle = std::min(angle, ProjectionConstants::PI);
 	}
-	else 
+	else
 	{
 		angle = ProjectionConstants::PI;
 	}
 	double minlong = lng.rad() - angle;
 	double maxlong = lng.rad() + angle;
-	if (minlong < -ProjectionConstants::PI) 
+	if (minlong < -ProjectionConstants::PI)
 	{
 		minlong = minlong + ProjectionConstants::PI * 2;
 	}
-	if (maxlong > ProjectionConstants::PI) 
+	if (maxlong > ProjectionConstants::PI)
 	{
 		maxlong = maxlong - ProjectionConstants::PI * 2;
 	}
-	
+
 	return { Longitude::rad(minlong), Longitude::rad(maxlong) };
 }
 
@@ -315,7 +316,7 @@ double ProjectionUtils::CalcEarthRadiusAtLat(Latitude latitude)
 
 void ProjectionUtils::ComputeAABB(const Coordinate& center, MyRealType dist,
 	Coordinate& min, Coordinate& max)
-{	
+{
 	double radius = ProjectionUtils::CalcEarthRadiusAtLat(center.lat);
 	auto retLats = ProjectionUtils::EarthLatitudeRange(center.lat, radius, dist);
 	auto retLngs = ProjectionUtils::EarthLongitudeRange(center.lat, center.lon, radius, dist);

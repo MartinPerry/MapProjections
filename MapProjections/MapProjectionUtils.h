@@ -38,6 +38,7 @@ namespace Projections
 			}
 
 			std::vector<Coordinate> pts;
+			pts.reserve(pxs.size());
 			for (auto & px : pxs)
 			{
 				auto gps = from->template  ProjectInverse<PixelType, false>(px);

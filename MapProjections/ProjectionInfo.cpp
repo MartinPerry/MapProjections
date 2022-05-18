@@ -8,6 +8,7 @@
 #include "./Projections/Mercator.h"
 #include "./Projections/Miller.h"
 #include "./Projections/LambertConic.h"
+#include "./Projections/LambertAzimuthal.h"
 #include "./Projections/Equirectangular.h"
 #include "./Projections/PolarSteregographic.h"
 #include "./Projections/GEOS.h"
@@ -479,25 +480,25 @@ void ProjectionInfo<Proj>::ComputeAABB(Coordinate & min, Coordinate & max) const
 		this->LineBresenham({ 0,0 }, { 0, hh },
 			[&](int x, int y) -> void {
 				Coordinate c = this->ProjectInverse({ x, y });
-				if (isnan(c.lat.rad()) || isnan(c.lon.rad())) return;
+				if (std::isnan(c.lat.rad()) || std::isnan(c.lon.rad())) return;
 				border.push_back(std::move(c));
 			});
 		this->LineBresenham({ 0,0 }, { ww, 0 },
 			[&](int x, int y) -> void {
 				Coordinate c = this->ProjectInverse({ x, y });
-				if (isnan(c.lat.rad()) || isnan(c.lon.rad())) return;
+				if (std::isnan(c.lat.rad()) || std::isnan(c.lon.rad())) return;
 				border.push_back(std::move(c));
 			});
 		this->LineBresenham({ ww, hh }, { 0, hh },
 			[&](int x, int y) -> void {
 				Coordinate c = this->ProjectInverse({ x, y });
-				if (isnan(c.lat.rad()) || isnan(c.lon.rad())) return;
+				if (std::isnan(c.lat.rad()) || std::isnan(c.lon.rad())) return;
 				border.push_back(std::move(c));
 			});
 		this->LineBresenham({ ww, hh }, { 0, hh },
 			[&](int x, int y) -> void {
 				Coordinate c = this->ProjectInverse({ x, y });
-				if (isnan(c.lat.rad()) || isnan(c.lon.rad())) return;
+				if (std::isnan(c.lat.rad()) || std::isnan(c.lon.rad())) return;
 				border.push_back(std::move(c));
 			});
 	}
@@ -511,6 +512,7 @@ void ProjectionInfo<Proj>::ComputeAABB(Coordinate & min, Coordinate & max) const
 //=====
 
 template class Projections::ProjectionInfo<LambertConic>;
+template class Projections::ProjectionInfo<LambertAzimuthal>;
 template class Projections::ProjectionInfo<Mercator>;
 template class Projections::ProjectionInfo<Miller>;
 template class Projections::ProjectionInfo<Equirectangular>;

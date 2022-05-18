@@ -11,6 +11,7 @@
 #include "./Projections/Mercator.h"
 #include "./Projections/Miller.h"
 #include "./Projections/LambertConic.h"
+#include "./Projections/LambertAzimuthal.h"
 #include "./Projections/PolarSteregographic.h"
 #include "./Projections/GEOS.h"
 #include "ProjectionRenderer.h"
@@ -75,6 +76,58 @@ void TestLambertConic()
 	pd.SaveToFile("D://xxx2.png");
 
 }
+
+
+void TestLambertAzimuthal()
+{
+	unsigned w = 600;
+	unsigned h = 600;
+
+	//std::vector<uint8_t> imgRawData;
+	//std::vector<uint8_t> fileData;
+	//lodepng::load_file(fileData, "D://hrrr2.png");
+	//lodepng::load_file(fileData, "D://full_disk_ahi_true_color.png");	
+	//lodepng::decode(imgRawData, w, h, fileData, LodePNGColorType::LCT_GREY);
+
+	/*
+	MinLat = 49.432895
+	MinLon = -13.107987
+	MaxLat = 61.188428
+	MaxLon = 3.646337
+	*/
+
+
+	Projections::Coordinate bbMin, bbMax;
+
+	//======= lambert conic
+
+	bbMin.lat = 49.4329_deg; bbMin.lon = -13.107987_deg;
+	bbMax.lat = 61.188428_deg; bbMax.lon = 3.646337_deg;
+
+	//create input projection and set its visible frame
+	Projections::LambertAzimuthal* inputImage = new Projections::LambertAzimuthal(-2.5_deg, 54.9_deg);
+
+	//auto kk = inputImage->ProjectInverseInternal(-899.5, -529.5);
+
+	inputImage->SetFrame(bbMin, bbMax, w, h, Projections::STEP_TYPE::PIXEL_CENTER, false);
+
+
+	Projections::Equirectangular* outputImage = new Projections::Equirectangular();
+	outputImage->SetFrame(inputImage, false); //same resolution as ipImage frame
+
+	//compute mapping from input -> output projection   	
+	Reprojection reprojection = Reprojection<int>::CreateReprojection(inputImage, outputImage);
+
+	ProjectionRenderer pd(inputImage);
+	pd.AddBorders("D://borders.csv", 5);	
+
+	pd.Clear();
+	//pd.DrawImage(&imgRawData[0], ProjectionRenderer::RenderImageType::GRAY, reprojection);
+	pd.DrawBorders();
+	pd.SaveToFile("D://xxx2.png");
+
+}
+
 
 
 void TestGEOS_Simd()
@@ -309,9 +362,152 @@ void TestWrapAround()
 	pd.SaveToFile("D://wrap.png");
 }
 
+double MapRange(double fromMin, double fromMax, double toMin, double toMax, double s)
+{
+	return toMin + (s - fromMin) * (toMax - toMin) / (fromMax - fromMin);
+}
+
 int main(int argc, const char * argv[]) 
 {
-	TestGEOS();
+
+	TestLambertAzimuthal();
+	return 0;
+
+	{
+
+		Projections::Coordinate bbMin, bbMax;
+
+		bbMin.lat = 21.1405_deg; bbMin.lon = -134.0955_deg;
+		bbMax.lat = 52.6133_deg; bbMax.lon = -60.9365_deg;
+
+		//create input projection and set its visible frame
+		Projections::Equirectangular* eq = new Projections::Equirectangular();
+
+		//auto kk = inputImage->ProjectInverseInternal(-899.5, -529.5);
+
+		eq->SetFrame(bbMin, bbMax, 1799, 1059, Projections::STEP_TYPE::PIXEL_BORDER, false);
+		auto f = eq->GetFrame();
+
+
+		Projections::Coordinate gps;
+		gps.lat = 39.775_deg;
+		gps.lon = -76.641_deg;
+
+		auto px = eq->Project<int>(gps);
+
+		printf("x");
+
+	}
+	return 0;
+
+	{
+
+		//https://rapidrefresh.noaa.gov/hrrr/HRRR_conus.domain.txt
+		Projections::Coordinate botLeft, topRight;
+		botLeft.lat = 45.0_deg; botLeft.lon = 0.0_deg;
+		topRight.lat = 57.0_deg; topRight.lon = 20.0_deg;
+
+		auto minL = std::min(botLeft.lat, topRight.lat);
+
+		//create input projection and set its 2D image frame
+		Projections::Mercator inputImage = Projections::Mercator();
+		inputImage.SetFrame(botLeft, topRight, 2048, 2048, Projections::STEP_TYPE::PIXEL_CENTER, true);
+
+
+		botLeft.lat = 46.9526_deg;
+		botLeft.lon = 3.5889_deg;
+		
+		topRight.lat = 54.7405_deg;
+		topRight.lon = 15.7208_deg;
+
+		//900x1100
+		botLeft.lat = 46.1929_deg;
+		botLeft.lon = 4.6759_deg;
+		
+		topRight.lat = 55.5342_deg;
+		topRight.lon = 17.1126_deg;
+
+		Projections::PolarSteregographic outputImage(10.0_deg, 60.0_deg);
+		outputImage.SetFrame(botLeft, topRight, 900, 1100, Projections::STEP_TYPE::PIXEL_CENTER, false); //same resolution as ipImage frame
+
+
+		auto reproj = Projections::Reprojection<int>::CreateReprojection(&inputImage, &outputImage);
+
+		unsigned w = 0;
+		unsigned h = 0;
+		std::vector<uint8_t> imgRawData;
+		std::vector<uint8_t> fileData;
+		//lodepng::load_file(fileData, "D://0.png");
+		//lodepng::load_file(fileData, "D://full_disk_ahi_true_color.png");	
+		//lodepng::decode(imgRawData, w, h, fileData, LodePNGColorType::LCT_GREY);
+		
+		w = 2048;
+		h = 2048;
+		lodepng::load_file(fileData, "D://0_final.raw");		
+		imgRawData.resize(w * h, 0);	
+		std::vector<float> heights;
+		heights.resize(w * h, 0);
+		for (size_t i = 0; i < 4 * w * h; i+=4)
+		{
+			uint8_t b = fileData[i];
+			uint8_t g = fileData[i + 1];
+			uint8_t r = fileData[i + 2];
+			uint8_t a = fileData[i + 3];
+
+			uint32_t rgba = (a << 24) | (b << 16) | (g << 8) | r;
+			float val = 0;
+			memcpy(&val, &rgba, sizeof(float));
+
+			heights[i / 4] = val;
+			imgRawData[i / 4] = MapRange(0, 3000, 0, 255, val);
+		}
+		
+		auto reprojData = reproj.ReprojectDataNerestNeighbor<uint8_t>(imgRawData.data(), 0);
+		auto reprojHeightsData = reproj.ReprojectDataNerestNeighbor<float>(heights.data(), 0);
+
+		FILE* f = fopen("D://reproj_height_polar.raw", "wb");
+		if (f != nullptr)
+		{			
+			size_t size = reproj.outW * reproj.outH;
+			fwrite(reprojHeightsData, sizeof(float), size, f);			
+			fclose(f);
+		}
+
+		f = fopen("D://reproj_height_polar_swapy.raw", "wb");
+		if (f != nullptr)
+		{
+			//raw data are upside down
+			std::vector<float> heightsSwap;
+			heightsSwap.resize(reproj.outW * reproj.outH, 0);
+			for (size_t y = 0; y < reproj.outH; y++)
+			{
+				for (size_t x = 0; x < reproj.outW; x++)
+				{
+					heightsSwap[x + y * reproj.outW] = reprojHeightsData[x + (reproj.outH - 1 - y) * reproj.outW];
+				}
+			}
+
+			size_t size = reproj.outW * reproj.outH;			
+			fwrite(heightsSwap.data(), sizeof(float), size, f);
+			fclose(f);
+		}
+
+		lodepng::encode("D://reproj_height_polar.png", reprojData,
+			static_cast<int>(reproj.outW), static_cast<int>(reproj.outH),
+			LodePNGColorType::LCT_GREY);
+
+		ProjectionRenderer pd(&outputImage);
+		pd.AddBorders("D://borders.csv", 5);
+		pd.Clear();
+		//pd.DrawImage(&imgRawData[0], ProjectionRenderer::RenderImageType::GRAY, w, h, &outputImage);
+		pd.DrawImage(&imgRawData[0], ProjectionRenderer::RenderImageType::GRAY, reproj);
+		pd.DrawBorders();
+		pd.SaveToFile("D://debug_with_border.png");
+
+	}
+
+
+	//TestGEOS();
 	return 0;
 	{
 

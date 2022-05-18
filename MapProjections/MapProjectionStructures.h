@@ -35,7 +35,8 @@ namespace Projections
 		WEB_MERCATOR = 3,
 		POLAR_STEREOGRAPHICS = 4,
         MILLER = 5,
-		GEOS = 6
+		GEOS = 6,
+		LAMBERT_AZIMUTHAL = 7
 	};
 
 

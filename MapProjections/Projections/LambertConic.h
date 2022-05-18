@@ -12,7 +12,7 @@ namespace Projections
 {
 
 	/// <summary>
-	/// 	// Based on:
+	/// Based on:
 	/// http://mathworld.wolfram.com/LambertConformalConicProjection.html
 	/// https://en.wikipedia.org/wiki/Lambert_conformal_conic_projection (see only one standard parallel)
 	/// </summary>

@@ -115,6 +115,8 @@ void TestLambertAzimuthal()
 	Projections::Equirectangular* outputImage = new Projections::Equirectangular();
 	outputImage->SetFrame(inputImage, false); //same resolution as ipImage frame
 
+	std::cout << outputImage->GetFrame().toString() << std::endl;
+
 	//compute mapping from input -> output projection   	
 	Reprojection reprojection = Reprojection<int>::CreateReprojection(inputImage, outputImage);
 
@@ -122,6 +124,7 @@ void TestLambertAzimuthal()
 	pd.AddBorders("D://borders.csv", 5);	
 
 	pd.Clear();
+	pd.DrawParalells(2, 2);
 	//pd.DrawImage(&imgRawData[0], ProjectionRenderer::RenderImageType::GRAY, reprojection);
 	pd.DrawBorders();
 	pd.SaveToFile("D://xxx2.png");

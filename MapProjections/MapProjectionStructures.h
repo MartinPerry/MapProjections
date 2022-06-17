@@ -160,6 +160,19 @@ namespace Projections
 			ww(0),
 			hh(0)
 		{}
+
+		std::string toString() const
+		{
+			return std::string("Latitude:") +
+				"\n min:" + std::to_string(min.lat.deg()) +
+				"\n max:" + std::to_string(max.lat.deg()) +
+				"\nLongitude:" + 
+				"\n min:" + std::to_string(min.lon.deg()) +
+				"\n max:" + std::to_string(max.lon.deg()) +
+				"\nDimensions:" +
+				"\n w:" + std::to_string(w) +
+				"\n h:" + std::to_string(h);
+		}
 	};
 
 	//================================================================================================

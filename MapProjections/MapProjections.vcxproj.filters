@@ -45,6 +45,9 @@
     <ClCompile Include="Reprojection.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="CountriesUtils.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="lodepng.h">
@@ -124,6 +127,9 @@
     </ClInclude>
     <ClInclude Include="Projections\LambertAzimuthal.h">
       <Filter>Header Files\Projections</Filter>
+    </ClInclude>
+    <ClInclude Include="CountriesUtils.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

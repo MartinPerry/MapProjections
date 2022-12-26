@@ -282,6 +282,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="CountriesUtils.cpp" />
     <ClCompile Include="lodepng.cpp" />
     <ClCompile Include="main.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_lib|Win32'">true</ExcludedFromBuild>
@@ -296,6 +297,7 @@
     <ClCompile Include="Reprojection.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="CountriesUtils.h" />
     <ClInclude Include="GeoCoordinate.h" />
     <ClInclude Include="IProjectionInfo.h" />
     <ClInclude Include="lodepng.h" />

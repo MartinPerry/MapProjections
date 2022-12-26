@@ -1,6 +1,11 @@
 #ifndef PROJECTION_DEBUGGER_H
 #define PROJECTION_DEBUGGER_H
 
+namespace Projections
+{
+	class CountriesUtils;
+}
+
 #include <cstdint>
 #include <vector>
 #include <string>
@@ -40,7 +45,7 @@ namespace Projections
 		void SetPixelVal(uint8_t v);
 		void SetRawDataTarget(uint8_t * target, RenderImageType targetType);
 
-		void AddBorders(const char * fileName, int useEveryNthPoint = 1);
+		void AddBorders(const CountriesUtils* cu);
 		void DrawBorders();
 		void DrawParalells();
 		void DrawParalells(MyRealType lonStep, MyRealType latStep);
@@ -76,21 +81,18 @@ namespace Projections
 
 		uint8_t pixelVal;
 
+		const CountriesUtils* cu;
+
 		ProjectionFrame frame;
 		std::function<Pixel<int>(const Coordinate & c)> projectCallback;
 		std::function<Coordinate(const Pixel<int> & p)> projectInverseCallback;
 		std::function<void(const Pixel<int> & start, const Pixel<int> & end, std::function<void(int x, int y)> callback)> lineBresenhamCallback;
-	
-		std::unordered_map<std::string, std::vector<Coordinate> > debugBorder;
-
+			
 		int ComputeOutCode(MyRealType x, MyRealType y);
 		void CohenSutherlandLineClipAndDraw(MyRealType x0, MyRealType y0, MyRealType x1, MyRealType y1);
 
 		void DrawLine(Pixel<int> pp1, Pixel<int> pp2);
-
-		std::vector<std::string> Split(const std::string &s, char delim);
-		std::string LoadFromFile(const char * filePath);
-
+		
 	};
 
 
@@ -99,8 +101,12 @@ namespace Projections
 	/// </summary>
 	/// <param name="proj"></param>
 	template <typename Proj>
-	ProjectionRenderer::ProjectionRenderer(Proj * proj, RenderImageType type)
-		: rawData(nullptr), externalData(false), type(type), pixelVal(255)
+	ProjectionRenderer::ProjectionRenderer(Proj * proj, RenderImageType type) : 
+		rawData(nullptr), 
+		externalData(false), 
+		type(type), 
+		pixelVal(255),
+		cu(nullptr)
 	{
 		this->SetProjection(proj);
 	};

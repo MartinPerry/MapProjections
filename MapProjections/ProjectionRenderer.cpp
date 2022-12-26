@@ -5,7 +5,8 @@
 #else
 #	include "../Compression/3rdParty/lodepng.h"
 #endif
-#include "MapProjectionStructures.h"
+#include "./MapProjectionStructures.h"
+#include "./CountriesUtils.h"
 
 using namespace Projections;
 
@@ -102,100 +103,9 @@ void ProjectionRenderer::FillData(std::vector<uint8_t> & output)
 }
 
 
-/// <summary>
-/// Load input data from file
-/// </summary>
-/// <param name="filePath"></param>
-/// <returns></returns>
-std::string ProjectionRenderer::LoadFromFile(const char * filePath)
+void ProjectionRenderer::AddBorders(const CountriesUtils* cu)
 {
-	FILE * f = NULL;  //pointer to file we will read in
-	my_fopen(&f, filePath, "rb");
-	if (f == NULL)
-	{
-		printf("Failed to open file: \"%s\"\n", filePath);
-		return "";
-	}
-
-	fseek(f, 0L, SEEK_END);
-	long size = ftell(f);
-	fseek(f, 0L, SEEK_SET);
-
-	char * data = new char[size + 1];
-	fread(data, sizeof(char), size, f);
-	fclose(f);
-
-	data[size] = 0;
-	std::string tmp = data;
-	delete[] data;
-
-	return tmp;
-};
-
-std::vector<std::string> ProjectionRenderer::Split(const std::string &s, char delim)
-{
-	std::stringstream ss;
-	ss.str(s);
-	std::string item;
-	std::vector<std::string> elems;
-	while (std::getline(ss, item, delim)) {
-		elems.push_back(item);
-	}
-
-	return elems;
-}
-
-/// <summary>
-/// Load borders from file in format "lat;lon\n"
-/// </summary>
-/// <param name="fileName"></param>
-/// <param name="useEveryNthPoint"></param>
-void ProjectionRenderer::AddBorders(const char * fileName, int useEveryNthPoint)
-{
-	std::string content = LoadFromFile(fileName);
-
-
-	std::vector<std::string> lines = Split(content, '\n');
-
-	std::string keyName;
-	int tmp = 0;
-
-	for (size_t i = 0; i < lines.size(); i++)
-	{
-		std::vector<std::string> line = Split(lines[i], ';');
-		if (line.size() <= 2)
-		{
-			continue;
-		}
-		if (line.size() > 5)
-		{
-			keyName = line[7];
-			tmp = 0;
-		}
-		else
-		{
-			if (tmp % useEveryNthPoint != 0)
-			{
-				tmp++;
-				continue;
-			}
-
-			std::string key = keyName;
-			key += "_";
-			key += line[3];
-
-
-			Coordinate point;
-			point.lon = Longitude::deg(atof(line[0].c_str()));
-			point.lat = Latitude::deg(atof(line[1].c_str()));
-			this->debugBorder[key].push_back(point);
-
-			tmp++;
-		}
-
-	}
-
-
+	this->cu = cu;
 }
 
 void ProjectionRenderer::DrawLine(Pixel<int> pp1, Pixel<int> pp2)
@@ -239,14 +149,23 @@ void ProjectionRenderer::DrawLine(Pixel<int> pp1, Pixel<int> pp2)
 /// </summary>
 void ProjectionRenderer::DrawBorders()
 {	
-	for (const auto & it : this->debugBorder)
+	if (this->cu == nullptr)
+	{
+		return;
+	}
+
+	for (const auto & it : this->cu->GetBorders())
 	{
 		const std::vector<Coordinate> & b = it.second;
-
-		for (size_t i = 0; i < b.size(); i++)
+		if (b.size() <= 1)
 		{
-			Coordinate p = b[i % b.size()];
-			Coordinate p1 = b[(i + 1) % b.size()];
+			continue;
+		}
+
+		for (size_t i = 0; i < b.size() - 1; i++)
+		{
+			Coordinate p = b[i];
+			Coordinate p1 = b[i + 1];
 
 			Pixel<int> pp1 = this->projectCallback(p);
 			Pixel<int> pp2 = this->projectCallback(p1);
@@ -254,6 +173,13 @@ void ProjectionRenderer::DrawBorders()
 			this->DrawLine(pp1, pp2);
 		}
 
+		Coordinate p = b.back();
+		Coordinate p1 = b[0];
+
+		Pixel<int> pp1 = this->projectCallback(p);
+		Pixel<int> pp2 = this->projectCallback(p1);
+
+		this->DrawLine(pp1, pp2);
 
 	}
 }

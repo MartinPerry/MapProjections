@@ -28,6 +28,11 @@ struct IAngle
 		return this->rad() < rhs.rad();
 	}
 
+	inline bool operator>(const IAngle<T>& rhs) const noexcept
+	{
+		return this->rad() > rhs.rad();
+	}
+
 protected:
 	IAngle(MyRealType valRad, MyRealType valDeg) : valRad(valRad), valDeg(valDeg) {};
 	MyRealType valRad;

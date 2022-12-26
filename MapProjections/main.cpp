@@ -16,6 +16,7 @@
 #include "./Projections/GEOS.h"
 #include "ProjectionRenderer.h"
 #include "MapProjectionUtils.h"
+#include "CountriesUtils.h"
 #include "lodepng.h"
 
 #include "./simd/ProjectionInfo_simd.h"
@@ -120,8 +121,11 @@ void TestLambertAzimuthal()
 	//compute mapping from input -> output projection   	
 	Reprojection reprojection = Reprojection<int>::CreateReprojection(inputImage, outputImage);
 
+	CountriesUtils cu;
+	cu.Load("D://borders.csv", 5);
+
 	ProjectionRenderer pd(inputImage);
-	pd.AddBorders("D://borders.csv", 5);	
+	pd.AddBorders(&cu);	
 
 	pd.Clear();
 	pd.DrawParalells(2, 2);
@@ -163,9 +167,11 @@ void TestGEOS_Simd()
 
 	std::vector<uint8_t> rawData = reproj.ReprojectDataNerestNeighbor<uint8_t, std::vector<uint8_t>, 1>(imgRawData.data(), 0);
 
+	CountriesUtils cu;
+	cu.Load("D://borders.csv", 5);
 	
 	ProjectionRenderer pd(&mercator, ProjectionRenderer::RenderImageType::GRAY);
-	pd.AddBorders("D://borders.csv", 5);
+	pd.AddBorders(&cu);
 	//pd.Clear();	
 	pd.SetRawDataTarget(rawData.data(), ProjectionRenderer::RenderImageType::GRAY);
 	pd.DrawBorders();
@@ -205,8 +211,11 @@ void TestGEOS()
 	std::vector<uint8_t> rawData = reproj.ReprojectDataNerestNeighbor<uint8_t, std::vector<uint8_t>, 1>(imgRawData.data(), 0);
 
 
+	CountriesUtils cu;
+	cu.Load("D://borders.csv", 5);
+
 	ProjectionRenderer pd(&mercator, ProjectionRenderer::RenderImageType::GRAY);
-	pd.AddBorders("D://borders.csv", 5);
+	pd.AddBorders(&cu);
 	//pd.Clear();	
 	pd.SetRawDataTarget(rawData.data(), ProjectionRenderer::RenderImageType::GRAY);
 	pd.DrawBorders();
@@ -253,8 +262,11 @@ void ReprojectNightImage()
 		);
 
 
+	CountriesUtils cu;
+	cu.Load("D://borders.csv", 5);
+
 	ProjectionRenderer pd(&mercator, ProjectionRenderer::RenderImageType::RGB);
-	pd.AddBorders("D://borders.csv", 5);
+	pd.AddBorders(&cu);
 	//pd.Clear();	
 	pd.SetRawDataTarget(rawData.data(), ProjectionRenderer::RenderImageType::RGB);
 	//pd.DrawBorders();
@@ -357,8 +369,11 @@ void TestWrapAround()
 
 	auto repro = Reprojection<int>::CreateReprojection(eq, merc);
 
+	CountriesUtils cu;
+	cu.Load("D://borders.csv", 5);
+
 	ProjectionRenderer pd(merc);
-	pd.AddBorders("D://borders.csv", 5);
+	pd.AddBorders(&cu);
 	pd.Clear();
 	pd.DrawImage(imgRawData.data(), ProjectionRenderer::RenderImageType::GRAY, repro);
 	pd.DrawBorders();
@@ -370,10 +385,32 @@ double MapRange(double fromMin, double fromMax, double toMin, double toMax, doub
 	return toMin + (s - fromMin) * (toMax - toMin) / (fromMax - fromMin);
 }
 
-int main(int argc, const char * argv[]) 
+int main(int argc, const char* argv[])
 {
+	//TestLambertAzimuthal();
 
-	TestLambertAzimuthal();
+	{
+		CountriesUtils cu;
+		cu.Load("D://borders.csv", 5);
+		auto bb = cu.GetCountryBoundingBox("CZE");
+
+
+		//create input projection and set its 2D image frame
+		Projections::Mercator inputImage = Projections::Mercator();
+		inputImage.SetFrame(bb[0], bb[1], 2048, 2048, Projections::STEP_TYPE::PIXEL_CENTER, true);
+
+		Coordinate pragGps;
+		pragGps.lat = Latitude::deg(50.071); 
+		pragGps.lon = Longitude::deg(14.557);
+
+		ProjectionRenderer pd(&inputImage);
+		pd.AddBorders(&cu);
+		pd.Clear();
+		pd.DrawBorders();
+		pd.DrawPoint(pragGps);
+		pd.SaveToFile("D://debug_with_border.png");
+	}
+
 	return 0;
 
 	{
@@ -499,8 +536,11 @@ int main(int argc, const char * argv[])
 			static_cast<int>(reproj.outW), static_cast<int>(reproj.outH),
 			LodePNGColorType::LCT_GREY);
 
+		CountriesUtils cu;
+		cu.Load("D://borders.csv", 5);
+
 		ProjectionRenderer pd(&outputImage);
-		pd.AddBorders("D://borders.csv", 5);
+		pd.AddBorders(&cu);
 		pd.Clear();
 		//pd.DrawImage(&imgRawData[0], ProjectionRenderer::RenderImageType::GRAY, w, h, &outputImage);
 		pd.DrawImage(&imgRawData[0], ProjectionRenderer::RenderImageType::GRAY, reproj);
@@ -547,9 +587,11 @@ int main(int argc, const char * argv[])
 		//lodepng::load_file(fileData, "D://full_disk_ahi_true_color.png");	
 		lodepng::decode(imgRawData, w, h, fileData, LodePNGColorType::LCT_GREY);
 
+		CountriesUtils cu;
+		cu.Load("D://borders.csv", 5);
 
 		ProjectionRenderer pd(&outputImage);
-		pd.AddBorders("D://borders.csv", 5);
+		pd.AddBorders(&cu);
 		pd.Clear();
 		//pd.DrawImage(&imgRawData[0], ProjectionRenderer::RenderImageType::GRAY, w, h, &outputImage);
 		pd.DrawImage(&imgRawData[0], ProjectionRenderer::RenderImageType::GRAY, reproj);
@@ -643,9 +685,11 @@ int main(int argc, const char * argv[])
 		//lodepng::load_file(fileData, "D://full_disk_ahi_true_color.png");	
 		lodepng::decode(imgRawData, w, h, fileData, LodePNGColorType::LCT_GREY);
 
+		CountriesUtils cu;
+		cu.Load("D://borders.csv", 5);
 
 		ProjectionRenderer pd(eq);
-		pd.AddBorders("D://borders.csv", 5);
+		pd.AddBorders(&cu);
 		pd.Clear();
 		pd.DrawImage(&imgRawData[0], ProjectionRenderer::RenderImageType::GRAY, w, h, eq);
 		pd.DrawBorders();

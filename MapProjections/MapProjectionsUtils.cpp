@@ -266,7 +266,7 @@ std::array<Latitude, 2> ProjectionUtils::EarthLatitudeRange(Latitude lat, double
 /// <param name="earth_radius"></param>
 /// <param name="distance"></param>
 /// <returns></returns>
-std::array<Longitude, 2> ProjectionUtils::EarthLongitudeRange(Latitude lat, Longitude lng, double earthRadius, int distance)
+std::array<Longitude, 2> ProjectionUtils::EarthLongitudeRange(Latitude lat, Longitude lng, double earthRadius, double distance)
 {
 	// Estimate the min and max longitudes within distance of a given location.
 	double radius = earthRadius * cos(lat.rad());

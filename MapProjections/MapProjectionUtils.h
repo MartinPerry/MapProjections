@@ -49,7 +49,7 @@ namespace Projections
 		}
 
 		static std::array<Latitude, 2> EarthLatitudeRange(Latitude lat, double earthRadius, double distance);
-		static std::array<Longitude, 2> EarthLongitudeRange(Latitude lat, Longitude lng, double earthRadius, int distance);
+		static std::array<Longitude, 2> EarthLongitudeRange(Latitude lat, Longitude lng, double earthRadius, double distance);
 		static double CalcEarthRadiusAtLat(Latitude latitude);
 
         inline static MyRealType cot(MyRealType x) { return 1.0 / std::tan(x); };

@@ -269,7 +269,7 @@ namespace Projections
 		/// <param name="NO_VALUE"></param>
 		/// <returns></returns>
 		template <typename DataType, typename Out = DataType*, size_t ChannelsCount = 1>
-		Out ReprojectDataNerestNeighbor(DataType* inputData, const DataType NO_VALUE) const
+		Out ReprojectDataNerestNeighbor(const DataType* inputData, const DataType NO_VALUE) const
 		{
 			size_t count = this->outW * this->outH;
 
@@ -341,7 +341,7 @@ namespace Projections
 		/// <param name="NO_VALUE"></param>
 		/// <returns></returns>
 		template <typename DataType, typename Out = DataType*, size_t ChannelsCount = 1>
-		Out ReprojectDataBilinear(DataType* inputData, const DataType NO_VALUE) const
+		Out ReprojectDataBilinear(const DataType* inputData, const DataType NO_VALUE) const
 		{
 			size_t count = this->outW * this->outH;
 
@@ -428,7 +428,7 @@ namespace Projections
 		/// <param name="NO_VALUE"></param>
 		/// <returns></returns>
 		template <typename DataType, typename Out = DataType*, size_t ChannelsCount = 1>
-		Out ReprojectDataBicubic(DataType* inputData, const DataType NO_VALUE) const
+		Out ReprojectDataBicubic(const DataType* inputData, const DataType NO_VALUE) const
 		{
 			size_t count = this->outW * this->outH;
 

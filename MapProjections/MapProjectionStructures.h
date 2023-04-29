@@ -173,6 +173,11 @@ namespace Projections
 				"\n w:" + std::to_string(w) +
 				"\n h:" + std::to_string(h);
 		}
+
+		MyRealType GetStepOffset() const
+		{
+			return static_cast<MyRealType>(stepType);
+		}
 	};
 
 	//================================================================================================

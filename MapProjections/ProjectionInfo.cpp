@@ -174,10 +174,10 @@ void ProjectionInfo<Proj>::SetRawFrame(const Coordinate & botLeft, const Coordin
 		this->frame.h = w * hAr;
 	}
 
-	this->frame.wAR = (this->frame.w - stepType) / projW;
+	this->frame.wAR = (this->frame.w - this->frame.GetStepOffset()) / projW;
 	this->frame.wPadding = 0;
 
-	this->frame.hAR = (this->frame.h - stepType) / projH;
+	this->frame.hAR = (this->frame.h - this->frame.GetStepOffset()) / projH;
 	this->frame.hPadding = 0;
 
 	// Using different ratios for width and height will cause the map to be stretched,
@@ -190,12 +190,12 @@ void ProjectionInfo<Proj>::SetRawFrame(const Coordinate & botLeft, const Coordin
 		this->frame.wAR = globalAR;
 		this->frame.hAR = globalAR;
 
-		this->frame.wPadding = ((this->frame.w - stepType) - (this->frame.wAR * projW)) * MyRealType(0.5);
-		this->frame.hPadding = ((this->frame.h - stepType) - (this->frame.hAR * projH)) * MyRealType(0.5);
+		this->frame.wPadding = ((this->frame.w - this->frame.GetStepOffset()) - (this->frame.wAR * projW)) * MyRealType(0.5);
+		this->frame.hPadding = ((this->frame.h - this->frame.GetStepOffset()) - (this->frame.hAR * projH)) * MyRealType(0.5);
 	}
 
 	this->frame.projPrecomX = -this->frame.wPadding + this->frame.wAR * minX;
-	this->frame.projPrecomY = -(this->frame.h - stepType) + this->frame.hPadding - this->frame.hAR * minY;
+	this->frame.projPrecomY = -(this->frame.h - this->frame.GetStepOffset()) + this->frame.hPadding - this->frame.hAR * minY;
 
 	this->frame.min = botLeft;
 	this->frame.max = topRight;
@@ -338,9 +338,9 @@ Coordinate ProjectionInfo<Proj>::GetDeltaStep() const
 {	
 	Coordinate step;
 	step.lat = Latitude::rad((this->frame.max.lat.rad() - this->frame.min.lat.rad()) / 
-		(this->frame.h - this->frame.stepType));
+		(this->frame.h - this->frame.GetStepOffset()));
 	step.lon = Longitude::rad((this->frame.max.lon.rad() - this->frame.min.lon.rad()) / 
-		(this->frame.w - this->frame.stepType));
+		(this->frame.w - this->frame.GetStepOffset()));
 
 	return step;
 }
@@ -388,8 +388,8 @@ void ProjectionInfo<Proj>::LineBresenham(Pixel<int> start, Pixel<int> end,
 	//[w, h] is at pixel corner
 	//for coordinates at pixel center:
 	//use [w - 1, h - 1] (it correspond to [0, 0] for pixel center)
-	int ww = static_cast<int>(this->frame.w) - this->frame.stepType;
-	int hh = static_cast<int>(this->frame.h) - this->frame.stepType;
+	int ww = static_cast<int>(this->frame.w - this->frame.GetStepOffset());
+	int hh = static_cast<int>(this->frame.h - this->frame.GetStepOffset());
 
 
 	if ((start.x > ww) || (start.y > hh))
@@ -452,8 +452,8 @@ void ProjectionInfo<Proj>::ComputeAABB(Coordinate & min, Coordinate & max) const
 	//[w, h] is at pixel corner
 	//for coordinates at pixel center:
 	//use [w - 1, h - 1] (it correspond to [0, 0] for pixel center)
-	int ww = static_cast<int>(this->frame.w) - this->frame.stepType;
-	int hh = static_cast<int>(this->frame.h) - this->frame.stepType;
+	int ww = static_cast<int>(this->frame.w - this->frame.GetStepOffset());
+	int hh = static_cast<int>(this->frame.h - this->frame.GetStepOffset());
 
 			
 	std::vector<Coordinate> border;

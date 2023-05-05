@@ -15,6 +15,16 @@
 
 namespace Projections 
 {
+	class ITransform
+	{
+	public:
+		virtual Coordinate Transform(const Coordinate& c) const = 0;
+		virtual Coordinate TransformInverse(const Coordinate& c) const = 0;		
+	};
+
+
+
+
 	class IProjectionInfo
 	{
 	public:
@@ -26,6 +36,11 @@ namespace Projections
 		virtual const char* GetName() const
 		{
 			return "";
+		}
+
+		void SetLatLonTransform(ITransform* transform)
+		{
+			this->transform = transform;
 		}
 
 #ifdef USE_VIRTUAL_INTERFACE
@@ -63,10 +78,16 @@ namespace Projections
 
 		virtual void ComputeAABB(Coordinate & min, Coordinate & max) const = 0;
 
+		virtual bool IsIndependentLatLon() const = 0;
 		virtual bool IsOrthogonalLatLon() const = 0;
 #endif
 	protected:
-		IProjectionInfo(PROJECTION curProjection) : curProjection(curProjection) {};
+		mutable ITransform* transform;
+
+		IProjectionInfo(PROJECTION curProjection) : 
+			curProjection(curProjection),
+			transform(nullptr)
+		{};
 	};
 
 }

@@ -28,6 +28,26 @@ const char* ProjectionInfo<Proj>::GetName() const
 }
 
 /// <summary>
+/// Get info if projections lat / lon are independet to each other
+/// (one can be caltulated without the other)
+/// (eg. Mercator, Equirectangular)
+/// 
+/// If transform is enabled, the result is always false
+/// </summary>
+/// <typeparam name="Proj"></typeparam>
+/// <returns></returns>
+template <typename Proj>
+bool ProjectionInfo<Proj>::IsIndependentLatLon() const
+{
+	if (this->transform != nullptr)
+	{
+		return false;
+	}
+
+	return Proj::INDEPENDENT_LAT_LON;
+}
+
+/// <summary>
 /// Get info if projections lat / lon are orthogonal to each other
 /// (eg. Mercator, Equirectangular)
 /// </summary>
@@ -92,9 +112,8 @@ void ProjectionInfo<Proj>::SetFrame(const ProjectionFrame & frame)
 	//but they will be recomputed in ComputeAABB
 	this->frame.min = frame.min;
 	this->frame.max = frame.max;
-
 	
-	this->ComputeAABB(this->frame.min, this->frame.max);
+	this->ComputeAABB(this->frame.min, this->frame.max);	
 }
 
 
@@ -141,6 +160,10 @@ template <typename Proj>
 void ProjectionInfo<Proj>::SetRawFrame(const Coordinate & botLeft, const Coordinate & topRight,
 	MyRealType w, MyRealType h, STEP_TYPE stepType, bool keepAR)
 {		
+	//temporary disable transform
+	auto oldTransform = this->transform;
+	this->transform = nullptr;
+	
 	//calculate minimum internal projection value				
 
 	auto[minX, minY, maxX, maxY] = static_cast<Proj*>(this)->GetFrameBotLeftTopRight(botLeft, topRight);
@@ -201,6 +224,9 @@ void ProjectionInfo<Proj>::SetRawFrame(const Coordinate & botLeft, const Coordin
 	this->frame.max = topRight;
 
 	this->CalculateWrapRepeat(botLeft, topRight);
+
+	//restore transform
+	this->transform = oldTransform;
 }
 
 /// <summary>
@@ -447,6 +473,10 @@ void ProjectionInfo<Proj>::LineBresenham(Pixel<int> start, Pixel<int> end,
 template <typename Proj>
 void ProjectionInfo<Proj>::ComputeAABB(Coordinate & min, Coordinate & max) const
 {	
+	//temporary disable transform
+	auto oldTransform = this->transform;
+	this->transform = nullptr;	
+
 	//for coordinates at pixel corner:
 	//[0, 0] is at pixel corner
 	//[w, h] is at pixel corner
@@ -504,6 +534,9 @@ void ProjectionInfo<Proj>::ComputeAABB(Coordinate & min, Coordinate & max) const
 	}
 	
 	ProjectionUtils::ComputeAABB(border, min, max);
+
+	//restore transform
+	this->transform = oldTransform;
 }
 
 

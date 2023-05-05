@@ -303,6 +303,7 @@
     <ClInclude Include="lodepng.h" />
     <ClInclude Include="MapProjectionStructures.h" />
     <ClInclude Include="MapProjectionUtils.h" />
+    <ClInclude Include="PoleRotationTransform.h" />
     <ClInclude Include="ProjectionInfo.h" />
     <ClInclude Include="ProjectionRenderer.h" />
     <ClInclude Include="Projections\Equirectangular.h" />

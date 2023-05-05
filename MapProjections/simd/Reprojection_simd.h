@@ -35,7 +35,7 @@ namespace Projections::Simd
 			int h8 = to->GetFrameHeight() - hRest8;
 
 			//if x and y are independent, simplify
-			if ((from->INDEPENDENT_LAT_LON) && (to->INDEPENDENT_LAT_LON))
+			if ((from->IsIndependentLatLon()) && (to->IsIndependentLatLon()))
 			{
 				std::vector<T> cacheX;
 				cacheX.resize(to->GetFrameWidth());

@@ -18,8 +18,8 @@ namespace Projections
 	class Mercator : public ProjectionInfo<Mercator>
 	{
 	public:
-		inline static const double  MERCATOR_MIN = -85.051;
-		inline static const double  MERCATOR_MAX = 85.051;
+		inline static const Latitude  MERCATOR_MIN = -85.051_deg;
+		inline static const Latitude  MERCATOR_MAX = 85.051_deg;
 
 		static const bool INDEPENDENT_LAT_LON = true; //can Lat / Lon be computed separatly. To compute one, we dont need the other
 		static const bool ORTHOGONAL_LAT_LON = true; //is lat / lon is orthogonal to each other

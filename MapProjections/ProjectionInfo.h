@@ -31,6 +31,7 @@ namespace Projections
 
 		const char* GetName() const;
 
+		bool IsIndependentLatLon() const OVERRIDE;
 		bool IsOrthogonalLatLon() const OVERRIDE;
 
 		template <typename PixelType = int>
@@ -106,7 +107,9 @@ namespace Projections
 		ProjectionInfo(PROJECTION curProjection);
 	};
 
-
+	//================================================================================================
+	//================================================================================================
+	//================================================================================================
 
 	/// <summary>
 	/// Set current data active frame based on existing projection
@@ -151,22 +154,25 @@ namespace Projections
 	template <typename Proj>
 	template <typename PixelType>	
 	RET_VAL(PixelType, std::is_integral) ProjectionInfo<Proj>::Project(const Coordinate & c) const
-	{
+	{		
+		ProjectedValue rawPixel;
 
-		ProjectedValue rawPixel = static_cast<const Proj*>(this)->ProjectInternal(c);
+		if (transform)
+		{
+			auto ct = transform->Transform(c);
+			rawPixel = static_cast<const Proj*>(this)->ProjectInternal(ct);
+		}
+		else
+		{
+			//project value and get "pseudo" pixel coordinate
+			rawPixel = static_cast<const Proj*>(this)->ProjectInternal(c);
+		}
 
 		Pixel<PixelType> p{
 			static_cast<PixelType>(std::round(rawPixel.x * this->frame.wAR - this->frame.projPrecomX)),
 			static_cast<PixelType>(std::round(-rawPixel.y * this->frame.hAR - this->frame.projPrecomY))
 		};
-
-		//rawPixel.x = rawPixel.x - this->frame.minPixelOffsetX;
-		//rawPixel.y = rawPixel.y - this->frame.minPixelOffsetY;
-
-		//Pixel<PixelType> p;
-		//p.x = static_cast<PixelType>(std::round(this->frame.wPadding + (rawPixel.x * this->frame.wAR)));
-		//p.y = static_cast<PixelType>(std::round(this->frame.h - this->frame.hPadding - (rawPixel.y * this->frame.hAR)));
-
+		
 		return p;
 	};
 
@@ -174,9 +180,18 @@ namespace Projections
 	template <typename PixelType>	
 	RET_VAL(PixelType, std::is_floating_point) ProjectionInfo<Proj>::Project(const Coordinate & c) const
 	{
+		ProjectedValue rawPixel;
 
-		//project value and get "pseudo" pixel coordinate
-		ProjectedValue rawPixel = static_cast<const Proj*>(this)->ProjectInternal(c);
+		if (transform)
+		{
+			auto ct = transform->Transform(c);
+			rawPixel = static_cast<const Proj*>(this)->ProjectInternal(ct);
+		}
+		else
+		{
+			//project value and get "pseudo" pixel coordinate
+			rawPixel = static_cast<const Proj*>(this)->ProjectInternal(c);
+		}
 
 		Pixel<PixelType> p{
 			static_cast<PixelType>(rawPixel.x * this->frame.wAR - this->frame.projPrecomX),
@@ -227,6 +242,11 @@ namespace Projections
 			c.lon.Normalize();			
 		}
 		
+		if (transform)
+		{
+			c = transform->TransformInverse(c);
+		}
+
 		return c;
 	};
 

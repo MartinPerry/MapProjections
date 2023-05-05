@@ -3,7 +3,7 @@
 
 #include <cmath>
 
-typedef double MyRealType;
+using MyRealType = double;
 
 struct AngleUtils
 {
@@ -61,9 +61,7 @@ struct Latitude : public IAngle<Latitude>
 	/// </summary>
 	void Normalize() noexcept
 	{
-		this->Clamp();
-		//valDeg = (valDeg > 90) ? (valDeg - 180) : valDeg;		
-		valRad = Latitude::deg(valDeg).rad();
+		this->Clamp();		
 	};
 
 	/// <summary>

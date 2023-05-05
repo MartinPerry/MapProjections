@@ -170,7 +170,7 @@ void ProjectionRenderer::DrawBorders()
 			Pixel<int> pp1 = this->projectCallback(p);
 			Pixel<int> pp2 = this->projectCallback(p1);
 			
-			this->DrawLine(pp1, pp2);
+			this->DrawLine(pp1, pp2);						
 		}
 
 		Coordinate p = b.back();
@@ -345,6 +345,18 @@ void ProjectionRenderer::CohenSutherlandLineClipAndDraw(MyRealType x0, MyRealTyp
 	int outcode0 = ComputeOutCode(x0, y0);
 	int outcode1 = ComputeOutCode(x1, y1);
 	bool accept = false;
+
+	if (
+		((outcode0 & LEFT) && (outcode1 & RIGHT)) ||
+		((outcode0 & RIGHT) && (outcode1 & LEFT)) ||
+		((outcode0 & TOP) && (outcode1 & BOTTOM)) ||
+		((outcode0 & BOTTOM) && (outcode1 & TOP))
+		)
+	{
+		//both ends are outside 
+		//maybe line wrap around - ignore
+		return;
+	}
 
 	MyRealType xmin = 0;
 	MyRealType xmax = static_cast<int>(frame.w) - 1;

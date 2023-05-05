@@ -175,7 +175,7 @@ namespace Projections
 				}
 
 			}						
-			else if ((from->INDEPENDENT_LAT_LON) && (to->INDEPENDENT_LAT_LON))
+			else if ((from->IsIndependentLatLon()) && (to->IsIndependentLatLon()))
 			{
 				//if x and y are independent, simplify
 
@@ -580,6 +580,8 @@ namespace Projections
 				const FromProjection* from, const ToProjection* to)
 		{
 			Coordinate cc = to->template ProjectInverse<InPixelType, false>(p);
+			cc.lat.Normalize();
+
 			return from->template Project<OutPixelType>(cc);
 		};
 	};

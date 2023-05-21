@@ -43,6 +43,11 @@ namespace Projections
 			this->transform = transform;
 		}
 
+		ITransform* GetLatLonTransform()
+		{
+			return this->transform;
+		}
+
 #ifdef USE_VIRTUAL_INTERFACE
 		/*
 		template <typename PixelType = int>

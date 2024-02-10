@@ -14,6 +14,9 @@
 #include "./Projections/LambertAzimuthal.h"
 #include "./Projections/PolarSteregographic.h"
 #include "./Projections/GEOS.h"
+
+
+#include "PoleRotationTransform.h"
 #include "ProjectionRenderer.h"
 #include "MapProjectionUtils.h"
 #include "CountriesUtils.h"
@@ -380,6 +383,98 @@ void TestWrapAround()
 	pd.SaveToFile("D://wrap.png");
 }
 
+void TestOblique()
+{
+	unsigned int w = 405;
+	unsigned int h = 809;
+
+	std::vector<uint8_t> imgRawData;
+	std::vector<uint8_t> fileData;
+	lodepng::load_file(fileData, "D://raw.png");
+	lodepng::decode(imgRawData, w, h, fileData, LodePNGColorType::LCT_RGB);
+
+
+	
+
+	Projections::Coordinate bbMin, bbMax;
+	Projections::Coordinate newPole;
+
+	//--------
+
+	//+proj=ob_tran +o_proj=longlat +lon_0=-40 +o_lat_p=22 +R=6.371e+06 +no_defs
+	bbMin.lat = -14.35_deg; bbMin.lon = 5.53_deg; 
+	bbMax.lat = 26.65_deg; bbMax.lon = 30.45_deg;
+	newPole = { Longitude::deg(-40.0), Latitude::deg(90-22.0) };
+
+
+	//+proj=ob_tran +o_proj=longlat +lon_0=26.5 +o_lat_p=40 +o_lon_p=0 +R=6367470 +no_defs	
+	//South pole is at 26.5°,40°.
+	//you would rotate 50 degrees north (from -90° to -40°)  => Lat: 90 - 40 = 50
+	// and 26.5 degrees east (from 0° to 26.5°)	
+	// 
+	//bbMin.lat = -80.0_deg; bbMin.lon = -170.0_deg;
+	//bbMax.lat = 80.0_deg; bbMax.lon = 170.0_deg;
+	//newPole = { Longitude::deg(26.5), Latitude::deg(50.0) };
+
+	Projections::Equirectangular* inputImage = new Projections::Equirectangular();
+	inputImage->SetFrame(bbMin, bbMax, w, h, Projections::STEP_TYPE::PIXEL_CENTER, false); //same resolution as ipImage frame
+	
+	Projections::PoleRotationTransform* transform = new Projections::PoleRotationTransform(newPole);			
+	inputImage->SetLatLonTransform(transform);
+
+
+	//--------
+
+	
+	bbMin.lat = 36.0_deg; bbMin.lon = -46.0_deg;
+	bbMax.lat = 90.0_deg; bbMax.lon = 80.0_deg;
+	Projections::Equirectangular* outputImage = new Projections::Equirectangular();
+	outputImage->SetFrame(bbMin, bbMax, 1024, 1024, Projections::STEP_TYPE::PIXEL_CENTER, false);
+
+
+	auto a = outputImage->ProjectInverse({ 123, 123 });
+	auto b = outputImage->ProjectInverse({ 940, 123 });
+	auto c = outputImage->ProjectInverse({ 123, 805 });
+	auto d = outputImage->ProjectInverse({ 940, 805 });
+
+	bbMin.lat = 47.507_deg; bbMin.lon = -30.850_deg;
+	bbMax.lat = 83.507_deg; bbMax.lon = 69.777_deg;	
+
+	int newW = static_cast<int>(std::sqrt(inputImage->GetFrameWidth() * inputImage->GetFrameWidth() +
+		inputImage->GetFrameHeight() * inputImage->GetFrameHeight()));
+
+	outputImage->SetFrame(bbMin, bbMax, 
+		newW, inputImage->GetFrameHeight(), 
+		Projections::STEP_TYPE::PIXEL_CENTER, false);
+
+
+	//--------
+
+	CountriesUtils cu;
+	cu.Load("D://borders.csv", 5);
+	
+	{
+		ProjectionRenderer pd(inputImage);
+		pd.AddBorders(&cu);
+		pd.Clear();
+		pd.DrawBorders();
+		pd.SaveToFile("D://xxx2.png");
+	}
+
+	ProjectionRenderer pd(outputImage, Projections::ProjectionRenderer::RenderImageType::RGB);
+	pd.AddBorders(&cu);
+
+	pd.Clear();
+
+	//compute mapping from input -> output projection   
+	Reprojection reprojection = Reprojection<int>::CreateReprojection(inputImage, outputImage);
+	
+	pd.DrawImage(imgRawData.data(), Projections::ProjectionRenderer::RenderImageType::RGB, reprojection);
+		
+	pd.DrawBorders();
+	pd.SaveToFile("D://output.png");
+}
+
 double MapRange(double fromMin, double fromMax, double toMin, double toMax, double s)
 {
 	return toMin + (s - fromMin) * (toMax - toMin) / (fromMax - fromMin);
@@ -387,6 +482,51 @@ double MapRange(double fromMin, double fromMax, double toMin, double toMax, doub
 
 int main(int argc, const char* argv[])
 {
+	{
+		unsigned int w = 405;
+		unsigned int h = 809;
+
+		std::vector<uint8_t> imgRawData;
+		std::vector<uint8_t> fileData;
+		lodepng::load_file(fileData, "D://maska_wavewatch_no_water.png");
+		lodepng::decode(imgRawData, w, h, fileData, LodePNGColorType::LCT_GREY);
+
+
+		Projections::Coordinate bbMin, bbMax;
+		bbMin.lat = 47.507_deg; bbMin.lon = -30.850_deg;
+		bbMax.lat = 83.507_deg; bbMax.lon = 69.777_deg;
+
+		Projections::Equirectangular eq;
+		eq.SetFrame(bbMin, bbMax, w, h, Projections::STEP_TYPE::PIXEL_CENTER, false); //same resolution as ipImage frame
+
+
+		Projections::Mercator mercator;
+		mercator.SetFrame(bbMin, bbMax, w, h, Projections::STEP_TYPE::PIXEL_CENTER, false);
+
+
+
+		Projections::Reprojection<short> reproj =
+			Reprojection<short>::CreateReprojection<Equirectangular, Mercator>(&eq, &mercator);
+
+		//==========================================================
+
+		
+		std::vector<uint8_t> rawData =
+			reproj.ReprojectDataNerestNeighbor<uint8_t, std::vector<uint8_t>, 1>(
+				imgRawData.data(), 0
+			);
+		
+		ProjectionRenderer pd(&mercator, ProjectionRenderer::RenderImageType::GRAY);
+		pd.SetRawDataTarget(rawData.data(), ProjectionRenderer::RenderImageType::GRAY);		
+		pd.SaveToFile("D://maska_wavewatch_no_water_me.png");
+
+	}
+
+
+
+	//TestOblique();
+	return 0;
+
 	//TestLambertAzimuthal();
 
 	{

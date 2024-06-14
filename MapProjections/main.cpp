@@ -483,6 +483,32 @@ double MapRange(double fromMin, double fromMax, double toMin, double toMax, doub
 int main(int argc, const char* argv[])
 {
 	{
+		Projections::Coordinate bbMin, bbMax;
+		bbMin.lat = -90.0_deg; bbMin.lon = -180.0_deg;
+		bbMax.lat = 90.0_deg; bbMax.lon = 179.875_deg;
+
+		Projections::Equirectangular eq;
+		eq.SetFrame(bbMin, bbMax, 2880, 1441, Projections::STEP_TYPE::PIXEL_CENTER, false); //same resolution as ipImage frame
+
+
+		ProjectionRenderer pd(&eq, ProjectionRenderer::RenderImageType::GRAY);		
+
+		CountriesUtils cu;
+		cu.Load("D://borders.csv", 5);
+		
+
+		pd.AddBorders(&cu);
+
+		pd.DrawBorders();
+		pd.DrawLine(Projections::Pixel<int>{ 2256, 568 }, Projections::Pixel<int>{ 2616, 568 });
+		pd.DrawLine(Projections::Pixel<int>{ 2256, 352 }, Projections::Pixel<int>{ 2616, 352 });
+		pd.DrawLine(Projections::Pixel<int>{ 2256, 568 }, Projections::Pixel<int> { 2256, 352 });
+		pd.DrawLine(Projections::Pixel<int>{ 2616, 568 }, Projections::Pixel<int>{ 2616, 352 });
+		pd.SaveToFile("D://empty_icon.png");
+		printf("x");
+	}
+
+	{
 		unsigned int w = 405;
 		unsigned int h = 809;
 

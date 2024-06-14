@@ -178,6 +178,32 @@ namespace Projections
 		{
 			return static_cast<MyRealType>(stepType);
 		}
+
+		/// <summary>
+		/// Get frame "hash" id so frame is identified uniquely by its 
+		/// bounding box coordinates
+		/// </summary>
+		/// <returns></returns>
+		uint32_t GetId() const
+		{
+			//by chatGPT
+			const int scale_factor = 100000;
+
+			// Convert floats to integers
+			int32_t min_lat_int = (int32_t)(min.lat.deg() * scale_factor);
+			int32_t max_lat_int = (int32_t)(max.lat.deg() * scale_factor);
+			int32_t min_lon_int = (int32_t)(min.lon.deg() * scale_factor);
+			int32_t max_lon_int = (int32_t)(max.lon.deg() * scale_factor);
+
+			// Combine the integers using bitwise shift and XOR to mix bits
+			uint32_t hash = 0;
+			hash ^= (min_lat_int << 16) | (min_lat_int >> 16);
+			hash ^= (max_lat_int << 16) | (max_lat_int >> 16);
+			hash ^= (min_lon_int << 16) | (min_lon_int >> 16);
+			hash ^= (max_lon_int << 16) | (max_lon_int >> 16);
+
+			return hash;
+		}
 	};
 
 	//================================================================================================

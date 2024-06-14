@@ -59,12 +59,18 @@ namespace Projections
 		static std::string CreateCacheName(FromProjection* from, ToProjection* to)
 		{
 			std::string tmp = "reproj_";
+			if constexpr (std::is_floating_point<T>::value)
+			{
+				tmp += "float_";
+			}
 			tmp += from->GetName();
-			tmp += "_";
+			tmp += "_";			
 #ifdef USE_VIRTUAL_INTERFACE
 			tmp += std::to_string(static_cast<int>(from->GetFrame().w));
 			tmp += "_";
 			tmp += std::to_string(static_cast<int>(from->GetFrame().h));
+			tmp += "_";
+			tmp += std::to_string(from->GetFrame().GetId());
 			tmp += "_";
 #endif
 			tmp += to->GetName();
@@ -73,6 +79,7 @@ namespace Projections
 			tmp += std::to_string(static_cast<int>(to->GetFrame().w));
 			tmp += "_";
 			tmp += std::to_string(static_cast<int>(to->GetFrame().h));
+			tmp += std::to_string(to->GetFrame().GetId());			
 #endif
 			
 			return tmp;

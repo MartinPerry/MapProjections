@@ -22,12 +22,18 @@ namespace Projections
 		static const bool INDEPENDENT_LAT_LON = false; //can Lat / Lon be computed separatly. To compute one, we dont need the other
 		static const bool ORTHOGONAL_LAT_LON = false; //is lat / lon is orthogonal to each other
 
-		LambertConic(const Latitude & latProjOrigin, const Longitude & lonCentMeridian, const Latitude & stanParallel) :
+		LambertConic(const Latitude& latProjOrigin, const Longitude& lonCentMeridian, const Latitude& stanParallel) :
+			LambertConic(latProjOrigin, lonCentMeridian, stanParallel, stanParallel)
+		{
+		}
+
+		LambertConic(const Latitude& latProjOrigin, const Longitude& lonCentMeridian,
+			const Latitude& stanParallel1, const Latitude& stanParallel2) :
 			ProjectionInfo(PROJECTION::LAMBERT_CONIC),
 			latProjectionOrigin(latProjOrigin),
 			lonCentralMeridian(lonCentMeridian),
-			standardParallel1(stanParallel),
-			standardParallel2(stanParallel)
+			standardParallel1(stanParallel1),
+			standardParallel2(stanParallel2)
 		{
 			if (standardParallel1.rad() == standardParallel2.rad())
 			{

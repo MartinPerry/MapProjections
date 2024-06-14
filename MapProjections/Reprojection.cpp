@@ -75,3 +75,4 @@ void Reprojection<T>::SaveToFile(const std::string& fileName)
 
 template struct Projections::Reprojection<int>;
 template struct Projections::Reprojection<short>;
+template struct Projections::Reprojection<float>;

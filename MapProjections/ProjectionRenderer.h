@@ -51,6 +51,7 @@ namespace Projections
 		void DrawParalells(MyRealType lonStep, MyRealType latStep);
 
 		void DrawLine(Coordinate start, Coordinate end, int stepCount = 20);
+		void DrawLine(Pixel<int> pp1, Pixel<int> pp2);
 
 		void DrawPoint(Coordinate p, int size = 5);
 
@@ -90,8 +91,7 @@ namespace Projections
 			
 		int ComputeOutCode(MyRealType x, MyRealType y);
 		void CohenSutherlandLineClipAndDraw(MyRealType x0, MyRealType y0, MyRealType x1, MyRealType y1);
-
-		void DrawLine(Pixel<int> pp1, Pixel<int> pp2);
+		
 		
 	};
 

@@ -252,7 +252,36 @@ namespace Projections
 			return reprojection;
 		};
 
-		
+		/// <summary>
+		/// Clamp input fromData to map only from sub-image (sub-region)
+		/// point at startX, startY will become [0, 0]
+		/// Usefull when we calculate reprojection for large area image
+		/// but want to do actuall reprojection only for a smaller image
+		/// that was created from the large one
+		/// </summary>
+		/// <param name="startX"></param>
+		/// <param name="startY"></param>
+		/// <param name="endX"></param>
+		/// <param name="endY"></param>
+		void ClampInputToSubImage(int startX, int startY, int endX, int endY)
+		{
+			int w = endX - startX;
+			int h = endY - startY;
+
+			for (auto& v : this->pixels)
+			{
+				v.x -= startX;
+				v.y -= startY;
+
+				if ((v.x < 0) || (v.y < 0) || (v.x >= w) || (v.y >= h))
+				{
+					v.x = -1;
+					v.y = -1;
+				}
+			}
+			this->inW = w;
+			this->inH = h;
+		}
 		
 		/// <summary>
 		/// Save reprojection to file

@@ -471,12 +471,8 @@ void ProjectionInfo<Proj>::LineBresenham(Pixel<int> start, Pixel<int> end,
 /// <param name="min"></param>
 /// <param name="max"></param>
 template <typename Proj>
-void ProjectionInfo<Proj>::ComputeAABB(Coordinate & min, Coordinate & max) const
-{	
-	//temporary disable transform
-	auto oldTransform = this->transform;
-	this->transform = nullptr;	
-
+void ProjectionInfo<Proj>::ComputeAABB(Coordinate& min, Coordinate& max) const
+{
 	//for coordinates at pixel corner:
 	//[0, 0] is at pixel corner
 	//[w, h] is at pixel corner
@@ -485,15 +481,38 @@ void ProjectionInfo<Proj>::ComputeAABB(Coordinate & min, Coordinate & max) const
 	int ww = static_cast<int>(this->frame.w - this->frame.GetStepOffset());
 	int hh = static_cast<int>(this->frame.h - this->frame.GetStepOffset());
 
+
+	this->ComputeAABB(0, 0, ww, hh, min, max);
+}
+
+/// <summary>
+/// Compute AABB for sub image inside current active frame
+/// It uses Bresenham lines around the image 
+/// E.g.: [0,0] -> [0, h] and reproject each pixel, and from those, AABB is calculated
+/// </summary>
+/// <typeparam name="Proj"></typeparam>
+/// <param name="startX"></param>
+/// <param name="startY"></param>
+/// <param name="endX"></param>
+/// <param name="endY"></param>
+/// <param name="min"></param>
+/// <param name="max"></param>
+template <typename Proj>
+void ProjectionInfo<Proj>::ComputeAABB(int startX, int startY, int endX, int endY, Coordinate& min, Coordinate& max) const
+{
+	//temporary disable transform
+	auto oldTransform = this->transform;
+	this->transform = nullptr;	
+
 			
 	std::vector<Coordinate> border;
 
 	if (static_cast<const Proj*>(this)->ORTHOGONAL_LAT_LON)
 	{
-		Coordinate c0 = this->ProjectInverse({ 0, 0 });
+		Coordinate c0 = this->ProjectInverse({ startX, startY });
 		border.push_back(c0);
 
-		Coordinate c1 = this->ProjectInverse({ ww, hh });
+		Coordinate c1 = this->ProjectInverse({ endX, endY });
 		border.push_back(c1);
 
 		if (c0.lon.rad() > c1.lon.rad())
@@ -507,25 +526,25 @@ void ProjectionInfo<Proj>::ComputeAABB(Coordinate & min, Coordinate & max) const
 	{
 		//check isnan because in some projections (eg. GEOS) pixels may fall outside mapping range
 
-		this->LineBresenham({ 0,0 }, { 0, hh },
+		this->LineBresenham({ startX, startY }, { startX, endY },
 			[&](int x, int y) -> void {
 				Coordinate c = this->ProjectInverse({ x, y });
 				if (std::isnan(c.lat.rad()) || std::isnan(c.lon.rad())) return;
 				border.push_back(std::move(c));
 			});
-		this->LineBresenham({ 0,0 }, { ww, 0 },
+		this->LineBresenham({ startX, startY }, { endX, startY },
 			[&](int x, int y) -> void {
 				Coordinate c = this->ProjectInverse({ x, y });
 				if (std::isnan(c.lat.rad()) || std::isnan(c.lon.rad())) return;
 				border.push_back(std::move(c));
 			});
-		this->LineBresenham({ ww, hh }, { 0, hh },
+		this->LineBresenham({ endX, endY }, { startX, endY },
 			[&](int x, int y) -> void {
 				Coordinate c = this->ProjectInverse({ x, y });
 				if (std::isnan(c.lat.rad()) || std::isnan(c.lon.rad())) return;
 				border.push_back(std::move(c));
 			});
-		this->LineBresenham({ ww, hh }, { 0, hh },
+		this->LineBresenham({ endX, endY }, { endX, startY },
 			[&](int x, int y) -> void {
 				Coordinate c = this->ProjectInverse({ x, y });
 				if (std::isnan(c.lat.rad()) || std::isnan(c.lon.rad())) return;

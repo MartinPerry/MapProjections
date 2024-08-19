@@ -73,7 +73,8 @@ namespace Projections
 
 
 
-		void ComputeAABB(Coordinate & min, Coordinate & max) const OVERRIDE;
+		void ComputeAABB(Coordinate& min, Coordinate& max) const OVERRIDE;
+		void ComputeAABB(int startX, int startY, int endX, int endY, Coordinate& min, Coordinate& max) const OVERRIDE;
 
 
 	protected:

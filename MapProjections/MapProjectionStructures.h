@@ -6,6 +6,7 @@
 #include <string>
 #include <tuple>
 #include <array>
+#include <ostream>
 
 #include "GeoCoordinate.h"
 
@@ -109,6 +110,12 @@ namespace Projections
 		template <typename T = std::tuple<double, double, double>>
 		T ConvertVectorToCartesianLHSystem(const Longitude & lonDif, const Latitude & latDif,
 			const Coordinate::PrecomputedSinCos * precomp = nullptr) const;
+
+
+		friend std::ostream& operator <<(std::ostream& out, const Coordinate& gps) 
+		{
+			return out << "lat: " << gps.lat.deg() << " | lon: " << gps.lon.deg();
+		}
 	};
 
 		

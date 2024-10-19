@@ -41,7 +41,7 @@ namespace Projections
 		{			
 			return {
 				c.lon.rad(),
-				1.25 * std::log(std::tan(ProjectionConstants::PI_4 + 0.4 * c.lat.rad()))
+				MyRealType(1.25) * std::log(std::tan(ProjectionConstants::PI_4 + MyRealType(0.4) * c.lat.rad()))
 			};
 		};
 

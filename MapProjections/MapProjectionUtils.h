@@ -25,12 +25,12 @@ namespace Projections
 
 		static Coordinate CalcEndPointShortest(const Coordinate & start, const AngleValue & bearing, MyRealType dist);
 		static Coordinate CalcEndPointDirect(const Coordinate & start, const AngleValue & bearing, MyRealType dist);
-		static double Distance(const Coordinate & from, const Coordinate & to);
+		static MyRealType Distance(const Coordinate & from, const Coordinate & to);
 		
-		static double CalcArea(const std::vector<Coordinate> & pts);
+		static MyRealType CalcArea(const std::vector<Coordinate> & pts);
 		
 		template <typename PixelType, typename Projection>
-		static double CalcArea(const std::vector<Pixel<PixelType>> & pxs, const Projection * from)
+		static MyRealType CalcArea(const std::vector<Pixel<PixelType>> & pxs, const Projection * from)
 		{
 			if (pxs.size() <= 2)
 			{
@@ -48,9 +48,9 @@ namespace Projections
 			return CalcArea(pts);
 		}
 
-		static std::array<Latitude, 2> EarthLatitudeRange(Latitude lat, double earthRadius, double distance);
-		static std::array<Longitude, 2> EarthLongitudeRange(Latitude lat, Longitude lng, double earthRadius, double distance);
-		static double CalcEarthRadiusAtLat(Latitude latitude);
+		static std::array<Latitude, 2> EarthLatitudeRange(Latitude lat, MyRealType earthRadius, MyRealType distance);
+		static std::array<Longitude, 2> EarthLongitudeRange(Latitude lat, Longitude lng, MyRealType earthRadius, MyRealType distance);
+		static MyRealType CalcEarthRadiusAtLat(Latitude latitude);
 
         inline static MyRealType cot(MyRealType x) { return 1.0 / std::tan(x); };
         inline static MyRealType sec(MyRealType x) { return 1.0 / std::cos(x); };

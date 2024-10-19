@@ -44,7 +44,8 @@ namespace Projections
 		template <typename PixelType = int, bool Normalize = true>
 		Coordinate ProjectInverse(const Pixel<PixelType> & p) const;
 
-        
+		template <typename PixelType = int, bool Normalize = true>
+		Coordinate ProjectInverse(PixelType x, PixelType y) const;
         
 		template <typename InputProj>
 		void SetFrame(InputProj * proj, bool keepAR = true);
@@ -100,7 +101,7 @@ namespace Projections
 
 		ProjectionFrame frame;
 
-		std::tuple<double, double, double, double> 
+		std::tuple<MyRealType, MyRealType, MyRealType, MyRealType>
 			GetFrameBotLeftTopRight(const Coordinate & botLeft, const Coordinate & topRight);
 
 		void CalculateWrapRepeat(const Coordinate& botLeft, const Coordinate& topRight);
@@ -218,25 +219,30 @@ namespace Projections
 	/// <returns></returns>
 	template <typename Proj>
 	template <typename PixelType, bool Normalize>
-	Coordinate ProjectionInfo<Proj>::ProjectInverse(const Pixel<PixelType> & p) const
+	Coordinate ProjectionInfo<Proj>::ProjectInverse(const Pixel<PixelType>& p) const
+	{
+		return this->ProjectInverse<PixelType, Normalize>(p.x, p.y);
+	}
+
+	template <typename Proj>
+	template <typename PixelType, bool Normalize>
+	Coordinate ProjectionInfo<Proj>::ProjectInverse(PixelType x, PixelType y) const
 	{
 
 		//double xx = (static_cast<double>(p.x) - this->frame.wPadding + this->frame.wAR * this->frame.minPixelOffset.x);
-		MyRealType xx = (static_cast<MyRealType>(p.x) + this->frame.projPrecomX);
+		MyRealType xx = (static_cast<MyRealType>(x) + this->frame.projPrecomX);
 		xx /= this->frame.wAR;
 
 		//double yy = (static_cast<double>(p.y) - this->frame.h + this->frame.hPadding - this->frame.hAR * this->frame.minPixelOffset.y);
-		MyRealType yy = (static_cast<MyRealType>(p.y) + this->frame.projPrecomY);
+		MyRealType yy = (static_cast<MyRealType>(y) + this->frame.projPrecomY);
 		yy /= -this->frame.hAR;
 
 
 		
 		ProjectedValueInverse pi = static_cast<const Proj*>(this)->ProjectInverseInternal(xx, yy);
 
-		Coordinate c;
-		c.lat = pi.lat;
-		c.lon = pi.lon;
-
+		Coordinate c(pi.lon, pi.lat);
+		
 		if (Normalize)
 		{
 			c.lat.Normalize();

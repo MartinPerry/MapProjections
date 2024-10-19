@@ -482,6 +482,116 @@ double MapRange(double fromMin, double fromMax, double toMin, double toMax, doub
 
 int main(int argc, const char* argv[])
 {
+
+	{
+		unsigned w = 5504 * 2;
+		unsigned h = 5504 * 2;
+
+
+		Projections::Coordinate bbMin, bbMax;
+		// Coordinate bbMin, bbMax;	
+		bbMin.lat = -90.0_deg; bbMin.lon = -180.0_deg;
+		bbMax.lat = 90.0_deg; bbMax.lon = 180.0_deg;
+
+		GEOS geos(GEOS::SatelliteSettings::Himawari8());
+		geos.SetFrame(bbMin, bbMax, w, h, Projections::STEP_TYPE::PIXEL_CENTER, false);
+
+		Projections::Pixel<int> aPx = { 1376, 6880 };
+		auto aGps = geos.ProjectInverse(aPx);
+
+		Projections::Pixel<int> bPx = { 6192, 6880 };
+		auto bGps = geos.ProjectInverse(bPx);
+
+		Projections::Pixel<int> cPx = { 6192, 1376 };
+		auto cGps = geos.ProjectInverse(cPx);
+
+		Projections::Pixel<int> dPx = { 1376, 1376 };
+		auto dGps = geos.ProjectInverse(dPx);
+
+		Projections::Pixel<int> ePx = { 1376, 1376 + 4300 };
+		auto eGps = geos.ProjectInverse(ePx);
+
+		Projections::Pixel<int> fPx = { 1376 + 6880 / 2, 6880 };
+		auto fGps = geos.ProjectInverse(fPx);
+
+		std::cout << aGps << std::endl;
+		std::cout << bGps << std::endl;
+		std::cout << cGps << std::endl;
+		std::cout << dGps << std::endl;
+		std::cout << eGps << std::endl;
+		std::cout << fGps << std::endl;
+
+		//lat: -13.3367 / lat: 43.2799
+		//lon: 149.636 /  lon: 95.9362
+
+		Projections::Coordinate min, max;
+		geos.ComputeAABB(1376, 1376, 6192, 6880, min, max);
+
+		std::cout << "Min: " << min << std::endl;
+		std::cout << "Max: " << max << std::endl;
+		
+		//Min: lat: -13.3367 | lon : 62.599
+		//Max : lat : 48.8868 | lon : 149.636
+
+		//---------
+		
+		
+
+		std::vector<uint8_t> imgRawData;
+		std::vector<uint8_t> fileData;
+		//lodepng::load_file(fileData, "D://ttt.png");
+		lodepng::load_file(fileData, "d:\\himawari_hd_g.png");
+		lodepng::decode(imgRawData, w, h, fileData, LodePNGColorType::LCT_GREY);
+
+		
+		bbMin.lat = -12.62_deg; bbMin.lon = 97.8_deg;
+		bbMax.lat = 43.28_deg; bbMax.lon = 146.5_deg;
+
+		//bbMin.lat = -13.3367_deg; bbMin.lon = 62.599_deg;
+		//bbMax.lat = 48.8868_deg; bbMax.lon = 149.636_deg;
+
+		//bbMin.lat = 0.0_deg; bbMin.lon = 102.0_deg;
+		//bbMax.lat = 46.0_deg; bbMax.lon = 147.0_deg;	
+
+		Mercator mercator;
+		mercator.SetFrame(bbMin, bbMax, 5100, 0, Projections::STEP_TYPE::PIXEL_CENTER, false);
+		
+		Projections::Reprojection<short> reproj = Reprojection<short>::CreateReprojection<GEOS, Mercator>(&geos, &mercator);
+
+		reproj.ClampInputToSubImage(1376, 1376, 1376 + w, 1376 + h);
+
+		/*
+		for (auto& v : reproj.pixels)
+		{
+			v.x -= 1376;
+			v.y -= 1376;
+
+			if ((v.x < 0) || (v.y < 0) || (v.x >= w) || (v.y >= h))
+			{
+				v.x = -1;
+				v.y = -1;
+			}
+		}
+		reproj.inW = w;
+		reproj.inH = h;
+		*/
+		std::vector<uint8_t> rawData = reproj.ReprojectDataNerestNeighbor<uint8_t, std::vector<uint8_t>, 1>(imgRawData.data(), 0);
+
+
+		//CountriesUtils cu;
+		//cu.Load("D://borders.csv", 5);
+
+		ProjectionRenderer pd(&mercator, ProjectionRenderer::RenderImageType::GRAY);
+		//pd.AddBorders(&cu);
+		//pd.Clear();	
+		pd.SetRawDataTarget(rawData.data(), ProjectionRenderer::RenderImageType::GRAY);
+		//pd.DrawBorders();
+		pd.SaveToFile("D://yyy.png");
+
+		printf("x");
+		return 0;
+	}
+
 	{
 		Projections::Coordinate bbMin, bbMax;
 		bbMin.lat = -90.0_deg; bbMin.lon = -180.0_deg;

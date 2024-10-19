@@ -71,7 +71,7 @@ ProjectionInfo<Proj>::ProjectionInfo(PROJECTION curProjection) :
 
 }
 template <typename Proj>
-std::tuple<double, double, double, double> ProjectionInfo<Proj>::GetFrameBotLeftTopRight(
+std::tuple<MyRealType, MyRealType, MyRealType, MyRealType> ProjectionInfo<Proj>::GetFrameBotLeftTopRight(
 	const Coordinate & botLeft, const Coordinate & topRight)
 {
 	ProjectedValue tmpMinPixel = static_cast<Proj*>(this)->ProjectInternal(botLeft);

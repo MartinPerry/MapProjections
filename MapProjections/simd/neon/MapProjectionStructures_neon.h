@@ -15,6 +15,10 @@ typename std::enable_if<enable_cond<PixelType>::value, std::array<Projections::P
 
 namespace Projections::Neon
 {
+    //=======================================================================================
+    // Pixel
+    //=======================================================================================
+
     struct PixelNeon
     {
         float32x4_t x;
@@ -82,6 +86,10 @@ namespace Projections::Neon
         };
     };
     
+    //=======================================================================================
+    // GPS
+    //=======================================================================================
+
     struct CoordinateNeon
     {
         float32x4_t lonRad;
@@ -186,7 +194,7 @@ namespace Projections::Neon
 
             return res;
         }
-      
+                      
         static CoordinateNeon CreateFromCartesianLHSystem(
             const std::array<double, 4>& vx,
             const std::array<double, 4>& vy,
@@ -236,6 +244,27 @@ namespace Projections::Neon
 
             return res;
         }
+
+        std::array<float32x4_t, 3> ConvertToCartesianLHSystem(float radius) const
+        {
+            float32x4_t sinLon;
+            float32x4_t cosLon;
+            float32x4_t sinLat;
+            float32x4_t cosLat;
+            
+            my_sincos_f32(this->lonRad, &sinLon, &cosLon);
+            my_sincos_f32(this->latRad, &sinLat, &cosLat);
+
+            float32x4_t r = vdupq_n_f32(radius);
+
+            float32x4_t x = vmulq_f32(r, vmulq_f32(cosLat, sinLon));
+            float32x4_t y = vmulq_f32(r, sinLat);
+            float32x4_t z = vmulq_f32(vdupq_n_f32(-radius), vmulq_f32(cosLat, cosLon));
+            
+            return { x, y, z };
+        }
+
+
     };
 }
 

@@ -14,6 +14,10 @@ typename std::enable_if<enable_cond<PixelType>::value, std::array<Projections::P
 
 namespace Projections::Avx
 {
+    //=======================================================================================
+    // Pixel
+    //=======================================================================================
+
     struct PixelAvx
     {
         __m256 x;
@@ -94,12 +98,19 @@ namespace Projections::Avx
         };
     };
     
+    //=======================================================================================
+    // GPS
+    //=======================================================================================
+
     struct CoordinateAvx
     {
         __m256 lonRad;
         __m256 latRad;
         
-        CoordinateAvx() {};
+        CoordinateAvx() :
+            lonRad({}),
+            latRad({})
+        {};
 
         CoordinateAvx(const __m256 & lonRad, const __m256 & latRad) : 
             lonRad(lonRad), 

@@ -22,13 +22,13 @@ lodepng::decode(inputRawData, w, h, fileData, LodePNGColorType::LCT_GREY);
 
 
 // Specify coordinates of corners for AABB
-Projections::Coordinate bbMin, bbMax;
+Coordinate bbMin, bbMax;
 bbMin.lat = 21.140547_deg; bbMin.lon = -134.09548_deg;
 bbMax.lat = 52.6132742_deg; bbMax.lon = -60.9365_deg;
 
 //create input projection and set its visible frame
 //sample of Lambert-Conic with input params
-Projections::LambertConic * inputImage = new Projections::LambertConic(38.5_deg, -97.5_deg, 38.5_deg);
+LambertConic * inputImage = new LambertConic(38.5_deg, -97.5_deg, 38.5_deg);
 
 //set projection frame
 //STEP_TYPE determines, where coordinate is located within the pixel
@@ -36,17 +36,17 @@ Projections::LambertConic * inputImage = new Projections::LambertConic(38.5_deg,
 inputImage->SetFrame(bbMin, bbMax, w, h, Projections::STEP_TYPE::PIXEL_CENTER, false);
 
 //create output projection that uses the same frame as input
-Projections::Equirectangular * outputImage = new Projections::Equirectangular();
+Equirectangular * outputImage = new Equirectangular();
 outputImage->SetFrame(inputImage, false); 
 
 
 //compute mapping from input -> output projection   
-Reprojection reprojection = Projections::ProjectionUtils::CreateReprojection(inputImage, outputImage);
+Reprojection reprojection = Reprojection<int>::CreateReprojection(inputImage, outputImage);
 
 //initialize helper debug renderer
 ProjectionRenderer pd(outputImage);
 pd.Clear();
-pd.DrawImage(&inputRawData[0], ProjectionRenderer::GREY, reprojection);
+pd.DrawImage(&inputRawData[0], ProjectionRenderer::RenderImageType::GRAY, reprojection);
 pd.DrawBorders();
 pd.SaveToFile("output.png");
 ```
@@ -151,22 +151,53 @@ In this case, there are only 2 "steps" (_`-|-`_) between GPS positions, but 3 po
 For this, max position is calculated by subtract 1 from width to get correct last.
 `a + (3 - 1) * '-x-' => c`
 
-### Utilities
+### Reprojections
 
-The are helper static methods in class `ProjectionUtils`.
+The are methods in class `Reprojection`.
 
-* `DataType * ReprojectData(const Reprojection & reproj, DataType * inputData, DataType NO_VALUE)` - 
-Takes `inputData` and based on `reproj` create output image. 
-Copy data from `inputData` to the output based on `reproj` mapping. 
-In places, where no mapping is present, use NO_VALUE.
+* Reprojection creation
+```
+template <typename FromProjection, typename ToProjection>
+static Reprojection CreateReprojection(FromProjection * from, ToProjection * to)
+```
 
-* `Reprojection CreateReprojection(FromProjection * from, ToProjection * to)` - 
 Create reprojection to re-project data `from` -> `to`.
 Calculates mapping: `toData[index] = fromData[reprojection[index]]`
 
-* `Pixel<OutPixelType> ReProject(Pixel<InPixelType> p, const FromProjection * from, const ToProjection * to)` - 
+* Reprojections using different filtering methods
+```
+template <typename DataType, typename Out = DataType*, size_t ChannelsCount = 1>
+   Out ReprojectDataNerestNeighbor(const DataType* inputData, const DataType NO_VALUE) const 
+```
+
+```
+template <typename DataType, typename Out = DataType*, size_t ChannelsCount = 1>
+   Out ReprojectDataBilinear(const DataType* inputData, const DataType NO_VALUE) const
+```
+
+```
+template <typename DataType, typename Out = DataType*, size_t ChannelsCount = 1>
+   Out ReprojectDataBicubic(const DataType* inputData, const DataType NO_VALUE) const
+```
+
+Takes `inputData` and create output image. 
+Copy data from `inputData` to the output based on reprojection mapping. 
+In places, where no mapping is present, use NO_VALUE.
+
+
+* Single pixel reprojection
+```
+template <typename InPixelType, typename OutPixelType,
+          typename FromProjection, typename ToProjection>
+Pixel<OutPixelType> ReProject(Pixel<InPixelType> p, const FromProjection * from, const ToProjection * to)
+ ```
+
 Reprojects single pixel `p` from projection `from` to projection `to`. 
 Its basically one step from `CreateReprojection` method, that reprojects every pixel of input projection `from` to output projection `to`.
+
+### Utilities
+
+The are helper static methods in class `MapProjectionUtils`.
 
 * `Coordinate CalcEndPointShortest(const Coordinate & start, const Angle & bearing, MyRealType dist)` - 
 Calculate end point based on shortest path (on real earth surface).
@@ -189,14 +220,16 @@ The file must be decompressed.
 
 ### SIMD
 
-In some casess, the speed-up can be achieved by using SIMD instructions.
+In some casess, the speed-up can be achieved by using SIMD instructions 
+(AVX can compute 8 float operations at once, NEON 4 float operations at once).
 It offers calculation only in `float`, so `typedef MyRealType` should be `float`.
 If not, the data are casted to `float`.
-The support for this can be found in directory _SIMD_.
-SIMD must be enabled by macro `ENABLE_SIMD` during compilation.
+The support for this can be found in directory _simd_.
+SIMD must be enabled by macro `ENABLE_SIMD` (for AVX) or `HAVE_NEON` (for NEON) during compilation.
 Logic is similar to single instruction mode.
 
-To define a new projection, see existing ones in _SIMD/Projections_.
+To define a new projection, see existing ones in _simd/avx/Projections_ or 
+_simd/neon/Projections_.
 
 SIMD versions are named same as single instructions oned. 
 To distinguish them, a different namespace is used.
@@ -204,10 +237,15 @@ To distinguish them, a different namespace is used.
 Simple example:
 
 ```c++
-namespace ns = Projections::Simd;
+namespace avx = Projections::Avx;
+namespace neon = Projections::Neon;
 
-ns::Mercator mercSimd;
-ns::Miller millerSimd;
+avx::Mercator mercAvx;
+avx::Miller millerAvx;
 
-Reprojection reprojectionSimd = ns::ProjectionUtils::CreateReprojection(&millerSimd, &mercSimd);
+neon::Mercator mercNeon;
+neon::Equirectangular eqNeon;
+
+Reprojection reprojectionAvx = avx::Reprojection<int>::CreateReprojection(&millerSimd, &mercSimd);
+
 ```

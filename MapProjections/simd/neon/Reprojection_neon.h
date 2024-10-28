@@ -162,7 +162,7 @@ namespace Projections::Neon
 				const FromProjection* from,
 				const ToProjection* to)
 		{
-			PixelNeon pNeond = PixelNeond::FromArray<InPixelType>(p);
+			PixelNeon pNeon = PixelNeon::FromArray<InPixelType>(p);
 
 			auto cc = to->ProjectInverse(pNeon);
 			auto tmp = from->Project(cc);

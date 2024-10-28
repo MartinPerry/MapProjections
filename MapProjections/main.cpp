@@ -516,8 +516,8 @@ void TestVectorization()
 
 	auto projectedMercSimd = mercAvx.Project(gpsAvx);
 	auto projectedEqSimd = eqAvx.Project(gpsAvx);
-
-	Reprojection reprojectionSimd = Projections::Reprojection<int>::CreateReprojection(&mercAvx, &eqAvx);
+	
+	Reprojection reprojectionAvx = nsAvx::Reprojection<int>::CreateReprojection(&mercAvx, &eqAvx);
 
 	//========================================
 
@@ -542,7 +542,7 @@ void TestVectorization()
 
 	auto sinCosNeon = nsNeon::CoordinateNeon::PrecalcMultipleSinCos(gpsNeon);
 
-	Reprojection reprojectionNeon = Projections::Reprojection<int>::CreateReprojection(&mercNeon, &eqNeon);
+	Reprojection reprojectionNeon = nsNeon::Reprojection<int>::CreateReprojection(&mercNeon, &eqNeon);
 
 	//========================================
 }

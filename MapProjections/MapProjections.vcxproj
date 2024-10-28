@@ -183,7 +183,7 @@
       </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>_DEBUG;_CONSOLE;ENABLE_SIMD;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_DEBUG;_CONSOLE;ENABLE_SIMD;HAVE_NEON;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
@@ -291,7 +291,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release_lib|x64'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="MapProjectionStructures.cpp" />
-    <ClCompile Include="MapProjectionsUtils.cpp" />
+    <ClCompile Include="MapProjectionUtils.cpp" />
     <ClCompile Include="ProjectionInfo.cpp" />
     <ClCompile Include="ProjectionRenderer.cpp" />
     <ClCompile Include="Reprojection.cpp" />
@@ -314,17 +314,24 @@
     <ClInclude Include="Projections\Miller.h" />
     <ClInclude Include="Projections\PolarSteregographic.h" />
     <ClInclude Include="Reprojection.h" />
-    <ClInclude Include="simd\avx_math_float.h" />
-    <ClInclude Include="simd\MapProjectionStructures_simd.h" />
-    <ClInclude Include="simd\MapProjectionUtils_simd.h" />
-    <ClInclude Include="simd\neon_math_float.h" />
-    <ClInclude Include="simd\neon_utils.h" />
-    <ClInclude Include="simd\ProjectionInfo_simd.h" />
-    <ClInclude Include="simd\Projections\Equirectangular_simd.h" />
-    <ClInclude Include="simd\Projections\GEOS_simd.h" />
-    <ClInclude Include="simd\Projections\Mercator_simd.h" />
-    <ClInclude Include="simd\Projections\Miller_simd.h" />
-    <ClInclude Include="simd\Reprojection_simd.h" />
+    <ClInclude Include="simd\avx\avx_math_float.h" />
+    <ClInclude Include="simd\avx\MapProjectionStructures_avx.h" />
+    <ClInclude Include="simd\avx\MapProjectionUtils_avx.h" />
+    <ClInclude Include="simd\avx\ProjectionInfo_avx.h" />
+    <ClInclude Include="simd\avx\Projections\Equirectangular_avx.h" />
+    <ClInclude Include="simd\avx\Projections\GEOS_avx.h" />
+    <ClInclude Include="simd\avx\Projections\Mercator_avx.h" />
+    <ClInclude Include="simd\avx\Projections\Miller_avx.h" />
+    <ClInclude Include="simd\avx\Reprojection_avx.h" />
+    <ClInclude Include="simd\neon\MapProjectionStructures_neon.h" />
+    <ClInclude Include="simd\neon\MapProjectionUtils_neon.h" />
+    <ClInclude Include="simd\neon\NEON_2_SSE.h" />
+    <ClInclude Include="simd\neon\neon_math_float.h" />
+    <ClInclude Include="simd\neon\neon_utils.h" />
+    <ClInclude Include="simd\neon\ProjectionInfo_neon.h" />
+    <ClInclude Include="simd\neon\Projections\Equirectangular_neon.h" />
+    <ClInclude Include="simd\neon\Projections\Mercator_neon.h" />
+    <ClInclude Include="simd\neon\Reprojection_neon.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\README.md" />

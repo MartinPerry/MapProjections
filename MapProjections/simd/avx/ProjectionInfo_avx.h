@@ -6,24 +6,24 @@
 #include <array>
 #include <immintrin.h>     //AVX2
 
-#include "../GeoCoordinate.h"
-#include "../MapProjectionStructures.h"
-#include "../ProjectionInfo.h"
+#include "../../GeoCoordinate.h"
+#include "../../MapProjectionStructures.h"
+#include "../../ProjectionInfo.h"
 
-#include "./MapProjectionUtils_simd.h"
-#include "./MapProjectionStructures_simd.h"
+#include "./MapProjectionUtils_avx.h"
+#include "./MapProjectionStructures_avx.h"
 
 
 #define RET_VAL_SIMD(PixelType, enable_cond) \
 typename std::enable_if<enable_cond<PixelType>::value, std::array<Projections::Pixel<PixelType>, 8>>::type
 
-namespace Projections::Simd
+namespace Projections::Avx
 {
     template <typename Proj>
-    class ProjectionInfoSimd
+    class ProjectionInfoAvx
     {
         public:
-        virtual ~ProjectionInfoSimd() = default;
+        virtual ~ProjectionInfoAvx() = default;
         
         template <typename PixelType = int>
         std::array<Projections::Pixel<PixelType>, 8> Project(const std::array<Projections::Coordinate, 8> & c) const;
@@ -32,17 +32,17 @@ namespace Projections::Simd
         template <typename PixelType = int, bool Normalize = true>
         std::array<Projections::Coordinate, 8> ProjectInverse(const std::array<Projections::Pixel<PixelType>, 8> & p) const;
         
-        PixelSimd Project(const CoordinateSimd & p) const;
-        CoordinateSimd ProjectInverse(const PixelSimd & p) const;
+        PixelAvx Project(const CoordinateAvx & p) const;
+        CoordinateAvx ProjectInverse(const PixelAvx & p) const;
         
         protected:
-        struct ProjectedValueInverseSimd
+        struct ProjectedValueInverseAvx
         {
             __m256 latRad;
             __m256 lonRad;
         };
         
-        struct ProjectedValueSimd
+        struct ProjectedValueAvx
         {
             __m256 x;
             __m256 y;
@@ -57,15 +57,15 @@ namespace Projections::Simd
     /// <returns></returns>
     template <typename Proj>
     template <typename PixelType>
-    std::array<Projections::Pixel<PixelType>, 8> ProjectionInfoSimd<Proj>::Project(const std::array<Projections::Coordinate, 8> & c) const
+    std::array<Projections::Pixel<PixelType>, 8> ProjectionInfoAvx<Proj>::Project(const std::array<Projections::Coordinate, 8> & c) const
     {
-        CoordinateSimd cSimd = CoordinateSimd::FromArray(c);
-        auto raw = this->Project(cSimd);
-        return PixelSimd::ToArray<PixelType>(raw);
+        CoordinateAvx cAvx = CoordinateAvx::FromArray(c);
+        auto raw = this->Project(cAvx);
+        return PixelAvx::ToArray<PixelType>(raw);
     };
     
     template <typename Proj>
-    PixelSimd ProjectionInfoSimd<Proj>::Project(const CoordinateSimd & p) const
+    PixelAvx ProjectionInfoAvx<Proj>::Project(const CoordinateAvx & p) const
     {
         const Proj * tmp = static_cast<const Proj*>(this);
         auto frame = tmp->GetFrame();
@@ -73,7 +73,7 @@ namespace Projections::Simd
         //project value and get "pseudo" pixel coordinate
         auto raw = tmp->ProjectInternal(p.lonRad, p.latRad);
         
-		PixelSimd res;
+		PixelAvx res;
 
 		res.x = _mm256_mul_ps(raw.x, _mm256_set1_ps(static_cast<float>(frame.wAR)));
 		res.x = _mm256_sub_ps(res.x, _mm256_set1_ps(static_cast<float>(frame.projPrecomX)));
@@ -92,12 +92,12 @@ namespace Projections::Simd
     /// <returns></returns>
     template <typename Proj>
     template <typename PixelType, bool Normalize>
-    std::array<Projections::Coordinate, 8> ProjectionInfoSimd<Proj>::ProjectInverse(const std::array<Projections::Pixel<PixelType>, 8> & p) const
+    std::array<Projections::Coordinate, 8> ProjectionInfoAvx<Proj>::ProjectInverse(const std::array<Projections::Pixel<PixelType>, 8> & p) const
     {
-        PixelSimd pSimd = PixelSimd::FromArray(p);
-        auto cSimd = this->ProjectInverse(pSimd);
+        PixelAvx pAvx = PixelAvx::FromArray(p);
+        auto cAvx = this->ProjectInverse(pAvx);
         
-        return CoordinateSimd::ToArray<Normalize>(cSimd);
+        return CoordinateAvx::ToArray<Normalize>(cAvx);
     };
     
     /// <summary>
@@ -108,10 +108,10 @@ namespace Projections::Simd
     /// <param name="p"></param>
     /// <returns></returns>
     template <typename Proj>
-    CoordinateSimd ProjectionInfoSimd<Proj>::ProjectInverse(const PixelSimd & p) const
+    CoordinateAvx ProjectionInfoAvx<Proj>::ProjectInverse(const PixelAvx & p) const
     {
         const Proj * tmp = static_cast<const Proj*>(this);
-        auto frame = tmp->GetFrame();
+        const auto& frame = tmp->GetFrame();
         
         __m256 x = p.x;
         __m256 y = p.y;
@@ -123,12 +123,8 @@ namespace Projections::Simd
         y = _mm256_div_ps(y, _mm256_set1_ps(static_cast<float>(-frame.hAR)));
         
         auto pi = tmp->ProjectInverseInternal(x, y);
-                
-        CoordinateSimd c;
-        c.lonRad = pi.lonRad;
-        c.latRad = pi.latRad;
         
-        return c;
+        return CoordinateAvx(pi.lonRad, pi.latRad);
     };
 
 }

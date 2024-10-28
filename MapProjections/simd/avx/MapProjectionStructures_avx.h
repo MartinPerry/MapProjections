@@ -7,20 +7,20 @@
 
 #include <immintrin.h>     //AVX2
 
-#include "../MapProjectionStructures.h"
+#include "../../MapProjectionStructures.h"
 
 #define RET_VAL_SIMD(PixelType, enable_cond) \
 typename std::enable_if<enable_cond<PixelType>::value, std::array<Projections::Pixel<PixelType>, 8>>::type
 
-namespace Projections::Simd
+namespace Projections::Avx
 {
-    struct PixelSimd
+    struct PixelAvx
     {
         __m256 x;
         __m256 y;
         
         /*
-        PixelSimd()
+        PixelAvx()
         {
             //not needed?
             //x = _mm256_setzero_ps();
@@ -29,10 +29,10 @@ namespace Projections::Simd
          */
         
         template <typename PixelType>
-        static PixelSimd FromArray(const std::array<Projections::Pixel<PixelType>, 8> & p)
+        static PixelAvx FromArray(const std::array<Projections::Pixel<PixelType>, 8> & p)
         {
-            PixelSimd pSimd;
-            pSimd.x = _mm256_set_ps(static_cast<float>(p[7].x), 
+            PixelAvx pAvx;
+            pAvx.x = _mm256_set_ps(static_cast<float>(p[7].x), 
 				static_cast<float>(p[6].x), 
 				static_cast<float>(p[5].x), 
 				static_cast<float>(p[4].x), 
@@ -41,7 +41,7 @@ namespace Projections::Simd
 				static_cast<float>(p[1].x), 
 				static_cast<float>(p[0].x));
 
-            pSimd.y = _mm256_set_ps(static_cast<float>(p[7].y), 
+            pAvx.y = _mm256_set_ps(static_cast<float>(p[7].y), 
 				static_cast<float>(p[6].y), 
 				static_cast<float>(p[5].y), 
 				static_cast<float>(p[4].y), 
@@ -50,19 +50,19 @@ namespace Projections::Simd
 				static_cast<float>(p[1].y), 
 				static_cast<float>(p[0].y));
 
-            return pSimd;
+            return pAvx;
         };
         
         template <typename PixelType>
-        static RET_VAL_SIMD(PixelType, std::is_integral) ToArray(const PixelSimd & pSimd)
+        static RET_VAL_SIMD(PixelType, std::is_integral) ToArray(const PixelAvx & pAvx)
         {
             std::array<Pixel<PixelType>, 8> p;
             
-            float resX[p.size()];
-            _mm256_storeu_ps(resX, pSimd.x);
+            std::array<float, 8> resX;
+            _mm256_storeu_ps(resX.data(), pAvx.x);
             
-            float resY[p.size()];
-            _mm256_storeu_ps(resY, pSimd.y);
+            std::array<float, 8> resY;
+            _mm256_storeu_ps(resY.data(), pAvx.y);
             
             //calculate pixel in final frame
             for (size_t i = 0; i < p.size(); i++)
@@ -74,15 +74,15 @@ namespace Projections::Simd
         };
         
         template <typename PixelType>
-        static RET_VAL_SIMD(PixelType, std::is_floating_point) ToArray(const PixelSimd & pSimd)
+        static RET_VAL_SIMD(PixelType, std::is_floating_point) ToArray(const PixelAvx & pAvx)
         {
             std::array<Pixel<PixelType>, 8> p;
             
-            float resX[p.size()];
-            _mm256_storeu_ps(resX, pSimd.x);
+            std::array<float, 8> resX;
+            _mm256_storeu_ps(resX.data(), pAvx.x);
             
-            float resY[p.size()];
-            _mm256_storeu_ps(resY, pSimd.y);
+            std::array<float, 8> resY;
+            _mm256_storeu_ps(resY.data(), pAvx.y);
             
             //calculate pixel in final frame
             for (size_t i = 0; i < p.size(); i++)
@@ -94,18 +94,22 @@ namespace Projections::Simd
         };
     };
     
-    struct CoordinateSimd
+    struct CoordinateAvx
     {
         __m256 lonRad;
         __m256 latRad;
         
-        CoordinateSimd() {};
-        CoordinateSimd(const __m256 & lonRad, const __m256 & latRad) : lonRad(lonRad), latRad(latRad) {};
+        CoordinateAvx() {};
+
+        CoordinateAvx(const __m256 & lonRad, const __m256 & latRad) : 
+            lonRad(lonRad), 
+            latRad(latRad) 
+        {};
         
-        static CoordinateSimd FromArray(const std::array<Projections::Coordinate, 8> & c)
+        static CoordinateAvx FromArray(const std::array<Projections::Coordinate, 8> & c)
         {
-            CoordinateSimd cSimd;
-            cSimd.lonRad = _mm256_set_ps(static_cast<float>(c[7].lon.rad()), 
+            CoordinateAvx cAvx;
+            cAvx.lonRad = _mm256_set_ps(static_cast<float>(c[7].lon.rad()), 
 				static_cast<float>(c[6].lon.rad()), 
 				static_cast<float>(c[5].lon.rad()), 
 				static_cast<float>(c[4].lon.rad()), 
@@ -114,7 +118,7 @@ namespace Projections::Simd
 				static_cast<float>(c[1].lon.rad()), 
 				static_cast<float>(c[0].lon.rad()));
 
-            cSimd.latRad = _mm256_set_ps(static_cast<float>(c[7].lat.rad()), 
+            cAvx.latRad = _mm256_set_ps(static_cast<float>(c[7].lat.rad()), 
 				static_cast<float>(c[6].lat.rad()), 
 				static_cast<float>(c[5].lat.rad()), 
 				static_cast<float>(c[4].lat.rad()), 
@@ -123,19 +127,19 @@ namespace Projections::Simd
 				static_cast<float>(c[1].lat.rad()), 
 				static_cast<float>(c[0].lat.rad()));
 
-            return cSimd;
+            return cAvx;
         };
         
         template <bool Normalize>
-        static std::array<Projections::Coordinate, 8> ToArray(const CoordinateSimd & cSimd)
+        static std::array<Projections::Coordinate, 8> ToArray(const CoordinateAvx & cAvx)
         {
-             std::array<Projections::Coordinate, 8> c;
+            std::array<Projections::Coordinate, 8> c;
             
-            float resLatRad[c.size()];
-            _mm256_storeu_ps(resLatRad, cSimd.latRad);
+            std::array<float, 8> resLatRad;
+            _mm256_storeu_ps(resLatRad.data(), cAvx.latRad);
             
-            float resLonRad[c.size()];
-            _mm256_storeu_ps(resLonRad, cSimd.lonRad);
+            std::array<float, 8> resLonRad;
+            _mm256_storeu_ps(resLonRad.data(), cAvx.lonRad);
             
             if (Normalize)
             {

@@ -7,34 +7,34 @@
 
 #include "../avx_math_float.h"
 
-#include "../../GeoCoordinate.h"
-#include "../../MapProjectionStructures.h"
+#include "../../../GeoCoordinate.h"
+#include "../../../MapProjectionStructures.h"
 
-#include "../ProjectionInfo_simd.h"
+#include "../ProjectionInfo_avx.h"
 
-#include "../../Projections/GEOS.h"
+#include "../../../Projections/GEOS.h"
 
-namespace Projections::Simd
+namespace Projections::Avx
 {
 
-	class GEOS : public Projections::GEOS, public ProjectionInfoSimd<GEOS>
+	class GEOS : public Projections::GEOS, public ProjectionInfoAvx<GEOS>
 	{
 	public:
 		using Projections::GEOS::ProjectInverse;
-		using ProjectionInfoSimd<GEOS>::ProjectInverse;
+		using ProjectionInfoAvx<GEOS>::ProjectInverse;
 
 		using Projections::GEOS::Project;
-		using ProjectionInfoSimd<GEOS>::Project;
+		using ProjectionInfoAvx<GEOS>::Project;
 
 
 		GEOS(const SatelliteSettings & sets) :
 			Projections::GEOS(sets)			
 		{}
 
-		friend class ProjectionInfoSimd<GEOS>;
+		friend class ProjectionInfoAvx<GEOS>;
 
 	protected:
-		ProjectedValueSimd ProjectInternal(const __m256 & lonRad, const __m256 & latRad) const
+		ProjectedValueAvx ProjectInternal(const __m256 & lonRad, const __m256 & latRad) const
 		{			
 			__m256 lonDif = _mm256_sub_ps(lonRad, _mm256_set1_ps(static_cast<float>(sat.lon.rad())));
 
@@ -65,7 +65,7 @@ namespace Projections::Simd
 			__m256 r3 = _mm256_mul_ps(r, sinCLat);
 
 
-			ProjectedValueSimd p;
+			ProjectedValueAvx p;
 			
 			if (sat.sweepY)
 			{
@@ -101,9 +101,9 @@ namespace Projections::Simd
 			return p;
 		};
 
-		ProjectedValueInverseSimd ProjectInverseInternal(const __m256 & x, const __m256 & y) const
+		ProjectedValueInverseAvx ProjectInverseInternal(const __m256 & x, const __m256 & y) const
 		{
-			ProjectedValueInverseSimd c;
+			ProjectedValueInverseAvx c;
 			
 			//todo
 

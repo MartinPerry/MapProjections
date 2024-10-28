@@ -22,17 +22,24 @@
 #include "CountriesUtils.h"
 #include "lodepng.h"
 
-#include "./simd/ProjectionInfo_simd.h"
-#include "./simd/Projections/Miller_simd.h"
-#include "./simd/Projections/Mercator_simd.h"
-#include "./simd/Projections/GEOS_simd.h"
-#include "./simd/Projections/Equirectangular_simd.h"
-#include "./simd/MapProjectionUtils_simd.h"
-#include "./simd/Reprojection_simd.h"
+#include "./simd/avx/ProjectionInfo_avx.h"
+#include "./simd/avx/Projections/Miller_avx.h"
+#include "./simd/avx/Projections/Mercator_avx.h"
+#include "./simd/avx/Projections/GEOS_avx.h"
+#include "./simd/avx/Projections/Equirectangular_avx.h"
+#include "./simd/avx/MapProjectionUtils_avx.h"
+#include "./simd/avx/Reprojection_avx.h"
+
+#include "./simd/neon/ProjectionInfo_neon.h"
+#include "./simd/neon/Projections/Mercator_neon.h"
+#include "./simd/neon/Projections/Equirectangular_neon.h"
+#include "./simd/neon/MapProjectionUtils_neon.h"
+#include "./simd/neon/Reprojection_neon.h"
 
 using namespace Projections;
 
-namespace ns = Projections::Simd;
+namespace nsAvx = Projections::Avx;
+namespace nsNeon = Projections::Neon;
 
 
 void TestLambertConic()
@@ -154,19 +161,19 @@ void TestGEOS_Simd()
 	bbMin.lat = -45.0_deg; bbMin.lon = -135.0_deg;
 	bbMax.lat = 45.0_deg; bbMax.lon = -10.0_deg;
 	
-	ns::Mercator mercator;
+	nsAvx::Mercator mercator;
 	mercator.SetFrame(bbMin, bbMax, 4200, 0, Projections::STEP_TYPE::PIXEL_CENTER, false);
 
 	// Coordinate bbMin, bbMax;	
 	bbMin.lat = -90.0_deg; bbMin.lon = -180.0_deg;
 	bbMax.lat = 90.0_deg; bbMax.lon = 180.0_deg;
 
-	ns::GEOS geos(GEOS::SatelliteSettings::Goes16());
+	nsAvx::GEOS geos(GEOS::SatelliteSettings::Goes16());
 	geos.SetFrame(bbMin, bbMax, w, h, Projections::STEP_TYPE::PIXEL_CENTER, false);
 	
 
 	
-	Projections::Reprojection<short> reproj = ns::Reprojection<short>::CreateReprojection<ns::GEOS, ns::Mercator>(&geos, &mercator);
+	Projections::Reprojection<short> reproj = nsAvx::Reprojection<short>::CreateReprojection<nsAvx::GEOS, nsAvx::Mercator>(&geos, &mercator);
 
 	std::vector<uint8_t> rawData = reproj.ReprojectDataNerestNeighbor<uint8_t, std::vector<uint8_t>, 1>(imgRawData.data(), 0);
 
@@ -236,20 +243,20 @@ void ReprojectNightImage()
 	bbMin.lat = -90.0_deg; bbMin.lon = -180.0_deg;
 	bbMax.lat = 90.0_deg; bbMax.lon = 180.0_deg;
 
-	ns::Equirectangular eq;
+	nsAvx::Equirectangular eq;
 	eq.SetFrame(bbMin, bbMax, w, h, Projections::STEP_TYPE::PIXEL_CENTER, false);
 
 	// Coordinate bbMin, bbMax;	
 	bbMin.lat = -70.0_deg; bbMin.lon = -20.0_deg;
 	bbMax.lat = 70.0_deg; bbMax.lon = 78.0_deg;
 
-	ns::Mercator mercator;
+	nsAvx::Mercator mercator;
 	mercator.SetFrame(bbMin, bbMax, 2232, 0, Projections::STEP_TYPE::PIXEL_CENTER, false);
 
 
 
 	Projections::Reprojection<short> reproj = 
-		ns::Reprojection<short>::CreateReprojection<ns::Equirectangular, ns::Mercator>(&eq, &mercator);
+		nsAvx::Reprojection<short>::CreateReprojection<nsAvx::Equirectangular, nsAvx::Mercator>(&eq, &mercator);
 
 	//==========================================================
 
@@ -480,8 +487,76 @@ double MapRange(double fromMin, double fromMax, double toMin, double toMax, doub
 	return toMin + (s - fromMin) * (toMax - toMin) / (fromMax - fromMin);
 }
 
+void TestVectorization()
+{
+	Projections::Coordinate bbMin, bbMax;
+	bbMin.lat = 47.507_deg; bbMin.lon = -30.850_deg;
+	bbMax.lat = 83.507_deg; bbMax.lon = 69.777_deg;
+
+	int w = 800;
+	int h = 600;
+
+	Projections::Coordinate gps;
+	gps.lat = 60.0_deg;
+	gps.lon = 20.0_deg;
+
+	//========================================
+	
+	nsAvx::Mercator mercAvx;
+	nsAvx::Equirectangular eqAvx;
+
+	eqAvx.SetFrame(bbMin, bbMax, w, h, Projections::STEP_TYPE::PIXEL_CENTER, false);
+	mercAvx.SetFrame(bbMin, bbMax, w, h, Projections::STEP_TYPE::PIXEL_CENTER, false);
+	
+	std::array< Projections::Coordinate, 8> gpsAvx;
+	for (int i = 0; i < gpsAvx.size(); i++)
+	{
+		gpsAvx[i] = gps;
+	}
+
+	auto projectedMercSimd = mercAvx.Project(gpsAvx);
+	auto projectedEqSimd = eqAvx.Project(gpsAvx);
+
+	Reprojection reprojectionSimd = Projections::Reprojection<int>::CreateReprojection(&mercAvx, &eqAvx);
+
+	//========================================
+
+	nsNeon::Mercator mercNeon;
+	nsNeon::Equirectangular eqNeon;
+
+	eqNeon.SetFrame(bbMin, bbMax, w, h, Projections::STEP_TYPE::PIXEL_CENTER, false);
+	mercNeon.SetFrame(bbMin, bbMax, w, h, Projections::STEP_TYPE::PIXEL_CENTER, false);
+
+	std::array< Projections::Coordinate, 4> tmp4;
+	for (int i = 0; i < tmp4.size(); i++)
+	{
+		tmp4[i] = gps;
+	}
+
+	nsNeon::CoordinateNeon gpsNeon = nsNeon::CoordinateNeon::FromArray(tmp4);
+
+	auto projectedMercNeon = mercNeon.Project(gpsNeon);
+	auto projectedEqNeon = eqNeon.Project(gpsNeon);
+
+	auto sinCos4 = Coordinate::PrecalcMultipleSinCos(tmp4);
+
+	auto sinCosNeon = nsNeon::CoordinateNeon::PrecalcMultipleSinCos(gpsNeon);
+
+	Reprojection reprojectionNeon = Projections::Reprojection<int>::CreateReprojection(&mercNeon, &eqNeon);
+
+	//========================================
+}
+
 int main(int argc, const char* argv[])
 {
+
+	{
+		TestVectorization();
+		
+		
+
+		printf("x");
+	}
 
 	{
 		unsigned w = 5504 * 2;
@@ -1006,16 +1081,6 @@ int main(int argc, const char* argv[])
     unsigned w = 600;
     unsigned h = 600;
     
-		
-    /*
-    std::array<Projections::Pixel<int>, 8> p;
-    ns::Mercator mercSimd;
-    ns::Miller millerSimd;
-    mercSimd.ProjectInverse(p);
-    mercSimd.GetFrameWidth();
-    
-    Reprojection reprojectionSimd = Projections::Simd::ProjectionUtils::CreateReprojection(&millerSimd, &mercSimd);
-    */
     
    
     //===================================================

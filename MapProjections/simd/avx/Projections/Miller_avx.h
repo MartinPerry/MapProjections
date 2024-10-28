@@ -7,32 +7,32 @@
 
 #include "../avx_math_float.h"
 
-#include "../../GeoCoordinate.h"
-#include "../../MapProjectionStructures.h"
+#include "../../../GeoCoordinate.h"
+#include "../../../MapProjectionStructures.h"
 
-#include "../ProjectionInfo_simd.h"
+#include "../ProjectionInfo_avx.h"
 
-#include "../../Projections/Miller.h"
+#include "../../../Projections/Miller.h"
 
-namespace Projections::Simd
+namespace Projections::Avx
 {
 
-	class Miller : public Projections::Miller, public ProjectionInfoSimd<Miller>
+	class Miller : public Projections::Miller, public ProjectionInfoAvx<Miller>
 	{
 	public:
 		using Projections::Miller::ProjectInverse;
-		using ProjectionInfoSimd<Miller>::ProjectInverse;
+		using ProjectionInfoAvx<Miller>::ProjectInverse;
 
 		using Projections::Miller::Project;
-		using ProjectionInfoSimd<Miller>::Project;
+		using ProjectionInfoAvx<Miller>::Project;
 
 
-		friend class ProjectionInfoSimd<Miller>;
+		friend class ProjectionInfoAvx<Miller>;
 
 	protected:
-		ProjectedValueSimd ProjectInternal(const __m256 & lonRad, const __m256 & latRad) const
+		ProjectedValueAvx ProjectInternal(const __m256 & lonRad, const __m256 & latRad) const
 		{
-			ProjectedValueSimd p;
+			ProjectedValueAvx p;
 			p.x = lonRad;
 
 			p.y = _mm256_mul_ps(latRad, _mm256_set1_ps(0.4f));
@@ -47,9 +47,9 @@ namespace Projections::Simd
 			return p;
 		};
 
-		ProjectedValueInverseSimd ProjectInverseInternal(const __m256 & x, const __m256 & y) const
+		ProjectedValueInverseAvx ProjectInverseInternal(const __m256 & x, const __m256 & y) const
 		{
-			ProjectedValueInverseSimd c;
+			ProjectedValueInverseAvx c;
 			c.lonRad = x;
 
 			c.latRad = _my_mm256_pow_ps(_mm256_set1_ps(static_cast<float>(ProjectionConstants::E)), _mm256_mul_ps(y, _mm256_set1_ps(0.8f)));

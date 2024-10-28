@@ -13,14 +13,23 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
-    <Filter Include="Header Files\SIMD">
-      <UniqueIdentifier>{34c5c28a-f0a7-405a-b65f-5c8b39162eab}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Header Files\Projections">
       <UniqueIdentifier>{96fc63df-f7b0-4559-9460-5534b71ef2ea}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Header Files\SIMD\Projections">
-      <UniqueIdentifier>{a0e3c983-a15d-4ebd-a7d9-8a7e4c84b2d2}</UniqueIdentifier>
+    <Filter Include="Header Files\simd">
+      <UniqueIdentifier>{6915119f-0cb0-451b-a7a9-beb75018137a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\simd\avx">
+      <UniqueIdentifier>{aa64741d-365c-4620-8f57-a1af2ce19bdf}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\simd\neon">
+      <UniqueIdentifier>{1c1eaba0-2293-4189-97ea-a971317f327d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\simd\avx\Projections">
+      <UniqueIdentifier>{37ab7c8b-97ef-40ff-9830-289ef99ed813}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\simd\neon\Projections">
+      <UniqueIdentifier>{e781f8cf-e69d-4d15-a674-74ad2741dd96}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -39,13 +48,13 @@
     <ClCompile Include="ProjectionInfo.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="MapProjectionsUtils.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Reprojection.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="CountriesUtils.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="MapProjectionUtils.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -68,18 +77,6 @@
     <ClInclude Include="IProjectionInfo.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="simd\avx_math_float.h">
-      <Filter>Header Files\SIMD</Filter>
-    </ClInclude>
-    <ClInclude Include="simd\MapProjectionStructures_simd.h">
-      <Filter>Header Files\SIMD</Filter>
-    </ClInclude>
-    <ClInclude Include="simd\MapProjectionUtils_simd.h">
-      <Filter>Header Files\SIMD</Filter>
-    </ClInclude>
-    <ClInclude Include="simd\ProjectionInfo_simd.h">
-      <Filter>Header Files\SIMD</Filter>
-    </ClInclude>
     <ClInclude Include="ProjectionInfo.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -98,32 +95,11 @@
     <ClInclude Include="Projections\PolarSteregographic.h">
       <Filter>Header Files\Projections</Filter>
     </ClInclude>
-    <ClInclude Include="simd\Projections\Mercator_simd.h">
-      <Filter>Header Files\SIMD\Projections</Filter>
-    </ClInclude>
-    <ClInclude Include="simd\Projections\Miller_simd.h">
-      <Filter>Header Files\SIMD\Projections</Filter>
-    </ClInclude>
-    <ClInclude Include="simd\neon_math_float.h">
-      <Filter>Header Files\SIMD</Filter>
-    </ClInclude>
     <ClInclude Include="Projections\GEOS.h">
       <Filter>Header Files\Projections</Filter>
     </ClInclude>
-    <ClInclude Include="simd\Projections\GEOS_simd.h">
-      <Filter>Header Files\SIMD\Projections</Filter>
-    </ClInclude>
-    <ClInclude Include="simd\neon_utils.h">
-      <Filter>Header Files\SIMD</Filter>
-    </ClInclude>
-    <ClInclude Include="simd\Projections\Equirectangular_simd.h">
-      <Filter>Header Files\SIMD\Projections</Filter>
-    </ClInclude>
     <ClInclude Include="Reprojection.h">
       <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="simd\Reprojection_simd.h">
-      <Filter>Header Files\SIMD</Filter>
     </ClInclude>
     <ClInclude Include="Projections\LambertAzimuthal.h">
       <Filter>Header Files\Projections</Filter>
@@ -133,6 +109,60 @@
     </ClInclude>
     <ClInclude Include="PoleRotationTransform.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="simd\avx\avx_math_float.h">
+      <Filter>Header Files\simd\avx</Filter>
+    </ClInclude>
+    <ClInclude Include="simd\neon\Projections\Equirectangular_neon.h">
+      <Filter>Header Files\simd\neon\Projections</Filter>
+    </ClInclude>
+    <ClInclude Include="simd\neon\Projections\Mercator_neon.h">
+      <Filter>Header Files\simd\neon\Projections</Filter>
+    </ClInclude>
+    <ClInclude Include="simd\neon\MapProjectionStructures_neon.h">
+      <Filter>Header Files\simd\neon</Filter>
+    </ClInclude>
+    <ClInclude Include="simd\neon\MapProjectionUtils_neon.h">
+      <Filter>Header Files\simd\neon</Filter>
+    </ClInclude>
+    <ClInclude Include="simd\neon\NEON_2_SSE.h">
+      <Filter>Header Files\simd\neon</Filter>
+    </ClInclude>
+    <ClInclude Include="simd\neon\neon_math_float.h">
+      <Filter>Header Files\simd\neon</Filter>
+    </ClInclude>
+    <ClInclude Include="simd\neon\neon_utils.h">
+      <Filter>Header Files\simd\neon</Filter>
+    </ClInclude>
+    <ClInclude Include="simd\neon\ProjectionInfo_neon.h">
+      <Filter>Header Files\simd\neon</Filter>
+    </ClInclude>
+    <ClInclude Include="simd\neon\Reprojection_neon.h">
+      <Filter>Header Files\simd\neon</Filter>
+    </ClInclude>
+    <ClInclude Include="simd\avx\MapProjectionStructures_avx.h">
+      <Filter>Header Files\simd\avx</Filter>
+    </ClInclude>
+    <ClInclude Include="simd\avx\MapProjectionUtils_avx.h">
+      <Filter>Header Files\simd\avx</Filter>
+    </ClInclude>
+    <ClInclude Include="simd\avx\ProjectionInfo_avx.h">
+      <Filter>Header Files\simd\avx</Filter>
+    </ClInclude>
+    <ClInclude Include="simd\avx\Reprojection_avx.h">
+      <Filter>Header Files\simd\avx</Filter>
+    </ClInclude>
+    <ClInclude Include="simd\avx\Projections\Equirectangular_avx.h">
+      <Filter>Header Files\simd\avx\Projections</Filter>
+    </ClInclude>
+    <ClInclude Include="simd\avx\Projections\GEOS_avx.h">
+      <Filter>Header Files\simd\avx\Projections</Filter>
+    </ClInclude>
+    <ClInclude Include="simd\avx\Projections\Mercator_avx.h">
+      <Filter>Header Files\simd\avx\Projections</Filter>
+    </ClInclude>
+    <ClInclude Include="simd\avx\Projections\Miller_avx.h">
+      <Filter>Header Files\simd\avx\Projections</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -7,32 +7,32 @@
 
 #include "../avx_math_float.h"
 
-#include "../../GeoCoordinate.h"
-#include "../../MapProjectionStructures.h"
+#include "../../../GeoCoordinate.h"
+#include "../../../MapProjectionStructures.h"
 
-#include "../ProjectionInfo_simd.h"
+#include "../ProjectionInfo_avx.h"
 
-#include "../../Projections/Mercator.h"
+#include "../../../Projections/Mercator.h"
 
-namespace Projections::Simd
+namespace Projections::Avx
 {
 
-	class Mercator : public Projections::Mercator, public ProjectionInfoSimd<Mercator>
+	class Mercator : public Projections::Mercator, public ProjectionInfoAvx<Mercator>
 	{
 	public:
 		using Projections::Mercator::ProjectInverse;
-		using ProjectionInfoSimd<Mercator>::ProjectInverse;
+		using ProjectionInfoAvx<Mercator>::ProjectInverse;
 
 		using Projections::Mercator::Project;
-		using ProjectionInfoSimd<Mercator>::Project;
+		using ProjectionInfoAvx<Mercator>::Project;
 
 
-		friend class ProjectionInfoSimd<Mercator>;
+		friend class ProjectionInfoAvx<Mercator>;
 
 	protected:
-		ProjectedValueSimd ProjectInternal(const __m256 & lonRad, const __m256 & latRad) const
+		ProjectedValueAvx ProjectInternal(const __m256 & lonRad, const __m256 & latRad) const
 		{
-			ProjectedValueSimd p;
+			ProjectedValueAvx p;
 			p.x = lonRad;
 
 			p.y = _mm256_mul_ps(latRad, _mm256_set1_ps(0.5f));
@@ -45,9 +45,9 @@ namespace Projections::Simd
 			return p;
 		};
 
-		ProjectedValueInverseSimd ProjectInverseInternal(const __m256 & x, const __m256 & y) const
+		ProjectedValueInverseAvx ProjectInverseInternal(const __m256 & x, const __m256 & y) const
 		{
-			ProjectedValueInverseSimd c;
+			ProjectedValueInverseAvx c;
 			c.lonRad = x;
 
 			c.latRad = _my_mm256_pow_ps(_mm256_set1_ps(static_cast<float>(ProjectionConstants::E)), y);

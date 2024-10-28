@@ -35,24 +35,6 @@
 
 
 
-static inline float32x4_t my_swap_sign_f32(const float32x4_t & v)
-{
-	uint32_t c = static_cast<uint32_t>(~0x7FFF'FFFF);	
-	auto res = veorq_u32(vreinterpretq_u32_f32(v), vdupq_n_u32(c));
-	return vreinterpretq_f32_u32(res);
-	//return _mm256_xor_ps(v, *(__m256*)_i32_sign_mask); //~0x7FFF'FFFF
-}
-
-///<summary>
-/// Select and return a or b based on mask value.
-/// If mask value is 1, return a; else return b
-///</summary>
-static inline float32x4_t my_select_f32(const uint32x4_t & mask, const float32x4_t & a, const float32x4_t & b)
-{	
-	// mask != 0 ? a : b
-	return vbslq_f32(mask, a, b);
-}
-
 //=============================================================================
 
 

@@ -14,7 +14,8 @@
 #endif
 
 #ifdef HAVE_NEON
-#	include "./Simd/neon_math_float.h"
+#	include "./simd/neon/neon_math_float.h"
+#	include "./simd/neon/MapProjectionStructures_neon.h"
 #endif
 
 using namespace Projections;
@@ -46,50 +47,13 @@ std::array<Coordinate, 4> Coordinate::CreateFromCartesianLHSystem(
 	std::array<Coordinate, 4> res;
 
 #ifdef HAVE_NEON
-	float32x4_t x =
-	{
-		static_cast<float32_t>(vx[0]),
-		static_cast<float32_t>(vx[1]),
-		static_cast<float32_t>(vx[2]),
-		static_cast<float32_t>(vx[3])
-};
 
-	float32x4_t y =
-	{
-		static_cast<float32_t>(vy[0]),
-		static_cast<float32_t>(vy[1]),
-		static_cast<float32_t>(vy[2]),
-		static_cast<float32_t>(vy[3])
-	};
-
-	float32x4_t z =
-	{
-		static_cast<float32_t>(vz[0]),
-		static_cast<float32_t>(vz[1]),
-		static_cast<float32_t>(vz[2]),
-		static_cast<float32_t>(vz[3])
-	};
-
-
-	float32x4_t sum = vmulq_f32(x, x);
-	sum = vaddq_f32(sum, vmulq_f32(y, y));
-	sum = vaddq_f32(sum, vmulq_f32(z, z));
-
-#if defined(__aarch64__) || defined(__arm64__) || (defined(vdivq_f32) && defined(vsqrtq_f32))
-	float32x4_t radius = vsqrtq_f32(sum);
-	float32x4_t rInv = vdivq_f32(vmovq_n_f32(1), radius);
-#else
-	float32x4_t radius = vmulq_f32(vrsqrteq_f32(sum), sum);
-	float32x4_t rInv = vrecpeq_f32(radius); //estimate 1.0 / radius
-#endif	
-
-	float32x4_t lat = my_asin_f32(vmulq_f32(y, rInv));
-	float32x4_t lon = my_atan2_f32(x, vmulq_n_f32(z, -1.0f));
+	Projections::Neon::CoordinateNeon gpsNeon = Projections::Neon::CoordinateNeon::CreateFromCartesianLHSystem(vx, vy, vz);
 
 	float resLat[4];
 	float resLon[4];
-	vst1q_f32(resLat, lat);
-	vst1q_f32(resLon, lon);
+	vst1q_f32(resLat, gpsNeon.latRad);
+	vst1q_f32(resLon, gpsNeon.lonRad);
 	
 	res[0] = Coordinate(Longitude::rad(resLon[0]), Latitude::rad(resLat[0]));
 	res[1] = Coordinate(Longitude::rad(resLon[1]), Latitude::rad(resLat[1]));
@@ -276,37 +240,15 @@ Coordinate::PrecomputedSinCos Coordinate::PrecomputeSinCos() const
 std::array<Coordinate::PrecomputedSinCos, 4> Coordinate::PrecalcMultipleSinCos(
 	const std::array<Coordinate, 4> & coords)
 {
-	std::array<Coordinate::PrecomputedSinCos, 4> res;
-
+	
 #ifdef HAVE_NEON
-	for (size_t i = 0; i < 4; i += 2)
-	{
-		float32x4_t v = {
-			static_cast<float32_t>(coords[i].lat.rad()),
-			static_cast<float32_t>(coords[i].lon.rad()),
-			static_cast<float32_t>(coords[i + 1].lat.rad()),
-			static_cast<float32_t>(coords[i + 1].lon.rad())
-		};
 
-		float32x4_t ysin;
-		float32x4_t ycos;
-		my_sincos_f32(v, &ysin, &ycos);
-
-		float values[4];
-		vst1q_f32(values, ysin);
-		res[i].sinLat = values[0];
-		res[i].sinLon = values[1];
-		res[i + 1].sinLat = values[2];
-		res[i + 1].sinLon = values[3];
-
-		vst1q_f32(values, ycos);
-		res[i].cosLat = values[0];
-		res[i].cosLon = values[1];
-		res[i + 1].cosLat = values[2];
-		res[i + 1].cosLon = values[3];
-	}
+	Projections::Neon::CoordinateNeon gpsNeon = Projections::Neon::CoordinateNeon::FromArray(coords);
+	return Projections::Neon::CoordinateNeon::PrecalcMultipleSinCos(gpsNeon);
 
 #else
+
+	std::array<Coordinate::PrecomputedSinCos, 4> res;
 	for (size_t i = 0; i < 4; i++)
 	{
 		res[i].sinLat = std::sin(coords[i].lat.rad());
@@ -314,7 +256,8 @@ std::array<Coordinate::PrecomputedSinCos, 4> Coordinate::PrecalcMultipleSinCos(
 		res[i].sinLon = std::sin(coords[i].lon.rad());
 		res[i].cosLon = std::cos(coords[i].lon.rad());
 	}
-#endif
 
 	return res;
+
+#endif	
 }

@@ -96,8 +96,8 @@ namespace Projections::Neon
         float32x4_t latRad;
         
         CoordinateNeon() :
-            lonRad({}),
-            latRad({})
+            lonRad(),
+            latRad()
         {};
 
         CoordinateNeon(const float32x4_t& lonRad, const float32x4_t& latRad) :

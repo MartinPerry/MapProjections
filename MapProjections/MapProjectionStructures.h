@@ -82,6 +82,8 @@ namespace Projections
 		Coordinate() {};
 		Coordinate(Longitude lon, Latitude lat) :
 			lon(lon), lat(lat) {};
+		Coordinate(Latitude lat, Longitude lon) :
+			lon(lon), lat(lat) {};
 
 		PrecomputedSinCos PrecomputeSinCos() const;
 

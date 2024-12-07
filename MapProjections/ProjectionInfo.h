@@ -29,7 +29,7 @@ namespace Projections
 	public:				
 		virtual ~ProjectionInfo() = default;
 
-		const char* GetName() const;
+		const char* GetName() const override;
 
 		bool IsIndependentLatLon() const OVERRIDE;
 		bool IsOrthogonalLatLon() const OVERRIDE;

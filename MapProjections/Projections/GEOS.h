@@ -69,7 +69,7 @@ namespace Projections
 					MyRealType(-40'927'010.0)
 				};
 			};
-
+			
 			static SatelliteSettings Goes16()
 			{
 				//cfac calculated as:

@@ -72,11 +72,13 @@ namespace Projections
 		void LineBresenham(Pixel<int> start, Pixel<int> end, 
 			std::function<void(int x, int y)> callback) const OVERRIDE;
 
-
+		void ComputeAABBWithoutTransform(Coordinate& min, Coordinate& max) const OVERRIDE;
+		void ComputeAABBWithoutTransform(int startX, int startY, int endX, int endY, Coordinate& min, Coordinate& max) const OVERRIDE;
 
 		void ComputeAABB(Coordinate& min, Coordinate& max) const OVERRIDE;
 		void ComputeAABB(int startX, int startY, int endX, int endY, Coordinate& min, Coordinate& max) const OVERRIDE;
 
+		
 
 	protected:
 

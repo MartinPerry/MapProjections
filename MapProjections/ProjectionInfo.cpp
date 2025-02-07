@@ -113,7 +113,7 @@ void ProjectionInfo<Proj>::SetFrame(const ProjectionFrame & frame)
 	this->frame.min = frame.min;
 	this->frame.max = frame.max;
 	
-	this->ComputeAABB(this->frame.min, this->frame.max);	
+	this->ComputeAABBWithoutTransform(this->frame.min, this->frame.max);	
 }
 
 
@@ -314,7 +314,7 @@ void ProjectionInfo<Proj>::SetFrame(const Coordinate & botLeft, const Coordinate
 	MyRealType w, MyRealType h, STEP_TYPE stepType, bool keepAR)
 {				
 	this->SetRawFrame(botLeft, topRight, w, h, stepType, keepAR);
-	this->ComputeAABB(this->frame.min, this->frame.max);
+	this->ComputeAABBWithoutTransform(this->frame.min, this->frame.max);
 }
 
 
@@ -461,6 +461,29 @@ void ProjectionInfo<Proj>::LineBresenham(Pixel<int> start, Pixel<int> end,
 	}
 }
 
+template <typename Proj>
+void ProjectionInfo<Proj>::ComputeAABBWithoutTransform(Coordinate& min, Coordinate& max) const
+{
+	//temporary disable transform
+	auto oldTransform = this->transform;
+	this->transform = nullptr;
+
+	this->ComputeAABB(min, max);
+
+	this->transform = oldTransform;
+}
+
+template <typename Proj>
+void ProjectionInfo<Proj>::ComputeAABBWithoutTransform(int startX, int startY, int endX, int endY, Coordinate& min, Coordinate& max) const
+{
+	//temporary disable transform
+	auto oldTransform = this->transform;
+	this->transform = nullptr;
+
+	this->ComputeAABB(startX, startY, endX, endY, min, max);
+
+	this->transform = oldTransform;
+}
 
 
 /// <summary>
@@ -499,15 +522,10 @@ void ProjectionInfo<Proj>::ComputeAABB(Coordinate& min, Coordinate& max) const
 /// <param name="max"></param>
 template <typename Proj>
 void ProjectionInfo<Proj>::ComputeAABB(int startX, int startY, int endX, int endY, Coordinate& min, Coordinate& max) const
-{
-	//temporary disable transform
-	auto oldTransform = this->transform;
-	this->transform = nullptr;	
-
-			
+{		
 	std::vector<Coordinate> border;
 
-	if (static_cast<const Proj*>(this)->ORTHOGONAL_LAT_LON)
+	if ((static_cast<const Proj*>(this)->ORTHOGONAL_LAT_LON) && (this->transform == nullptr))
 	{
 		Coordinate c0 = this->ProjectInverse({ startX, startY });
 		border.push_back(c0);
@@ -553,9 +571,6 @@ void ProjectionInfo<Proj>::ComputeAABB(int startX, int startY, int endX, int end
 	}
 	
 	ProjectionUtils::ComputeAABB(border, min, max);
-
-	//restore transform
-	this->transform = oldTransform;
 }
 
 

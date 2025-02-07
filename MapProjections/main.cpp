@@ -547,12 +547,153 @@ void TestVectorization()
 	//========================================
 }
 
+
+
+
+void TestOblique2()
+{	
+	/*
+	 :grid_south_pole_latitude = -35.0; // double
+      :grid_south_pole_longitude = -8.0; // double
+      :grid_south_pole_angle = 0.0; // double
+	*/
+
+	/*
+	MinLat = 37.741560
+MinLon = -42.075240
+MaxLat = 69.550000
+MaxLon = 38.757020 
+	*/
+
+	/*
+	-13.5 - 20.25 
+	-13.6 - 14.55
+	*/
+
+	unsigned int w = 676;
+	unsigned int h = 564;
+
+	std::vector<uint8_t> imgRawData;
+	std::vector<uint8_t> fileData;
+	lodepng::load_file(fileData, "D://knmi_eu.png");
+	lodepng::decode(imgRawData, w, h, fileData, LodePNGColorType::LCT_GREY);
+
+
+
+
+	Projections::Coordinate bbMin, bbMax;
+	Projections::Coordinate newPole;
+
+	//--------
+	//proj="ob_tran", o_lat_p=south_pole_lat, o_lon_p=south_pole_lon, lon_0=rotation_angle
+
+	//+proj=ob_tran +o_proj=longlat +lon_0=-40 +o_lat_p=22 +R=6.371e+06 +no_defs
+	bbMin.lat = 37.741560_deg; bbMin.lon = -42.075240_deg;
+	bbMax.lat = 69.550000_deg; bbMax.lon = 38.757020_deg;
+
+	bbMin.lat = -13.6_deg; bbMin.lon = -13.5_deg;
+	bbMax.lat = 14.55_deg; bbMax.lon = 20.25_deg;
+	newPole = { Longitude::deg(-8.0), Latitude::deg(90-35.0) };
+
+
+	//+proj=ob_tran +o_proj=longlat +lon_0=26.5 +o_lat_p=40 +o_lon_p=0 +R=6367470 +no_defs	
+	//South pole is at 26.5°,40°.
+	//you would rotate 50 degrees north (from -90° to -40°)  => Lat: 90 - 40 = 50
+	// and 26.5 degrees east (from 0° to 26.5°)	
+	// 
+	//bbMin.lat = -80.0_deg; bbMin.lon = -170.0_deg;
+	//bbMax.lat = 80.0_deg; bbMax.lon = 170.0_deg;
+	//newPole = { Longitude::deg(26.5), Latitude::deg(50.0) };
+
+	Projections::Equirectangular* inputImage = new Projections::Equirectangular();
+	inputImage->SetFrame(bbMin, bbMax, w, h, Projections::STEP_TYPE::PIXEL_CENTER, false); //same resolution as ipImage frame
+
+	Projections::PoleRotationTransform* transform = new Projections::PoleRotationTransform(newPole);
+	inputImage->SetLatLonTransform(transform);
+
+
+	//--------
+
+	auto a = inputImage->ProjectInverse({ 0, 0 });
+	auto b = inputImage->ProjectInverse({ 0, int(h) });
+	auto c = inputImage->ProjectInverse({ int(w), 0 });
+	auto d = inputImage->ProjectInverse({ int(w), int(h) });
+
+	inputImage->ComputeAABB(0, 0, w - 1, h - 1, bbMin, bbMax);
+
+	std::cout << a << "\n" << b << "\n" << c << "\n" << d << std::endl;
+	std::cout << "\n" << std::endl;
+	std::cout << bbMin << "\n" << bbMax << std::endl;
+/*
+lat: 66.2157 | lon : -42.0752
+lat : 39.6922 | lon : -25.1461
+lat : 62.5895 | lon : 38.8398
+lat : 37.6775 | lon : 17.2118
+*/
+
+	Projections::Equirectangular* outputImage = new Projections::Equirectangular();
+	/*
+	bbMin.lat = -80.0_deg; bbMin.lon = -180.0_deg;
+	bbMax.lat = 80.0_deg; bbMax.lon = 180.0_deg;
+
+	
+	bbMin.lat = 36.0_deg; bbMin.lon = -46.0_deg;
+	bbMax.lat = 90.0_deg; bbMax.lon = 80.0_deg;	
+	outputImage->SetFrame(bbMin, bbMax, 1024, 1024, Projections::STEP_TYPE::PIXEL_CENTER, false);
+
+	
+	auto a = outputImage->ProjectInverse({ 123, 123 });
+	auto b = outputImage->ProjectInverse({ 940, 123 });
+	auto c = outputImage->ProjectInverse({ 123, 805 });
+	auto d = outputImage->ProjectInverse({ 940, 805 });
+
+	bbMin.lat = 47.507_deg; bbMin.lon = -30.850_deg;
+	bbMax.lat = 83.507_deg; bbMax.lon = 69.777_deg;
+	*/
+
+	int newW = static_cast<int>(std::sqrt(inputImage->GetFrameWidth() * inputImage->GetFrameWidth() +
+		inputImage->GetFrameHeight() * inputImage->GetFrameHeight()));
+
+	outputImage->SetFrame(bbMin, bbMax,
+		newW, inputImage->GetFrameHeight(),
+		Projections::STEP_TYPE::PIXEL_CENTER, false);
+
+
+	//--------
+
+	CountriesUtils cu;
+	cu.Load("D://borders.csv", 5);
+
+	{
+		ProjectionRenderer pd(inputImage);
+		pd.AddBorders(&cu);
+		pd.Clear();
+		pd.DrawBorders();
+		pd.SaveToFile("D://xxx2.png");
+	}
+
+	ProjectionRenderer pd(outputImage, Projections::ProjectionRenderer::RenderImageType::GRAY);
+	pd.AddBorders(&cu);
+
+	pd.Clear();
+
+	//compute mapping from input -> output projection   
+	Reprojection reprojection = Reprojection<int>::CreateReprojection(inputImage, outputImage);
+
+	pd.DrawImage(imgRawData.data(), Projections::ProjectionRenderer::RenderImageType::GRAY, reprojection);
+
+	pd.DrawBorders();
+	pd.SaveToFile("D://output.png");
+}
+
 int main(int argc, const char* argv[])
 {
 
 	{
-		TestVectorization();
-		
+		TestOblique2();
+
+		//TestVectorization();
+		return 0;
 		
 
 		printf("x");

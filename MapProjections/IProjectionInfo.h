@@ -84,6 +84,9 @@ namespace Projections
 		virtual void ComputeAABB(Coordinate & min, Coordinate & max) const = 0;
 		virtual void ComputeAABB(int startX, int startY, int endX, int endY, Coordinate& min, Coordinate& max) const = 0;
 
+		virtual void ComputeAABBWithoutTransform(Coordinate& min, Coordinate& max) const = 0;
+		virtual void ComputeAABBWithoutTransform(int startX, int startY, int endX, int endY, Coordinate& min, Coordinate& max) const = 0;
+
 		virtual bool IsIndependentLatLon() const = 0;
 		virtual bool IsOrthogonalLatLon() const = 0;
 #endif

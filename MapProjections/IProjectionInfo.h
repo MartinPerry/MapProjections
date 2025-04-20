@@ -18,6 +18,8 @@ namespace Projections
 	class ITransform
 	{
 	public:
+		virtual ~ITransform() = default;
+
 		virtual Coordinate Transform(const Coordinate& c) const = 0;
 		virtual Coordinate TransformInverse(const Coordinate& c) const = 0;		
 	};

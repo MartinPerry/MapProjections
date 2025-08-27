@@ -295,6 +295,10 @@
     <ClCompile Include="ProjectionInfo.cpp" />
     <ClCompile Include="ProjectionRenderer.cpp" />
     <ClCompile Include="Reprojection.cpp" />
+    <ClCompile Include="tests.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_lib|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release_lib|x64'">true</ExcludedFromBuild>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="CountriesUtils.h" />
@@ -306,6 +310,7 @@
     <ClInclude Include="PoleRotationTransform.h" />
     <ClInclude Include="ProjectionInfo.h" />
     <ClInclude Include="ProjectionRenderer.h" />
+    <ClInclude Include="Projections\AEQD.h" />
     <ClInclude Include="Projections\Equirectangular.h" />
     <ClInclude Include="Projections\GEOS.h" />
     <ClInclude Include="Projections\LambertAzimuthal.h" />
@@ -332,6 +337,10 @@
     <ClInclude Include="simd\neon\Projections\Equirectangular_neon.h" />
     <ClInclude Include="simd\neon\Projections\Mercator_neon.h" />
     <ClInclude Include="simd\neon\Reprojection_neon.h" />
+    <ClInclude Include="tests.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_lib|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release_lib|x64'">true</ExcludedFromBuild>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\README.md" />

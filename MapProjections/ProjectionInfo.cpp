@@ -12,6 +12,7 @@
 #include "./Projections/Equirectangular.h"
 #include "./Projections/PolarSteregographic.h"
 #include "./Projections/GEOS.h"
+#include "./Projections/AEQD.h"
 
 #include "MapProjectionUtils.h"
 
@@ -546,25 +547,25 @@ void ProjectionInfo<Proj>::ComputeAABB(int startX, int startY, int endX, int end
 
 		this->LineBresenham({ startX, startY }, { startX, endY },
 			[&](int x, int y) -> void {
-				Coordinate c = this->ProjectInverse({ x, y });
+				Coordinate c = this->ProjectInverse(x, y);
 				if (std::isnan(c.lat.rad()) || std::isnan(c.lon.rad())) return;
 				border.push_back(std::move(c));
 			});
 		this->LineBresenham({ startX, startY }, { endX, startY },
 			[&](int x, int y) -> void {
-				Coordinate c = this->ProjectInverse({ x, y });
+				Coordinate c = this->ProjectInverse(x, y);
 				if (std::isnan(c.lat.rad()) || std::isnan(c.lon.rad())) return;
 				border.push_back(std::move(c));
 			});
 		this->LineBresenham({ endX, endY }, { startX, endY },
 			[&](int x, int y) -> void {
-				Coordinate c = this->ProjectInverse({ x, y });
+				Coordinate c = this->ProjectInverse(x, y);
 				if (std::isnan(c.lat.rad()) || std::isnan(c.lon.rad())) return;
 				border.push_back(std::move(c));
 			});
 		this->LineBresenham({ endX, endY }, { endX, startY },
 			[&](int x, int y) -> void {
-				Coordinate c = this->ProjectInverse({ x, y });
+				Coordinate c = this->ProjectInverse(x, y);
 				if (std::isnan(c.lat.rad()) || std::isnan(c.lon.rad())) return;
 				border.push_back(std::move(c));
 			});
@@ -585,3 +586,4 @@ template class Projections::ProjectionInfo<Miller>;
 template class Projections::ProjectionInfo<Equirectangular>;
 template class Projections::ProjectionInfo<PolarSteregographic>;
 template class Projections::ProjectionInfo<GEOS>;
+template class Projections::ProjectionInfo<AEQD>;

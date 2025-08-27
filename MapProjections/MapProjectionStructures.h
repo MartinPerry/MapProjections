@@ -37,7 +37,8 @@ namespace Projections
 		POLAR_STEREOGRAPHICS = 4,
         MILLER = 5,
 		GEOS = 6,
-		LAMBERT_AZIMUTHAL = 7
+		LAMBERT_AZIMUTHAL = 7,
+		AEQD = 8
 	};
 
 

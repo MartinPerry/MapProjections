@@ -25,6 +25,7 @@
 #include "./simd/avx/Projections/Mercator_avx.h"
 #include "./simd/avx/Projections/GEOS_avx.h"
 #include "./simd/avx/Projections/Equirectangular_avx.h"
+#include "./simd/avx/Projections/AEQD_avx.h"
 #include "./simd/avx/MapProjectionUtils_avx.h"
 #include "./simd/avx/Reprojection_avx.h"
 
@@ -53,9 +54,11 @@ using namespace Projections;
 namespace nsAvx = Projections::Avx;
 namespace nsNeon = Projections::Neon;
 
+static const std::string TEST_DATA_DIR = "d:\\Martin\\Programming\\test\\MapProjections\\TestData\\";
+
 //================================================================
 
-std::vector<uint8_t> LoadPngAsGray(const char* filePath, unsigned& w, unsigned& h)
+std::vector<uint8_t> LoadPngAsGray(const std::string& filePath, unsigned& w, unsigned& h)
 {
 	std::vector<uint8_t> imgRawData;
 	std::vector<uint8_t> fileData;
@@ -65,7 +68,7 @@ std::vector<uint8_t> LoadPngAsGray(const char* filePath, unsigned& w, unsigned& 
 	return imgRawData;
 }
 
-std::vector<uint8_t> LoadPngRgb(const char* filePath, unsigned& w, unsigned& h)
+std::vector<uint8_t> LoadPngRgb(const std::string& filePath, unsigned& w, unsigned& h)
 {
 	std::vector<uint8_t> imgRawData;
 	std::vector<uint8_t> fileData;
@@ -102,7 +105,7 @@ void TestGeos(const char* outputFileName)
 	unsigned w = 0;
 	unsigned h = 0;
 
-	std::vector<uint8_t> imgRawData = LoadPngRgb("d:\\Martin\\Programming\\test\\MapProjections\\TestData\\goes16.png", w, h);
+	std::vector<uint8_t> imgRawData = LoadPngRgb(TEST_DATA_DIR + "goes16.png", w, h);
 	
 	Coordinate bbMin, bbMax;	
 	bbMin.lat = -90.0_deg; bbMin.lon = -180.0_deg;
@@ -156,7 +159,7 @@ void TestReprojectEqToMerc(const char* outputFileName)
 	unsigned w = 0;
 	unsigned h = 0;
 	
-	std::vector<uint8_t> imgRawData = LoadPngRgb("d:\\Martin\\Programming\\test\\MapProjections\\TestData\\8081_earthmap2k.png", w, h);
+	std::vector<uint8_t> imgRawData = LoadPngRgb(TEST_DATA_DIR + "8081_earthmap2k.png", w, h);
 
 	Projections::Coordinate bbMin, bbMax;
 	bbMin.lat = -90.0_deg; bbMin.lon = -180.0_deg;
@@ -242,6 +245,59 @@ void TestReprojectLambertToEq()
 	std::cout << "TestReprojectLambertToEq" << std::endl;
 
 	TestReprojectLambertToEq<LambertConic, Equirectangular, Reprojection>("D://reproj_lam_eq_cpu.png");
+}
+
+//================================================================
+
+template <typename Input, typename Output, template <class> class Reproj>
+void TestReprojectAEQDToMerc(const char* outputFileName)
+{
+	//hrr data projection
+
+	unsigned w = 0;
+	unsigned h = 0;
+
+	std::vector<uint8_t> imgRawData = LoadPngRgb(TEST_DATA_DIR + "tr07.png", w, h);
+
+	Projections::Coordinate bbMin, bbMax;
+	
+	Input aeqd(30.4375_deg, 36.266389_deg, 370);
+	aeqd.CalcBounds(bbMin, bbMax);
+
+	aeqd.SetFrame(bbMin, bbMax, w, h, Projections::STEP_TYPE::PIXEL_CENTER, false);
+	
+	auto cc = aeqd.Project<int>(Coordinate(Longitude(30.4375_deg), Latitude(36.266389_deg)));
+	std::cout << "Projected: [" << cc.x << ", " << cc.y << "]" <<std::endl;
+	std::cout << "Reference: [360, 360]" << std::endl;
+
+	
+	Output outputImage;
+	outputImage.SetFrame(&aeqd, false); //same resolution as ipImage frame
+
+
+	auto reproj = Reproj<short>::CreateReprojection<Input, Output>(&aeqd, &outputImage);
+
+	//==========================================================
+
+
+	std::vector<uint8_t> rawData = reproj.ReprojectDataNerestNeighbor<uint8_t, std::vector<uint8_t>, 3>(imgRawData.data(), 0);
+
+	Save(&outputImage, rawData, ProjectionRenderer::RenderImageType::RGB, outputFileName);
+}
+
+
+void TestReprojectAEQDToMerc()
+{
+	std::cout << "TestReprojectAEQDToMerc" << std::endl;
+
+	TestReprojectAEQDToMerc<AEQD, Mercator, Reprojection>("D://reproj_aeqd_merc_cpu.png");
+}
+
+void TestReprojectAEQDToMerc_AVX()
+{
+	std::cout << "TestReprojectAEQDToMerc_AVX" << std::endl;
+
+	TestReprojectAEQDToMerc<nsAvx::AEQD, nsAvx::Mercator, nsAvx::Reprojection>("D://reproj_aeqd_merc_avx.png");
 }
 
 //================================================================
@@ -393,7 +449,7 @@ void TestWrapAround()
 	unsigned w = 0;
 	unsigned h = 0;
 	
-	std::vector<uint8_t> imgRawData = LoadPngAsGray("d:\\Martin\\Programming\\test\\MapProjections\\TestData\\8081_earthmap2k.png", w, h);
+	std::vector<uint8_t> imgRawData = LoadPngAsGray(TEST_DATA_DIR + "8081_earthmap2k.png", w, h);
 
 
 

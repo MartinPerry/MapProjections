@@ -72,21 +72,21 @@ ProjectionInfo<Proj>::ProjectionInfo(PROJECTION curProjection) :
 
 }
 template <typename Proj>
-std::tuple<MyRealType, MyRealType, MyRealType, MyRealType> ProjectionInfo<Proj>::GetFrameBotLeftTopRight(
+typename ProjectionInfo<Proj>::InternalBoundingBox ProjectionInfo<Proj>::GetInternalBoundingBox(
 	const Coordinate & botLeft, const Coordinate & topRight)
 {
 	ProjectedValue tmpMinPixel = static_cast<Proj*>(this)->ProjectInternal(botLeft);
 	ProjectedValue tmpMaxPixel = static_cast<Proj*>(this)->ProjectInternal(topRight);
 
-	ProjectedValue minVal, maxVal;
+	InternalBoundingBox bb;
 	
-	minVal.x = std::min(tmpMinPixel.x, tmpMaxPixel.x);
-	minVal.y = std::min(tmpMinPixel.y, tmpMaxPixel.y);
+	bb.min.x = std::min(tmpMinPixel.x, tmpMaxPixel.x);
+	bb.min.y = std::min(tmpMinPixel.y, tmpMaxPixel.y);
 
-	maxVal.x = std::max(tmpMinPixel.x, tmpMaxPixel.x);
-	maxVal.y = std::max(tmpMinPixel.y, tmpMaxPixel.y);
+	bb.max.x = std::max(tmpMinPixel.x, tmpMaxPixel.x);
+	bb.max.y = std::max(tmpMinPixel.y, tmpMaxPixel.y);
 
-	return std::make_tuple(minVal.x, minVal.y, maxVal.x, maxVal.y);
+	return bb;
 }
 
 
@@ -167,13 +167,13 @@ void ProjectionInfo<Proj>::SetRawFrame(const Coordinate & botLeft, const Coordin
 	
 	//calculate minimum internal projection value				
 
-	auto[minX, minY, maxX, maxY] = static_cast<Proj*>(this)->GetFrameBotLeftTopRight(botLeft, topRight);
+	auto bb = static_cast<Proj*>(this)->GetInternalBoundingBox(botLeft, topRight);
 
 	this->frame.stepType = stepType;
 
 	//Calculate width / height of internal projection		
-	MyRealType projW = maxX - minX;
-	MyRealType projH = maxY - minY;
+	MyRealType projW = bb.max.x - bb.min.x;
+	MyRealType projH = bb.max.y - bb.min.y;
 
 	//----------------------------------------------------------
 
@@ -218,8 +218,8 @@ void ProjectionInfo<Proj>::SetRawFrame(const Coordinate & botLeft, const Coordin
 		this->frame.hPadding = ((this->frame.h - this->frame.GetStepOffset()) - (this->frame.hAR * projH)) * MyRealType(0.5);
 	}
 
-	this->frame.projPrecomX = -this->frame.wPadding + this->frame.wAR * minX;
-	this->frame.projPrecomY = -(this->frame.h - this->frame.GetStepOffset()) + this->frame.hPadding - this->frame.hAR * minY;
+	this->frame.projPrecomX = -this->frame.wPadding + this->frame.wAR * bb.min.x;
+	this->frame.projPrecomY = -(this->frame.h - this->frame.GetStepOffset()) + this->frame.hPadding - this->frame.hAR * bb.min.y;
 
 	this->frame.min = botLeft;
 	this->frame.max = topRight;
@@ -315,7 +315,7 @@ void ProjectionInfo<Proj>::SetFrame(const Coordinate & botLeft, const Coordinate
 	MyRealType w, MyRealType h, STEP_TYPE stepType, bool keepAR)
 {				
 	this->SetRawFrame(botLeft, topRight, w, h, stepType, keepAR);
-	this->ComputeAABBWithoutTransform(this->frame.min, this->frame.max);
+	this->ComputeAABBWithoutTransform(this->frame.min, this->frame.max);	
 }
 
 
@@ -528,10 +528,10 @@ void ProjectionInfo<Proj>::ComputeAABB(int startX, int startY, int endX, int end
 
 	if ((static_cast<const Proj*>(this)->ORTHOGONAL_LAT_LON) && (this->transform == nullptr))
 	{
-		Coordinate c0 = this->ProjectInverse({ startX, startY });
+		Coordinate c0 = this->ProjectInverse(startX, startY);
 		border.push_back(c0);
 
-		Coordinate c1 = this->ProjectInverse({ endX, endY });
+		Coordinate c1 = this->ProjectInverse(endX, endY);
 		border.push_back(c1);
 
 		if (c0.lon.rad() > c1.lon.rad())

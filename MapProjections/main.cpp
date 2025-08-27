@@ -28,6 +28,7 @@
 #include "./simd/avx/Projections/Mercator_avx.h"
 #include "./simd/avx/Projections/GEOS_avx.h"
 #include "./simd/avx/Projections/Equirectangular_avx.h"
+#include "./simd/avx/Projections/AEQD_avx.h"
 #include "./simd/avx/MapProjectionUtils_avx.h"
 #include "./simd/avx/Reprojection_avx.h"
 
@@ -252,99 +253,79 @@ void drawBorders()
 }
 
 
-struct BoundingBox {
-	double lat_min, lat_max; // radians
-	double lon_min, lon_max; // radians
-};
-
-BoundingBox AEQD_Bounds(double lat0, double lon0, double radius_m,
-	double earth_radius = 6371000.0)
-{
-	const double rad = radius_m / earth_radius;
-
-	// latitude bounds
-	double lat_min = lat0 - rad;
-	double lat_max = lat0 + rad;
-	if (lat_min < -ProjectionConstants::PI_2) lat_min = -ProjectionConstants::PI_2;
-	if (lat_max > ProjectionConstants::PI_2) lat_max = ProjectionConstants::PI_2;
-
-	// longitude bounds
-	double lon_min, lon_max;
-	if (lat_min <= -ProjectionConstants::PI_2 || lat_max >= ProjectionConstants::PI_2) {
-		// circle includes a pole -> all longitudes
-		lon_min = -ProjectionConstants::PI;
-		lon_max = ProjectionConstants::PI;
-	}
-	else {
-		double dlon = std::asin(std::sin(rad) / std::cos(lat0));
-		lon_min = lon0 - dlon;
-		lon_max = lon0 + dlon;
-	}
-
-	return { lat_min, lat_max, lon_min, lon_max };
-}
-
 void tr07()
 {
-	//center: 30.4375,36.266389
-	//antppi15.jpg
+	//center: 30.4375, 36.266389
+	//antppi15.jpg (tr07)
 
-	auto bb = AEQD_Bounds((36.266389_deg).rad(), (30.4375_deg).rad(), 360'000);
+	//center: 29.903333, 40.538333
+	//brsppi15.jpg (tr16)
 
+
+	CountriesUtils cu;
+	cu.Load("D://borders.csv", 5);
+	auto turBb = cu.GetCountryBoundingBox("TUR");
+
+	//Projections::Equirectangular eq;
+	//eq.SetFrame(bbMinTr07, bbMaxTr07, w, h, Projections::STEP_TYPE::PIXEL_CENTER, false); //same resolution as ipImage frame
+
+	Projections::Coordinate bbMin, bbMax;
+	bbMin = std::get<0>(turBb);
+	bbMax = std::get<1>(turBb);
+
+	Projections::Mercator eq;
+	eq.SetFrame(bbMin, bbMax, 1500, 0, Projections::STEP_TYPE::PIXEL_CENTER, true); //same resolution as ipImage frame
+
+	ProjectionRenderer pd(&eq, ProjectionRenderer::RenderImageType::RGB);
+	pd.AddBorders(&cu);
+	pd.Clear();
+	
 	unsigned w = 0;
 	unsigned h = 0;
+
+	//=====================
 	std::vector<uint8_t> imgRawData;
 	std::vector<uint8_t> fileData;
 	lodepng::load_file(fileData, "D://tr07.png");
 	lodepng::decode(imgRawData, w, h, fileData, LodePNGColorType::LCT_RGB);
 
-	Projections::Coordinate bbMin, bbMax;
-	
-	bbMin.lat = Latitude::rad(bb.lat_min); bbMin.lon = Longitude::rad(bb.lon_min);
-	bbMax.lat = Latitude::rad(bb.lat_max); bbMax.lon = Longitude::rad(bb.lon_max);
+	Projections::Coordinate bbMinTr07, bbMaxTr07;				
+	Projections::AEQD aeqdTr07(30.4375_deg, 36.266389_deg, 370);	
+	aeqdTr07.CalcBounds(bbMinTr07, bbMaxTr07);
 
-	std::cout << "Min: " << bbMin << std::endl;
-	std::cout << "Max: " << bbMax << std::endl;
+	std::cout << "Min: " << bbMinTr07 << std::endl;
+	std::cout << "Max: " << bbMaxTr07 << std::endl;
 
-	//360
-	//<min lon = "26.4243477" lat = "33.0288312" / >
-	//<max lon = "34.4506523" lat = "39.5039468" / >
+	aeqdTr07.SetFrame(bbMinTr07, bbMaxTr07, w, h, Projections::STEP_TYPE::PIXEL_CENTER, false);
+	auto cc07 = aeqdTr07.Project<int>(Coordinate(Longitude(30.4375_deg), Latitude(36.266389_deg)));
+	printf("[%d, %d]\n", cc07.x, cc07.y);
+		
+	Reprojection reprojectionTr07 = Reprojection<int>::CreateReprojection(&aeqdTr07, &eq);
 
-	//bbMin.lat = 33.0288312_deg; bbMin.lon = 26.4243477_deg;
-	//bbMax.lat = 39.5039468_deg; bbMax.lon = 34.4506523_deg;
+	pd.DrawImage(imgRawData.data(), Projections::ProjectionRenderer::RenderImageType::RGB, reprojectionTr07);
 
-	//360 * sqrt(2)
-	//<min lon = "24.779537" lat = "31.677583" / >
-	//<max lon = "36.095463" lat = "40.851676" / >
+	//=====================
+	imgRawData.clear();
+	lodepng::load_file(fileData, "D://tr16.png");
+	lodepng::decode(imgRawData, w, h, fileData, LodePNGColorType::LCT_RGB);
 
-	//bbMin.lat = 31.677583_deg; bbMin.lon = 24.779537_deg;
-	//bbMax.lat = 40.851676_deg; bbMax.lon = 36.095463_deg;
+	Projections::Coordinate bbMinTr16, bbMaxTr16;
+	Projections::AEQD aeqdTr16(29.903333_deg, 40.538333_deg, 370);
+	aeqdTr07.CalcBounds(bbMinTr16, bbMaxTr16);
 
-	Projections::AEQD aeqd(30.4375_deg, 36.266389_deg);	
-	aeqd.SetRawFrame(bbMin, bbMax, w, h, Projections::STEP_TYPE::PIXEL_CENTER, false);
+	std::cout << "Min: " << bbMinTr16 << std::endl;
+	std::cout << "Max: " << bbMaxTr16 << std::endl;
 
-	auto cc = aeqd.Project<int>(Coordinate(Longitude(30.4375_deg), Latitude(36.266389_deg)));
+	aeqdTr16.SetFrame(bbMinTr16, bbMaxTr16, w, h, Projections::STEP_TYPE::PIXEL_CENTER, false);
+	auto cc16 = aeqdTr16.Project<int>(Coordinate(Longitude(29.903333_deg), Latitude(40.538333_deg)));
+	printf("[%d, %d]\n", cc16.x, cc16.y);
 
-	printf("[%d, %d]\n", cc.x, cc.y);
-	
+	Reprojection reprojectionTr16 = Reprojection<int>::CreateReprojection(&aeqdTr16, &eq);
 
-	//bbMin.lat = 33.724_deg; bbMin.lon = 25.313_deg;
-	//bbMax.lat = 37.996_deg; bbMax.lon = 34.409_deg;
+	pd.DrawImage(imgRawData.data(), Projections::ProjectionRenderer::RenderImageType::RGB, reprojectionTr16);
 
-	Projections::Equirectangular eq;
-	eq.SetFrame(bbMin, bbMax, w, h, Projections::STEP_TYPE::PIXEL_CENTER, false); //same resolution as ipImage frame
-
-
-	Reprojection reprojection = Reprojection<int>::CreateReprojection(&aeqd, &eq);
-
-
-	CountriesUtils cu;
-	cu.Load("D://borders.csv", 5);
-
-	ProjectionRenderer pd(&eq, ProjectionRenderer::RenderImageType::RGB);
-	pd.AddBorders(&cu);
-	pd.Clear();
-	pd.DrawImage(imgRawData.data(), Projections::ProjectionRenderer::RenderImageType::RGB, reprojection);
+	//=====================
+			
 	//pd.SetRawDataTarget(&imgRawData[0], ProjectionRenderer::RenderImageType::RGBA);
 	pd.DrawBorders();
 	pd.SaveToFile("D://tr07_reproj.png");
@@ -352,6 +333,7 @@ void tr07()
 
 void testing()
 {
+	
 	//TestGEOS();
 	//TestGEOS_AVX();
 	//TestGEOS_Neon();
@@ -364,6 +346,9 @@ void testing()
 
 	//TestReprojectionMercToPolar();
 
+	//TestReprojectAEQDToMerc();
+	//TestReprojectAEQDToMerc_AVX();
+
 	//TestOblique();
 
 	//TestWrapAround();
@@ -372,9 +357,8 @@ void testing()
 }
 
 int main(int argc, const char* argv[])
-{
-
-	
+{	
+	//TestReprojectLambertToEq();
 	//tr07();
 	//drawBorders();
 
@@ -446,7 +430,7 @@ int main(int argc, const char* argv[])
 
 		avg /= areas.size();
 
-		int n = areas.size() / 2;
+		int n = static_cast<int>(areas.size() / 2);
 		std::nth_element(areas.begin(), areas.begin() + n, areas.end());
 		double medianArea = areas[n];
 

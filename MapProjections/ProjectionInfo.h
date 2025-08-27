@@ -100,11 +100,15 @@ namespace Projections
             MyRealType y;
         };
 		
+		struct InternalBoundingBox 
+		{
+			ProjectedValue min;
+			ProjectedValue max;
+		};
 
 		ProjectionFrame frame;
 
-		std::tuple<MyRealType, MyRealType, MyRealType, MyRealType>
-			GetFrameBotLeftTopRight(const Coordinate & botLeft, const Coordinate & topRight);
+		virtual InternalBoundingBox GetInternalBoundingBox(const Coordinate & botLeft, const Coordinate & topRight);
 
 		void CalculateWrapRepeat(const Coordinate& botLeft, const Coordinate& topRight);
 

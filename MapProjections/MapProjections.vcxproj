@@ -323,6 +323,7 @@
     <ClInclude Include="simd\avx\MapProjectionStructures_avx.h" />
     <ClInclude Include="simd\avx\MapProjectionUtils_avx.h" />
     <ClInclude Include="simd\avx\ProjectionInfo_avx.h" />
+    <ClInclude Include="simd\avx\Projections\AEQD_avx.h" />
     <ClInclude Include="simd\avx\Projections\Equirectangular_avx.h" />
     <ClInclude Include="simd\avx\Projections\GEOS_avx.h" />
     <ClInclude Include="simd\avx\Projections\Mercator_avx.h" />

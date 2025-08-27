@@ -20,20 +20,61 @@ namespace Projections
 	public:
 		static const bool INDEPENDENT_LAT_LON = false; //can Lat / Lon be computed separatly. To compute one, we dont need the other
 		static const bool ORTHOGONAL_LAT_LON = false; //is lat / lon is orthogonal to each other
-
-		AEQD(const Longitude& centerLon, const Latitude& centerLat) : 
+		
+		AEQD(const Longitude& centerLon, const Latitude& centerLat, MyRealType radius) :
 			ProjectionInfo(PROJECTION::AEQD),
 			centerLon(centerLon),
 			centerLat(centerLat),
+			radius(radius),
 			sinCenterLat(std::sin(centerLat.rad())),
 			cosCenterLat(std::cos(centerLat.rad()))
 		{}
 
 		AEQD(const AEQD& mi) : 
-			AEQD(mi.centerLon, mi.centerLat)
+			AEQD(mi.centerLon, mi.centerLat, mi.radius)
 		{
 			this->frame = mi.frame;
 		}
+
+
+		void CalcBounds(Coordinate& min, Coordinate& max)
+		{
+			const MyRealType rad = radius / ProjectionConstants::EARTH_RADIUS;
+
+			// latitude bounds
+			MyRealType latMin = centerLat.rad() - rad;
+			MyRealType latMax = centerLat.rad() + rad;
+			if (latMin < -ProjectionConstants::PI_2)
+			{
+				latMin = -ProjectionConstants::PI_2;
+			}
+			if (latMax > ProjectionConstants::PI_2)
+			{
+				latMax = ProjectionConstants::PI_2;
+			}
+
+			// longitude bounds
+			MyRealType lonMin, lonMax;
+			if (latMin <= -ProjectionConstants::PI_2 || latMax >= ProjectionConstants::PI_2)
+			{
+				// circle includes a pole -> all longitudes
+				lonMin = -ProjectionConstants::PI;
+				lonMax = ProjectionConstants::PI;
+			}
+			else 
+			{
+				MyRealType dlon = std::asin(std::sin(rad) / cosCenterLat);
+				lonMin = centerLon.rad() - dlon;
+				lonMax = centerLon.rad() + dlon;
+			}
+
+			min.lat = Latitude::rad(latMin);
+			min.lon = Longitude::rad(lonMin);
+
+			max.lat = Latitude::rad(latMax);
+			max.lon = Longitude::rad(lonMax);
+		}
+
 
 		friend class ProjectionInfo<AEQD>;
 
@@ -41,20 +82,26 @@ namespace Projections
 
 		const Longitude centerLon;
 		const Latitude centerLat;
+		const MyRealType radius;
 
 		const double sinCenterLat;
 		const double cosCenterLat;
-
-
+		
 		const char* GetNameInternal() const
 		{
 			return "AEQD";
 		}
 
-		std::tuple<double, double, double, double>
-			GetFrameBotLeftTopRight(const Coordinate& botLeft, const Coordinate& topRight)
+		InternalBoundingBox GetInternalBoundingBox(const Coordinate& botLeft, const Coordinate& topRight) override
 		{
-			return std::make_tuple(-360, -360, 360, 360);
+			InternalBoundingBox bb;
+			bb.min.x = -radius;
+			bb.min.y = -radius;
+
+			bb.max.x = radius;
+			bb.max.y = radius;
+
+			return bb;
 		}
 
 		ProjectedValue ProjectInternal(const Coordinate& c) const

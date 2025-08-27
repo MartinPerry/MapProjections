@@ -173,6 +173,9 @@
     <ClInclude Include="tests.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="simd\avx\Projections\AEQD_avx.h">
+      <Filter>Header Files\simd\avx\Projections</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\README.md">

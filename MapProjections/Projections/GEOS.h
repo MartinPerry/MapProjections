@@ -133,10 +133,16 @@ namespace Projections
 			return "GEOS";
 		}
 
-		std::tuple<double, double, double, double>
-			GetFrameBotLeftTopRight(const Coordinate & botLeft, const Coordinate & topRight)
+		InternalBoundingBox GetInternalBoundingBox(const Coordinate & botLeft, const Coordinate & topRight) override
 		{
-			return std::make_tuple(0, 0, 2 * sat.coff, 2 * sat.loff);
+			InternalBoundingBox bb;
+			bb.min.x = 0;
+			bb.min.y = 0;
+
+			bb.max.x = 2 * sat.coff;
+			bb.max.y = 2 * sat.loff;
+
+			return bb;
 		}
 
 		ProjectedValue ProjectInternal(const Coordinate & c) const

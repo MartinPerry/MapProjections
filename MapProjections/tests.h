@@ -10,6 +10,9 @@ void TestReprojectEqToMerc();
 void TestReprojectEqToMerc_AVX();
 void TestReprojectEqToMerc_Neon();
 
+void TestReprojectAEQDToMerc();
+void TestReprojectAEQDToMerc_AVX();
+
 void TestReprojectLambertToEq();
 
 void TestReprojectionMercToPolar();

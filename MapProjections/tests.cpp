@@ -251,9 +251,7 @@ void TestReprojectLambertToEq()
 
 template <typename Input, typename Output, template <class> class Reproj>
 void TestReprojectAEQDToMerc(const char* outputFileName)
-{
-	//hrr data projection
-
+{	
 	unsigned w = 0;
 	unsigned h = 0;
 
@@ -261,6 +259,8 @@ void TestReprojectAEQDToMerc(const char* outputFileName)
 
 	Projections::Coordinate bbMin, bbMax;
 	
+
+	//radius is larger than image size, read from imaeg it is 360.. but with it, result was not correct
 	Input aeqd(30.4375_deg, 36.266389_deg, 370);
 	aeqd.CalcBounds(bbMin, bbMax);
 
@@ -284,7 +284,6 @@ void TestReprojectAEQDToMerc(const char* outputFileName)
 
 	Save(&outputImage, rawData, ProjectionRenderer::RenderImageType::RGB, outputFileName);
 }
-
 
 void TestReprojectAEQDToMerc()
 {

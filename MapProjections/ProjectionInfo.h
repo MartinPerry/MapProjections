@@ -53,8 +53,8 @@ namespace Projections
 		template <typename InputProj>
 		void SetFrame(InputProj * proj, MyRealType w, MyRealType h, STEP_TYPE stepType, bool keepAR = true);
 
-		void SetFrame(const ProjectionFrame & frame) OVERRIDE;		
-		void SetFrame(const Coordinate & botLeft, const Coordinate & topRight, MyRealType w, MyRealType h, STEP_TYPE stepType, bool keepAR = true) OVERRIDE;
+		void SetFrameWithAdjustment(const ProjectionFrame & frame) OVERRIDE;
+		void SetFrameWithAdjustment(const Coordinate & botLeft, const Coordinate & topRight, MyRealType w, MyRealType h, STEP_TYPE stepType, bool keepAR = true) OVERRIDE;
 		void SetRawFrame(const Coordinate & botLeft, const Coordinate & topRight, MyRealType w, MyRealType h, STEP_TYPE stepType, bool keepAR = true) OVERRIDE;
 		void SetFrameFromAABB(const Coordinate & min, const Coordinate & max, MyRealType w, MyRealType h, STEP_TYPE stepType, bool keepAR = true) OVERRIDE;
 

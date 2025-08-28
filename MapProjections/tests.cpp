@@ -112,7 +112,7 @@ void TestGeos(const char* outputFileName)
 	bbMax.lat = 90.0_deg; bbMax.lon = 180.0_deg;
 
 	Input geos(GEOS::SatelliteSettings::Goes16());
-	geos.SetFrame(bbMin, bbMax, w, h, STEP_TYPE::PIXEL_CENTER, false);
+	geos.SetRawFrame(bbMin, bbMax, w, h, STEP_TYPE::PIXEL_CENTER, false);
 
 
 	
@@ -120,7 +120,7 @@ void TestGeos(const char* outputFileName)
 	bbMax.lat = 45.0_deg; bbMax.lon = -10.0_deg;
 
 	Output mercator;
-	mercator.SetFrame(bbMin, bbMax, 4200, 0, STEP_TYPE::PIXEL_CENTER, false);
+	mercator.SetRawFrame(bbMin, bbMax, 4200, 0, STEP_TYPE::PIXEL_CENTER, false);
 
 	
 	auto reproj = Reproj<short>::CreateReprojection<Input, Output>(&geos, &mercator);
@@ -166,14 +166,14 @@ void TestReprojectEqToMerc(const char* outputFileName)
 	bbMax.lat = 90.0_deg; bbMax.lon = 180.0_deg;
 
 	Input eq;
-	eq.SetFrame(bbMin, bbMax, w, h, Projections::STEP_TYPE::PIXEL_CENTER, false);
+	eq.SetRawFrame(bbMin, bbMax, w, h, Projections::STEP_TYPE::PIXEL_CENTER, false);
 
 	// Coordinate bbMin, bbMax;	
 	bbMin.lat = -70.0_deg; bbMin.lon = -20.0_deg;
 	bbMax.lat = 70.0_deg; bbMax.lon = 78.0_deg;
 
 	Output mercator;
-	mercator.SetFrame(bbMin, bbMax, 2232, 0, Projections::STEP_TYPE::PIXEL_CENTER, false);
+	mercator.SetRawFrame(bbMin, bbMax, 2232, 0, Projections::STEP_TYPE::PIXEL_CENTER, false);
 
 
 	auto reproj = Reproj<short>::CreateReprojection<Input, Output>(&eq, &mercator);
@@ -224,7 +224,7 @@ void TestReprojectLambertToEq(const char* outputFileName)
 	bbMax.lat = 52.6132742_deg; bbMax.lon = -60.9365_deg;
 
 	Input lam(38.5_deg, -97.5_deg, 38.5_deg);
-	lam.SetFrame(bbMin, bbMax, w, h, Projections::STEP_TYPE::PIXEL_CENTER, false);
+	lam.SetFrameWithAdjustment(bbMin, bbMax, w, h, Projections::STEP_TYPE::PIXEL_CENTER, false);
 	
 	Output outputImage;
 	outputImage.SetFrame(&lam, false); //same resolution as ipImage frame
@@ -264,7 +264,7 @@ void TestReprojectAEQDToMerc(const char* outputFileName)
 	Input aeqd(30.4375_deg, 36.266389_deg, 370);
 	aeqd.CalcBounds(bbMin, bbMax);
 
-	aeqd.SetFrame(bbMin, bbMax, w, h, Projections::STEP_TYPE::PIXEL_CENTER, false);
+	aeqd.SetFrameWithAdjustment(bbMin, bbMax, w, h, Projections::STEP_TYPE::PIXEL_CENTER, false);
 	
 	auto cc = aeqd.Project<int>(Coordinate(Longitude(30.4375_deg), Latitude(36.266389_deg)));
 	std::cout << "Projected: [" << cc.x << ", " << cc.y << "]" <<std::endl;
@@ -310,7 +310,7 @@ void TestReprojectionMercToPolar()
 	
 	//create input projection and set its 2D image frame
 	Projections::Mercator inputImage;
-	inputImage.SetFrame(botLeft, topRight, 2048, 2048, Projections::STEP_TYPE::PIXEL_CENTER, true);
+	inputImage.SetRawFrame(botLeft, topRight, 2048, 2048, Projections::STEP_TYPE::PIXEL_CENTER, true);
 
 
 	botLeft.lat = 46.1929_deg;
@@ -320,7 +320,7 @@ void TestReprojectionMercToPolar()
 	topRight.lon = 17.1126_deg;
 
 	Projections::PolarSteregographic outputImage(10.0_deg, 60.0_deg);
-	outputImage.SetFrame(botLeft, topRight, 900, 1100, Projections::STEP_TYPE::PIXEL_CENTER, false); //same resolution as ipImage frame
+	outputImage.SetRawFrame(botLeft, topRight, 900, 1100, Projections::STEP_TYPE::PIXEL_CENTER, false); //same resolution as ipImage frame
 
 
 	auto reproj = Projections::Reprojection<int>::CreateReprojection(&inputImage, &outputImage);
@@ -384,7 +384,7 @@ void TestOblique()
 	//newPole = { Longitude::deg(26.5), Latitude::deg(50.0) };
 
 	Projections::Equirectangular* inputImage = new Projections::Equirectangular();
-	inputImage->SetFrame(bbMin, bbMax, w, h, Projections::STEP_TYPE::PIXEL_CENTER, false); //same resolution as ipImage frame
+	inputImage->SetRawFrame(bbMin, bbMax, w, h, Projections::STEP_TYPE::PIXEL_CENTER, false); //same resolution as ipImage frame
 
 	Projections::PoleRotationTransform* transform = new Projections::PoleRotationTransform(newPole);
 	inputImage->SetLatLonTransform(transform);
@@ -423,7 +423,7 @@ void TestOblique()
 	int newW = static_cast<int>(std::sqrt(inputImage->GetFrameWidth() * inputImage->GetFrameWidth() +
 		inputImage->GetFrameHeight() * inputImage->GetFrameHeight()));
 
-	outputImage->SetFrame(bbMin, bbMax,
+	outputImage->SetRawFrame(bbMin, bbMax,
 		newW, inputImage->GetFrameHeight(),
 		Projections::STEP_TYPE::PIXEL_CENTER, false);
 
@@ -459,13 +459,13 @@ void TestWrapAround()
 	
 	//create input projection and set its visible frame
 	auto merc = Projections::Mercator();
-	merc.SetFrame(bbMin, bbMax, 2880, 1441, Projections::STEP_TYPE::PIXEL_BORDER, true);
+	merc.SetRawFrame(bbMin, bbMax, 2880, 1441, Projections::STEP_TYPE::PIXEL_BORDER, true);
 
 	bbMin.lat = -90.0_deg; bbMin.lon = -180.0_deg;
 	bbMax.lat = 90.0_deg; bbMax.lon = 180.0_deg;
 
 	auto eq = Projections::Equirectangular();
-	eq.SetFrame(bbMin, bbMax, w, h, Projections::STEP_TYPE::PIXEL_BORDER, false);
+	eq.SetRawFrame(bbMin, bbMax, w, h, Projections::STEP_TYPE::PIXEL_BORDER, false);
 
 	auto reproj = Reprojection<int>::CreateReprojection(&eq, &merc);
 
@@ -531,7 +531,7 @@ void TestCalculations()
 
 	//auto kk = inputImage->ProjectInverseInternal(-899.5, -529.5);
 
-	eq->SetFrame(bbMin, bbMax, 1799, 1059, Projections::STEP_TYPE::PIXEL_BORDER, false);
+	eq->SetRawFrame(bbMin, bbMax, 1799, 1059, Projections::STEP_TYPE::PIXEL_BORDER, false);
 	auto f = eq->GetFrame();
 
 

@@ -77,7 +77,7 @@ void TestLambertAzimuthal()
 
 	//auto kk = inputImage->ProjectInverseInternal(-899.5, -529.5);
 
-	inputImage->SetFrame(bbMin, bbMax, w, h, Projections::STEP_TYPE::PIXEL_CENTER, false);
+	inputImage->SetFrameWithAdjustment(bbMin, bbMax, w, h, Projections::STEP_TYPE::PIXEL_CENTER, false);
 
 
 	Projections::Equirectangular* outputImage = new Projections::Equirectangular();
@@ -133,7 +133,7 @@ void LambertConicPressureEu()
 
 	//auto kk = inputImage->ProjectInverseInternal(-899.5, -529.5);
 
-	inputImage->SetFrame(bbMin, bbMax, w, h, Projections::STEP_TYPE::PIXEL_CENTER, false);
+	inputImage->SetFrameWithAdjustment(bbMin, bbMax, w, h, Projections::STEP_TYPE::PIXEL_CENTER, false);
 
 
 	ProjectionRenderer pd(inputImage);
@@ -179,8 +179,8 @@ void TestVectorization()
 	nsAvx::Mercator mercAvx;
 	nsAvx::Equirectangular eqAvx;
 
-	eqAvx.SetFrame(bbMin, bbMax, w, h, Projections::STEP_TYPE::PIXEL_CENTER, false);
-	mercAvx.SetFrame(bbMin, bbMax, w, h, Projections::STEP_TYPE::PIXEL_CENTER, false);
+	eqAvx.SetFrameWithAdjustment(bbMin, bbMax, w, h, Projections::STEP_TYPE::PIXEL_CENTER, false);
+	mercAvx.SetFrameWithAdjustment(bbMin, bbMax, w, h, Projections::STEP_TYPE::PIXEL_CENTER, false);
 	
 	std::array< Projections::Coordinate, 8> gpsAvx;
 	for (int i = 0; i < gpsAvx.size(); i++)
@@ -198,8 +198,8 @@ void TestVectorization()
 	nsNeon::Mercator mercNeon;
 	nsNeon::Equirectangular eqNeon;
 
-	eqNeon.SetFrame(bbMin, bbMax, w, h, Projections::STEP_TYPE::PIXEL_CENTER, false);
-	mercNeon.SetFrame(bbMin, bbMax, w, h, Projections::STEP_TYPE::PIXEL_CENTER, false);
+	eqNeon.SetFrameWithAdjustment(bbMin, bbMax, w, h, Projections::STEP_TYPE::PIXEL_CENTER, false);
+	mercNeon.SetFrameWithAdjustment(bbMin, bbMax, w, h, Projections::STEP_TYPE::PIXEL_CENTER, false);
 
 	std::array< Projections::Coordinate, 4> tmp4;
 	for (int i = 0; i < tmp4.size(); i++)
@@ -236,7 +236,7 @@ void drawBorders()
 	bbMax.lat = -9.0_deg; bbMax.lon = 156.0_deg;
 
 	Projections::Equirectangular eq;
-	eq.SetFrame(bbMin, bbMax, w, h, Projections::STEP_TYPE::PIXEL_CENTER, false); //same resolution as ipImage frame
+	eq.SetRawFrame(bbMin, bbMax, w, h, Projections::STEP_TYPE::PIXEL_CENTER, false); //same resolution as ipImage frame
 
 
 	CountriesUtils cu;
@@ -274,7 +274,7 @@ void tr07()
 	bbMax = std::get<1>(turBb);
 
 	Projections::Mercator eq;
-	eq.SetFrame(bbMin, bbMax, 1500, 0, Projections::STEP_TYPE::PIXEL_CENTER, true); //same resolution as ipImage frame
+	eq.SetRawFrame(bbMin, bbMax, 1500, 0, Projections::STEP_TYPE::PIXEL_CENTER, true); //same resolution as ipImage frame
 
 	ProjectionRenderer pd(&eq, ProjectionRenderer::RenderImageType::RGB);
 	pd.AddBorders(&cu);
@@ -296,7 +296,7 @@ void tr07()
 	std::cout << "Min: " << bbMinTr07 << std::endl;
 	std::cout << "Max: " << bbMaxTr07 << std::endl;
 
-	aeqdTr07.SetFrame(bbMinTr07, bbMaxTr07, w, h, Projections::STEP_TYPE::PIXEL_CENTER, false);
+	aeqdTr07.SetRawFrame(bbMinTr07, bbMaxTr07, w, h, Projections::STEP_TYPE::PIXEL_CENTER, false);
 	auto cc07 = aeqdTr07.Project<int>(Coordinate(Longitude(30.4375_deg), Latitude(36.266389_deg)));
 	printf("[%d, %d]\n", cc07.x, cc07.y);
 		
@@ -316,7 +316,7 @@ void tr07()
 	std::cout << "Min: " << bbMinTr16 << std::endl;
 	std::cout << "Max: " << bbMaxTr16 << std::endl;
 
-	aeqdTr16.SetFrame(bbMinTr16, bbMaxTr16, w, h, Projections::STEP_TYPE::PIXEL_CENTER, false);
+	aeqdTr16.SetRawFrame(bbMinTr16, bbMaxTr16, w, h, Projections::STEP_TYPE::PIXEL_CENTER, false);
 	auto cc16 = aeqdTr16.Project<int>(Coordinate(Longitude(29.903333_deg), Latitude(40.538333_deg)));
 	printf("[%d, %d]\n", cc16.x, cc16.y);
 
@@ -332,32 +332,33 @@ void tr07()
 }
 
 void testing()
-{
-	
-	//TestGEOS();
-	//TestGEOS_AVX();
-	//TestGEOS_Neon();
+{	
+	TestGEOS();
+	TestGEOS_AVX();
+	TestGEOS_Neon();
 
-	//TestReprojectEqToMerc();
-	//TestReprojectEqToMerc_AVX();
-	//TestReprojectEqToMerc_Neon();
+	TestReprojectEqToMerc();
+	TestReprojectEqToMerc_AVX();
+	TestReprojectEqToMerc_Neon();
 
-	//TestReprojectLambertToEq();
+	TestReprojectLambertToEq();
 
-	//TestReprojectionMercToPolar();
+	TestReprojectionMercToPolar();
 
-	//TestReprojectAEQDToMerc();
-	//TestReprojectAEQDToMerc_AVX();
+	TestReprojectAEQDToMerc();
+	TestReprojectAEQDToMerc_AVX();
 
-	//TestOblique();
+	TestOblique();
 
-	//TestWrapAround();
+	TestWrapAround();
 
-	//TestCalculations();
+	TestCalculations();
 }
 
 int main(int argc, const char* argv[])
 {	
+	testing();
+
 	//TestReprojectLambertToEq();
 	//tr07();
 	//drawBorders();
@@ -376,7 +377,7 @@ int main(int argc, const char* argv[])
 
 		//create input projection and set its 2D image frame
 		Projections::Mercator inputImage = Projections::Mercator();
-		inputImage.SetFrame(bb[0], bb[1], 2048, 2048, Projections::STEP_TYPE::PIXEL_CENTER, true);
+		inputImage.SetFrameWithAdjustment(bb[0], bb[1], 2048, 2048, Projections::STEP_TYPE::PIXEL_CENTER, true);
 
 		Coordinate pragGps;
 		pragGps.lat = Latitude::deg(50.071); 
@@ -407,7 +408,7 @@ int main(int argc, const char* argv[])
 
 		//auto kk = inputImage->ProjectInverseInternal(-899.5, -529.5);
 
-		eq->SetFrame(bbMin, bbMax, 2880, 1441, Projections::STEP_TYPE::PIXEL_BORDER, false);
+		eq->SetFrameWithAdjustment(bbMin, bbMax, 2880, 1441, Projections::STEP_TYPE::PIXEL_BORDER, false);
 		auto f = eq->GetFrame();
 		auto gps = eq->ProjectInverse({ 1437, 330 });
 

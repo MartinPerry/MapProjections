@@ -91,7 +91,7 @@ typename ProjectionInfo<Proj>::InternalBoundingBox ProjectionInfo<Proj>::GetInte
 
 
 template <typename Proj>
-void ProjectionInfo<Proj>::SetFrame(const ProjectionFrame & frame)
+void ProjectionInfo<Proj>::SetFrameWithAdjustment(const ProjectionFrame & frame)
 {	
 	this->frame.h = frame.h;
 	this->frame.w = frame.w;
@@ -301,6 +301,7 @@ void ProjectionInfo<Proj>::CalculateWrapRepeat(const Coordinate& botLeft, const 
 
 /// <summary>
 /// Same logic as SetRawFrame
+/// Should be used for projections that are not Equirectangular
 /// BUT: min/max coordinate of frame is calculated as AABB 
 /// using inverse projection
 /// </summary>
@@ -311,7 +312,7 @@ void ProjectionInfo<Proj>::CalculateWrapRepeat(const Coordinate& botLeft, const 
 /// <param name="stepType"></param>
 /// <param name="keepAR"></param>
 template <typename Proj>
-void ProjectionInfo<Proj>::SetFrame(const Coordinate & botLeft, const Coordinate & topRight,
+void ProjectionInfo<Proj>::SetFrameWithAdjustment(const Coordinate & botLeft, const Coordinate & topRight,
 	MyRealType w, MyRealType h, STEP_TYPE stepType, bool keepAR)
 {				
 	this->SetRawFrame(botLeft, topRight, w, h, stepType, keepAR);
@@ -338,7 +339,7 @@ void ProjectionInfo<Proj>::SetFrameFromAABB(const Coordinate & min, const Coordi
 {
 	//not working correctly for non-orthogonal lat/lon projections !!!!!
 	//todo
-	this->SetFrame(min, max, w, h, stepType, keepAR);
+	this->SetFrameWithAdjustment(min, max, w, h, stepType, keepAR);
 }
 
 /// <summary>

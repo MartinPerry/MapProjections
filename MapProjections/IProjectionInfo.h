@@ -70,8 +70,8 @@ namespace Projections
 		virtual void SetFrame(InputProj * proj, double w, double h, bool keepAR = true) = 0;
 		*/
 
-		virtual void WithAdjustment(const ProjectionFrame & frame) = 0;
-		virtual void WithAdjustment(const Coordinate & botLeft, const Coordinate & topRight, MyRealType w, MyRealType h, STEP_TYPE stepType, bool keepAR = true) = 0;
+		virtual void SetFrameWithAdjustment(const ProjectionFrame & frame) = 0;
+		virtual void SetFrameWithAdjustment(const Coordinate & botLeft, const Coordinate & topRight, MyRealType w, MyRealType h, STEP_TYPE stepType, bool keepAR = true) = 0;
 		virtual void SetRawFrame(const Coordinate & botLeft, const Coordinate & topRight, MyRealType w, MyRealType h, STEP_TYPE stepType, bool keepAR = true) = 0;
 		virtual void SetFrameFromAABB(const Coordinate & min, const Coordinate & max, MyRealType w, MyRealType h, STEP_TYPE stepType, bool keepAR = true) = 0;
 		

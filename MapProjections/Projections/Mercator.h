@@ -51,6 +51,12 @@ namespace Projections
 
 		ProjectedValueInverse ProjectInverseInternal(MyRealType x, MyRealType y) const
 		{
+			//https://www.johndcook.com/blog/2009/09/21/gudermannian/
+			//return {
+			//	Latitude::rad(std::asin(std::tanh(y))),
+			//	Longitude::rad(x)
+			//};
+
 			return {
 				Latitude::rad(2.0 * std::atan(std::pow(ProjectionConstants::E, y)) - ProjectionConstants::PI_2),
 				Longitude::rad(x)

@@ -49,14 +49,12 @@ namespace Projections::Neon
 			ProjectedValueInverseNeon c;
 			c.lonRad = x;
 
-			c.latRad = my_pow_f32(vdupq_n_f32(static_cast<float>(ProjectionConstants::E)), y);
+			//c.latRad = my_pow_f32(vdupq_n_f32(static_cast<float>(ProjectionConstants::E)), y);
+			c.latRad = my_exp_f32(y);
+
 			c.latRad = my_atan_f32(c.latRad);
 			c.latRad = vaddq_f32(c.latRad, c.latRad);
 			c.latRad = vsubq_f32(c.latRad, vdupq_n_f32(static_cast<float>(ProjectionConstants::PI_2)));
-
-
-			//c.lon = Longitude::rad(x);
-			//c.lat = Latitude::rad(2.0 * std::atan(std::pow(ProjectionConstants::E, y)) - ProjectionConstants::PI_2);
 
 			return c;
 		};

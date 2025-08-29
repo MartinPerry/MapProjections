@@ -149,7 +149,7 @@ namespace Projections
 	void ProjectionInfo<Proj>::SetFrame(InputProj * proj, MyRealType w, MyRealType h, STEP_TYPE stepType, bool keepAR)
 	{
 		auto f = proj->GetFrame();
-		this->SetFrame(f.min, f.max, w, h, stepType, keepAR);
+		this->SetFrameWithAdjustment(f.min, f.max, w, h, stepType, keepAR);
 	};
 
 

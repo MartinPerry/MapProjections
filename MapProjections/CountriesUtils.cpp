@@ -137,13 +137,21 @@ std::string CountriesUtils::LoadFromFile(const char* filePath) const
 
 std::vector<std::string> CountriesUtils::Split(const std::string& s, char delim) const
 {
-	std::stringstream ss;
-	ss.str(s);
-	std::string item;
 	std::vector<std::string> elems;
-	while (std::getline(ss, item, delim)) 
+	elems.reserve(1024); // reserve some space to avoid frequent reallocations
+	std::size_t start = 0;
+
+	while (true)
 	{
-		elems.push_back(item);
+		std::size_t pos = s.find(delim, start);
+		if (pos == std::string::npos)
+		{
+			elems.emplace_back(s.data() + start, s.size() - start);
+			break;
+		}
+
+		elems.emplace_back(s.data() + start, pos - start);
+		start = pos + 1;
 	}
 
 	return elems;

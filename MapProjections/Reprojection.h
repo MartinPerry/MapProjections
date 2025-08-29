@@ -144,7 +144,7 @@ namespace Projections
 
 						int offset = static_cast<int>(ww);
 
-						int px = p.x;
+						T px = p.x;
 
 						MyRealType nc = f.repeatNegCount;						
 						while (nc > 0)

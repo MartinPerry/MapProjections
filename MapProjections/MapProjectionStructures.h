@@ -122,6 +122,41 @@ namespace Projections
 	};
 
 		
+	//================================================================================================
+	//================================================================================================
+	//================================================================================================
+
+	struct CoordinatesBoundingBox
+	{
+		Coordinate topLeft;
+		Coordinate topRight;
+		Coordinate botLeft;
+		Coordinate botRight;
+
+		std::array<Coordinate, 2> GetAabb() const
+		{
+			auto minLat = std::min(topLeft.lat.deg(), topRight.lat.deg());
+			minLat = std::min(botLeft.lat.deg(), minLat);
+			minLat = std::min(botRight.lat.deg(), minLat);
+
+			auto minLon = std::min(topLeft.lon.deg(), topRight.lon.deg());
+			minLon = std::min(botLeft.lon.deg(), minLon);
+			minLon = std::min(botRight.lon.deg(), minLon);
+
+			auto maxLat = std::max(topLeft.lat.deg(), topRight.lat.deg());
+			maxLat = std::max(botLeft.lat.deg(), maxLat);
+			maxLat = std::max(botRight.lat.deg(), maxLat);
+
+			auto maxLon = std::max(topLeft.lon.deg(), topRight.lon.deg());
+			maxLon = std::max(botLeft.lon.deg(), maxLon);
+			maxLon = std::max(botRight.lon.deg(), maxLon);
+
+			return {
+				Coordinate(Latitude::deg(minLat), Longitude::deg(minLon)),
+				Coordinate(Latitude::deg(maxLat), Longitude::deg(maxLon)),
+			};
+		}
+	};
 	
 	//================================================================================================
 	//================================================================================================

@@ -302,6 +302,7 @@ void ProjectionInfo<Proj>::CalculateWrapRepeat(const Coordinate& botLeft, const 
 /// <summary>
 /// Same logic as SetRawFrame
 /// Should be used for projections that are not Equirectangular
+/// or if keepAR is true
 /// BUT: min/max coordinate of frame is calculated as AABB 
 /// using inverse projection
 /// </summary>

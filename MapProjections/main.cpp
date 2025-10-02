@@ -357,10 +357,10 @@ void testing()
 
 int main(int argc, const char* argv[])
 {	
-	testing();
+	//testing();
 
 	//TestReprojectLambertToEq();
-	//tr07();
+	tr07();
 	//drawBorders();
 
 

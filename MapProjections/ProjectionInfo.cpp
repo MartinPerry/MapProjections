@@ -13,6 +13,7 @@
 #include "./Projections/PolarSteregographic.h"
 #include "./Projections/GEOS.h"
 #include "./Projections/AEQD.h"
+#include "./Projections/TransverseMercator.h"
 
 #include "MapProjectionUtils.h"
 
@@ -589,3 +590,4 @@ template class Projections::ProjectionInfo<Equirectangular>;
 template class Projections::ProjectionInfo<PolarSteregographic>;
 template class Projections::ProjectionInfo<GEOS>;
 template class Projections::ProjectionInfo<AEQD>;
+template class Projections::ProjectionInfo<TransverseMercator>;

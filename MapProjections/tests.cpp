@@ -15,6 +15,7 @@
 #include "./Projections/PolarSteregographic.h"
 #include "./Projections/GEOS.h"
 #include "./Projections/AEQD.h"
+#include "./Projections/TransverseMercator.h"
 
 //================================================================
 // AVX
@@ -205,6 +206,52 @@ void TestReprojectEqToMerc_Neon()
 	std::cout << "TestReprojectEqToMerc_Neon" << std::endl;
 
 	TestReprojectEqToMerc<nsNeon::Equirectangular, nsNeon::Mercator, nsNeon::Reprojection>("D://reproj_eq_mercator_neon.png");
+}
+
+//================================================================
+
+template <typename Input, typename Output, template <class> class Reproj>
+void TestReprojectTransverseMercToEq(const char* outputFileName)
+{
+	//italy radar data (corners)
+	//47.541S, 4.515V    //47.541S, 20.420V
+	//35.063S, 5.926V	//35.083S, 19.029V
+
+	unsigned w = 1200;
+	unsigned h = 1400;
+
+	std::vector<uint8_t> imgRawData = std::vector<uint8_t>(w * h, 255);
+	
+	Projections::Coordinate bbMin, bbMax;	
+	bbMin.lat = 35.063_deg; bbMin.lon = 5.926_deg;
+	bbMax.lat = 47.541_deg; bbMax.lon = 20.420_deg;
+
+	Input tme(12.5_deg, 42.0_deg);
+	tme.SetFrameWithAdjustment(bbMin, bbMax, w, h, Projections::STEP_TYPE::PIXEL_CENTER, false);
+
+	//make larger area around to see the projected square
+	bbMin.lat = 33.063_deg; bbMin.lon = 2.926_deg;
+	bbMax.lat = 50.541_deg; bbMax.lon = 25.420_deg;
+
+	Output outputImage;	
+	outputImage.SetRawFrame(bbMin, bbMax, w, h, Projections::STEP_TYPE::PIXEL_CENTER, false);
+
+
+	auto reproj = Reproj<short>::CreateReprojection<Input, Output>(&tme, &outputImage);
+
+	//==========================================================
+
+
+	std::vector<uint8_t> rawData = reproj.ReprojectDataNerestNeighbor<uint8_t, std::vector<uint8_t>, 1>(imgRawData.data(), 0);
+
+	Save(&outputImage, rawData, ProjectionRenderer::RenderImageType::GRAY, outputFileName, 128);
+}
+
+void TestReprojectTransverseMercToEq()
+{
+	std::cout << "TestReprojectTransverseMercToEq" << std::endl;
+
+	TestReprojectTransverseMercToEq<TransverseMercator, Equirectangular, Reprojection>("D://reproj_transverse_merc_eq_cpu.png");
 }
 
 //================================================================

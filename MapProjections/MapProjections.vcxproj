@@ -318,6 +318,7 @@
     <ClInclude Include="Projections\Mercator.h" />
     <ClInclude Include="Projections\Miller.h" />
     <ClInclude Include="Projections\PolarSteregographic.h" />
+    <ClInclude Include="Projections\TransverseMercator.h" />
     <ClInclude Include="Reprojection.h" />
     <ClInclude Include="simd\avx\avx_math_float.h" />
     <ClInclude Include="simd\avx\MapProjectionStructures_avx.h" />

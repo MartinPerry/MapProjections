@@ -15,6 +15,7 @@
 #include "./Projections/PolarSteregographic.h"
 #include "./Projections/GEOS.h"
 #include "./Projections/AEQD.h"
+#include "./Projections/TransverseMercator.h"
 
 
 #include "PoleRotationTransform.h"
@@ -228,25 +229,43 @@ void drawBorders()
 	unsigned h = 600;
 	std::vector<uint8_t> imgRawData;
 	std::vector<uint8_t> fileData;
-	lodepng::load_file(fileData, "D://meteye.png");	
-	lodepng::decode(imgRawData, w, h, fileData, LodePNGColorType::LCT_RGBA);
+	//lodepng::load_file(fileData, "D://image_b_oc_2.png");	
+	lodepng::load_file(fileData, "D://radar.png");
+	
+	lodepng::decode(imgRawData, w, h, fileData, LodePNGColorType::LCT_RGB);
+	
+	/*
+	Projections::Coordinate bbMin, bbMax;
+	bbMin.lat = -51.6_deg; bbMin.lon = 110.0_deg;
+	bbMax.lat = 10.0_deg; bbMax.lon = 180.0_deg;
+
+	
+	Projections::Mercator mi;
+	mi.SetRawFrame(bbMin, bbMax, w, h, Projections::STEP_TYPE::PIXEL_CENTER, true); //same resolution as ipImage frame
+	*/
+
+	//47.541S, 4.515V    //47.541S, 20.420V
+	//35.063S, 5.926V	//35.083S, 19.029V
 
 	Projections::Coordinate bbMin, bbMax;
-	bbMin.lat = -45.0_deg; bbMin.lon = 111.0_deg;
-	bbMax.lat = -9.0_deg; bbMax.lon = 156.0_deg;
+	bbMin.lat = 35.063_deg; bbMin.lon = 5.926_deg;
+	bbMax.lat = 47.541_deg; bbMax.lon = 20.420_deg;
 
-	Projections::Equirectangular eq;
-	eq.SetRawFrame(bbMin, bbMax, w, h, Projections::STEP_TYPE::PIXEL_CENTER, false); //same resolution as ipImage frame
 
+	Projections::TransverseMercator mi(12.5_deg, 42.0_deg);
+	mi.SetFrameWithAdjustment(bbMin, bbMax, w, h, Projections::STEP_TYPE::PIXEL_CENTER, false); //same resolution as ipImage frame
+	
+	auto px = mi.Project<float>(Coordinate(Latitude(42.407_deg), Longitude(11.986_deg)));
+	auto pxInv = mi.ProjectInverse<float>(px);
 
 	CountriesUtils cu;
 	cu.Load("D://borders.csv", 5);
 
-	ProjectionRenderer pd(&eq, ProjectionRenderer::RenderImageType::RGBA);
+	ProjectionRenderer pd(&mi, ProjectionRenderer::RenderImageType::RGB);
 	pd.AddBorders(&cu);
 	pd.Clear();
 	//pd.DrawImage(&imgRawData[0], ProjectionRenderer::RenderImageType::GRAY, w, h, &outputImage);
-	pd.SetRawDataTarget(&imgRawData[0], ProjectionRenderer::RenderImageType::RGBA);
+	pd.SetRawDataTarget(&imgRawData[0], ProjectionRenderer::RenderImageType::RGB);
 	pd.DrawBorders();
 	pd.SaveToFile("D://xxx2.png");
 	
@@ -360,8 +379,9 @@ int main(int argc, const char* argv[])
 	//testing();
 
 	//TestReprojectLambertToEq();
-	tr07();
-	//drawBorders();
+	//tr07();
+	TestReprojectTransverseMercToEq();
+	drawBorders();
 
 
 	return 0;

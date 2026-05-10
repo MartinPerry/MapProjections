@@ -38,7 +38,8 @@ namespace Projections
         MILLER = 5,
 		GEOS = 6,
 		LAMBERT_AZIMUTHAL = 7,
-		AEQD = 8
+		AEQD = 8,
+		TRANSVERSE_MERCATOR = 9
 	};
 
 

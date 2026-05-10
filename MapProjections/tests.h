@@ -13,6 +13,8 @@ void TestReprojectEqToMerc_Neon();
 void TestReprojectAEQDToMerc();
 void TestReprojectAEQDToMerc_AVX();
 
+void TestReprojectTransverseMercToEq();
+
 void TestReprojectLambertToEq();
 
 void TestReprojectionMercToPolar();

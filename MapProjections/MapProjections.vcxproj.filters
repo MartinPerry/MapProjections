@@ -176,6 +176,9 @@
     <ClInclude Include="simd\avx\Projections\AEQD_avx.h">
       <Filter>Header Files\simd\avx\Projections</Filter>
     </ClInclude>
+    <ClInclude Include="Projections\TransverseMercator.h">
+      <Filter>Header Files\Projections</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\README.md">

@@ -19,7 +19,7 @@ namespace Projections
 	{
 	public:
 		
-		static const bool INDEPENDENT_LAT_LON = true; //can Lat / Lon be computed separatly. To compute one, we dont need the other
+		static const bool INDEPENDENT_LAT_LON = false; //can Lat / Lon be computed separatly. To compute one, we dont need the other
 		static const bool ORTHOGONAL_LAT_LON = false; //is lat / lon is orthogonal to each other
 
 		TransverseMercator(const Longitude& centralLon, const Latitude& centralLat) :

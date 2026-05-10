@@ -233,6 +233,7 @@ void TestReprojectTransverseMercToEq(const char* outputFileName)
 	bbMin.lat = 33.063_deg; bbMin.lon = 2.926_deg;
 	bbMax.lat = 50.541_deg; bbMax.lon = 25.420_deg;
 
+
 	Output outputImage;	
 	outputImage.SetRawFrame(bbMin, bbMax, w, h, Projections::STEP_TYPE::PIXEL_CENTER, false);
 

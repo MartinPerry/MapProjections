@@ -380,9 +380,19 @@ int main(int argc, const char* argv[])
 
 	//TestReprojectLambertToEq();
 	//tr07();
-	TestReprojectTransverseMercToEq();
-	drawBorders();
+	//TestReprojectTransverseMercToEq();
+	//drawBorders();
 
+	Projections::Coordinate c0 = Projections::Coordinate(
+		Latitude(50.036_deg), Longitude(13.975_deg)
+	);
+
+	Projections::Coordinate c1 = Projections::Coordinate(
+		Latitude(39.402_deg), Longitude(-121.816_deg)
+	);
+
+
+	auto pts = ProjectionUtils::CalcGreatCirclePoints(c0, c1, 1.0 / 10.0);
 
 	return 0;
 

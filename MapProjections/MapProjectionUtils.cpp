@@ -80,6 +80,7 @@ void ProjectionUtils::ComputeAABB_LessAccurateNearPoles(const Coordinate& center
 /// <summary>
 /// Calculate end point based on shortest path (on real earth surface)
 /// see: http://www.movable-type.co.uk/scripts/latlong.html
+/// (Great circle path)
 /// </summary>
 /// <param name="start"></param>
 /// <param name="bearing"></param>
@@ -148,6 +149,54 @@ Coordinate ProjectionUtils::CalcEndPointDirect(
 	end.lon.Normalize();
 
 	return end;
+}
+
+/// <summary>
+/// Calc point along "great circle"
+/// https://www.reddit.com/r/algorithms/comments/xljj7k/how_to_calculate_a_series_of_waypoints_between/
+/// </summary>
+/// <param name="start"></param>
+/// <param name="end"></param>
+/// <param name="step"></param>
+/// <returns></returns>
+std::vector<Coordinate> ProjectionUtils::CalcGreatCirclePoints(const Coordinate& start, const Coordinate& end, MyRealType step)
+{
+	//convert start and end points from latitude and longitude to Cartesian XYZ coordinates on the Unit Sphere: 
+	auto [x0, y0, z0] = start.ConvertToCartesianLHSystem(1.0);
+	auto [x1, y1, z1] = end.ConvertToCartesianLHSystem(1.0);
+
+	
+	std::vector<Coordinate> res;
+
+	res.push_back(start);
+
+	//Interpolate linearly between the points.
+    //Let M be fraction along the path from point A to point B:
+
+	for (MyRealType m = step; m <= (1 - step); m += step)
+	{
+
+		MyRealType xm = (x1 - x0) * m + x0;
+		MyRealType ym = (y1 - y0) * m + y0;
+		MyRealType zm = (z1 - z0) * m + z0;
+
+		//Project the interpolated points up to the surface of the Unit Sphere
+		auto tmp = std::sqrt(xm * xm + ym * ym + zm * zm);
+
+		MyRealType xs = xm / tmp;
+		MyRealType ys = ym / tmp;
+		MyRealType zs = zm / tmp;
+
+		//Convert back to latitude and longitude
+		auto mc = Coordinate::CreateFromCartesianLHSystem(xs, ys, zs);
+
+		res.push_back(mc);
+	}
+
+	res.push_back(end);
+
+	
+	return res;
 }
 
 /// <summary>

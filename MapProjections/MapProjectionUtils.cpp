@@ -173,19 +173,23 @@ std::vector<Coordinate> ProjectionUtils::CalcGreatCirclePoints(const Coordinate&
 	//Interpolate linearly between the points.
     //Let M be fraction along the path from point A to point B:
 
+	auto dx = (x1 - x0);
+	auto dy = (y1 - y0);
+	auto dz = (z1 - z0);
+
 	for (MyRealType m = step; m <= (1 - step); m += step)
 	{
 
-		MyRealType xm = (x1 - x0) * m + x0;
-		MyRealType ym = (y1 - y0) * m + y0;
-		MyRealType zm = (z1 - z0) * m + z0;
+		MyRealType xm = dx * m + x0;
+		MyRealType ym = dy * m + y0;
+		MyRealType zm = dz * m + z0;
 
 		//Project the interpolated points up to the surface of the Unit Sphere
-		auto tmp = std::sqrt(xm * xm + ym * ym + zm * zm);
+		auto tmp = 1.0 / std::sqrt(xm * xm + ym * ym + zm * zm);
 
-		MyRealType xs = xm / tmp;
-		MyRealType ys = ym / tmp;
-		MyRealType zs = zm / tmp;
+		MyRealType xs = xm * tmp;
+		MyRealType ys = ym * tmp;
+		MyRealType zs = zm * tmp;
 
 		//Convert back to latitude and longitude
 		auto mc = Coordinate::CreateFromCartesianLHSystem(xs, ys, zs);

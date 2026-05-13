@@ -207,6 +207,8 @@ std::vector<Coordinate> ProjectionUtils::CalcGreatCirclePoints(const Coordinate&
 /// Calculate Haversine distance in km between from - to
 /// 
 /// /http://stackoverflow.com/questions/365826/calculate-distance-between-2-gps-coordinates
+/// 
+/// Will calculate shortest path between these two points
 /// </summary>		
 /// <param name="from"></param>
 /// <param name="to"></param>
@@ -220,6 +222,7 @@ MyRealType ProjectionUtils::Distance(const Coordinate& from, const Coordinate& t
 	MyRealType c = 2 * std::atan2(std::sqrt(a), std::sqrt(1 - a));
 	MyRealType d = 6367 * c;
 
+	/*
 	if (dlong >= 3.14159265358979323846)
 	{
 		//we are going over 0deg meridian
@@ -230,6 +233,7 @@ MyRealType ProjectionUtils::Distance(const Coordinate& from, const Coordinate& t
 
 		d = 40075.0 - d;
 	}
+	*/
 
 	return d;
 };

@@ -61,8 +61,8 @@ namespace Projections
 		ProjectedValueInverse ProjectInverseInternal(MyRealType x, MyRealType y) const
 		{			
 			return {
-				Latitude::rad(y / cosStandardParallel + lonCentralMeridian.rad()),
-				Longitude::rad(x + standardParallel.rad())
+				Latitude::rad(y + standardParallel.rad()),
+				Longitude::rad(x / cosStandardParallel + lonCentralMeridian.rad())
 			};
 		};
 

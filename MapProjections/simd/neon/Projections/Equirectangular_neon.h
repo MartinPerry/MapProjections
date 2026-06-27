@@ -51,14 +51,14 @@ namespace Projections::Neon
 			auto lonMer = vdupq_n_f32(static_cast<float>(lonCentralMeridian.rad()));
 			
 			ProjectedValueInverseNeon c;
-			c.lonRad = vaddq_f32(x, stPar);
+			c.latRad = vaddq_f32(y, stPar);
 
 #if defined(__aarch64__) || defined(__arm64__) || defined(vdivq_f32)
-			c.latRad = vdivq_f32(y, cosStPar);
+			c.lonRad = vdivq_f32(x, cosStPar);
 #else
-			c.latRad = vmulq_f32(y, vrecpeq_f32(cosStPar)); //y * 1/cosStPar
+			c.lonRad = vmulq_f32(x, vrecpeq_f32(cosStPar)); //x * 1/cosStPar
 #endif			
-			c.latRad = vaddq_f32(c.latRad, lonMer);
+			c.lonRad = vaddq_f32(c.lonRad, lonMer);
 
 			return c;
 		};

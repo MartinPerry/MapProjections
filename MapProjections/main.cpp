@@ -383,16 +383,29 @@ int main(int argc, const char* argv[])
 	//TestReprojectTransverseMercToEq();
 	//drawBorders();
 
+	//prague
+	//Projections::Coordinate c0 = Projections::Coordinate(
+	//	Latitude(50.036_deg), Longitude(13.975_deg)
+	//);
+
+	//neco v japonsku
 	Projections::Coordinate c0 = Projections::Coordinate(
-		Latitude(50.036_deg), Longitude(13.975_deg)
+		Latitude(40.447_deg), Longitude(140.625_deg)
 	);
 
+	//usa kalifornie
 	Projections::Coordinate c1 = Projections::Coordinate(
 		Latitude(39.402_deg), Longitude(-121.816_deg)
 	);
 
+	auto distKm = static_cast<float>(Projections::ProjectionUtils::Distance(c1, c0));
 
 	auto pts = ProjectionUtils::CalcGreatCirclePoints(c0, c1, 1.0 / 10.0);
+
+	for (const auto& pt : pts)
+	{
+		printf("%f / %f\n", pt.lon.deg(), pt.lat.deg());
+	}
 
 	return 0;
 

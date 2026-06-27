@@ -161,6 +161,11 @@ Coordinate ProjectionUtils::CalcEndPointDirect(
 /// <returns></returns>
 std::vector<Coordinate> ProjectionUtils::CalcGreatCirclePoints(const Coordinate& start, const Coordinate& end, MyRealType step)
 {
+	if (step <= 0)
+	{
+		return {};
+	}
+
 	//convert start and end points from latitude and longitude to Cartesian XYZ coordinates on the Unit Sphere: 
 	auto [x0, y0, z0] = start.ConvertToCartesianLHSystem(1.0);
 	auto [x1, y1, z1] = end.ConvertToCartesianLHSystem(1.0);
@@ -192,7 +197,7 @@ std::vector<Coordinate> ProjectionUtils::CalcGreatCirclePoints(const Coordinate&
 		MyRealType zs = zm * tmp;
 
 		//Convert back to latitude and longitude
-		auto mc = Coordinate::CreateFromCartesianLHSystem(xs, ys, zs);
+		auto mc = Coordinate::CreateFromCartesianLHSystem(xs, ys, zs, 1.0);
 
 		res.push_back(mc);
 	}

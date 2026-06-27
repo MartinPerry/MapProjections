@@ -54,10 +54,10 @@ namespace Projections::Avx
 
 
 			ProjectedValueInverseAvx c;
-			c.lonRad = _mm256_add_ps(x, stPar);
+			c.latRad = _mm256_add_ps(y, stPar);
 
-			c.latRad = _mm256_div_ps(y, cosStPar);
-			c.latRad = _mm256_add_ps(c.latRad, lonMer);
+			c.lonRad = _mm256_div_ps(x, cosStPar);
+			c.lonRad = _mm256_add_ps(c.lonRad, lonMer);
 
 			return c;
 		};

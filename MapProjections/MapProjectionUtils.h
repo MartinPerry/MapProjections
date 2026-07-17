@@ -27,6 +27,8 @@ namespace Projections
 		static Coordinate CalcEndPointDirect(const Coordinate & start, const AngleValue & bearing, MyRealType dist);
 		static MyRealType Distance(const Coordinate & from, const Coordinate & to);
 				
+		static Latitude AntimeridianIntersection(const Coordinate& start, const Coordinate& end);
+
 		static std::vector<Coordinate> CalcGreatCirclePoints(const Coordinate& start, const Coordinate& end, MyRealType step);
 
 		static MyRealType CalcArea(const std::vector<Coordinate> & pts);

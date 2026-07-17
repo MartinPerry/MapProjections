@@ -152,6 +152,32 @@ Coordinate ProjectionUtils::CalcEndPointDirect(
 }
 
 /// <summary>
+/// Calc antimeridian intersection point on a line between two points
+/// </summary>
+/// <param name="start"></param>
+/// <param name="end"></param>
+/// <returns></returns>
+Latitude ProjectionUtils::AntimeridianIntersection(const Coordinate& start, const Coordinate& end)
+{
+	MyRealType lon2 = end.lon.deg();
+
+	// Unwrap lon2 so the segment takes the shortest path.
+	if (lon2 - start.lon.deg() > 180.0)
+	{
+		lon2 -= 360.0;
+	}
+	else if (lon2 - start.lon.deg() < -180.0)
+	{
+		lon2 += 360.0;
+	}
+
+	const double antimeridian = start.lon.deg() >= 0.0 ? 180.0 : -180.0;
+	const double t = (antimeridian - start.lon.deg()) / (lon2 - start.lon.deg());
+
+	return Latitude::deg(start.lat.deg() + t * (end.lat.deg() - start.lat.deg()));
+}
+
+/// <summary>
 /// Calc point along "great circle"
 /// https://www.reddit.com/r/algorithms/comments/xljj7k/how_to_calculate_a_series_of_waypoints_between/
 /// </summary>

@@ -54,9 +54,7 @@ namespace Projections
 		}
 
 		ProjectedValue ProjectInternal(const Coordinate& c) const
-		{
-			//vrtule = lat
-
+		{			
 			double sinLat = std::sin(c.lat.rad());
 			double cosLat = std::cos(c.lat.rad());
 			double cosLonDif = std::cos(c.lon.rad() - centralLon.rad());
@@ -74,7 +72,9 @@ namespace Projections
 
 		ProjectedValueInverse ProjectInverseInternal(MyRealType x, MyRealType y) const
 		{
-			double ro = std::sqrt(x * x + y * y);
+			//double ro = std::sqrt(x * x + y * y);
+			double ro = std::hypot(x, y);
+
 			double c = 2 * std::asin(0.5 * ro);
 
 			double cosC = std::cos(c);
@@ -83,7 +83,11 @@ namespace Projections
 
 			MyRealType lat = std::asin(cosC * sinStanParallel + (y * sinC * cosStanParallel) / ro);
 
-			MyRealType lon = centralLon.rad() + std::atan((x * sinC) / (ro * cosStanParallel * cosC - y * sinStanParallel * sinC));
+			double a = (x * sinC);
+			double b = (ro * cosStanParallel * cosC - y * sinStanParallel * sinC);
+
+			//MyRealType lon = centralLon.rad() + std::atan(a / b);
+			MyRealType lon = centralLon.rad() + std::atan2(a, b);
 
 			return {
 				Latitude::rad(lat),

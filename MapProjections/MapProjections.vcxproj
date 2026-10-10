@@ -295,10 +295,12 @@
     <ClCompile Include="ProjectionInfo.cpp" />
     <ClCompile Include="ProjectionRenderer.cpp" />
     <ClCompile Include="Reprojection.cpp" />
+    <ClCompile Include="ReprojectionPointCloud.cpp" />
     <ClCompile Include="tests.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_lib|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release_lib|x64'">true</ExcludedFromBuild>
     </ClCompile>
+    <ClCompile Include="Triangulation\Triangulation.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="CountriesUtils.h" />
@@ -320,6 +322,7 @@
     <ClInclude Include="Projections\PolarSteregographic.h" />
     <ClInclude Include="Projections\TransverseMercator.h" />
     <ClInclude Include="Reprojection.h" />
+    <ClInclude Include="ReprojectionPointCloud.h" />
     <ClInclude Include="simd\avx\avx_math_float.h" />
     <ClInclude Include="simd\avx\MapProjectionStructures_avx.h" />
     <ClInclude Include="simd\avx\MapProjectionUtils_avx.h" />
@@ -343,6 +346,8 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_lib|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release_lib|x64'">true</ExcludedFromBuild>
     </ClInclude>
+    <ClInclude Include="Triangulation\delaunator.hpp" />
+    <ClInclude Include="Triangulation\Triangulation.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\README.md" />

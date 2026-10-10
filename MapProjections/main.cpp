@@ -374,8 +374,98 @@ void testing()
 	TestCalculations();
 }
 
+
+void TestLambertAzimuthalx()
+{
+	unsigned w = 600;
+	unsigned h = 600;
+
+	std::vector<uint8_t> imgRawData;
+	std::vector<uint8_t> fileData;
+	lodepng::load_file(fileData, "D://orig.png");
+	//lodepng::load_file(fileData, "D://xxx3_empty.png");
+	//lodepng::load_file(fileData, "D://full_disk_ahi_true_color.png");	
+	lodepng::decode(imgRawData, w, h, fileData, LodePNGColorType::LCT_GREY);
+
+
+	CountriesUtils cu;
+	cu.Load("D://borders.csv", 5);
+
+	/*
+	Attribute: LL_lon: -10.434577 (H5T_FLOAT)	
+	Attribute: UL_lon: -39.535786 (H5T_FLOAT)
+	Attribute: UR_lon: 57.811965 (H5T_FLOAT)
+	Attribute: LR_lon: 29.421039 (H5T_FLOAT)
+
+	Attribute: LL_lat: 31.746215 (H5T_FLOAT)
+	Attribute: UL_lat: 67.022833 (H5T_FLOAT)	
+	Attribute: UR_lat: 67.621037 (H5T_FLOAT)	
+	Attribute: LR_lat: 31.987650 (H5T_FLOAT) 
+	*/
+
+
+	Projections::Coordinate bbMin, bbMax;
+
+	//======= lambert conic
+
+	//bbMin.lat = 31.746215_deg; bbMin.lon = -39.535786_deg;
+	//bbMax.lat = 67.621037_deg; bbMax.lon = 57.811965_deg;
+
+	bbMin.lat = 31.746215_deg; bbMin.lon = -10.434577_deg;
+	bbMax.lat = 67.621037_deg; bbMax.lon = 57.811965_deg;
+
+	//create input projection and set its visible frame
+	Projections::LambertAzimuthal* inputImage = new Projections::LambertAzimuthal(10.0_deg, 55.0_deg);
+
+	
+	inputImage->SetFrameWithAdjustment(bbMin, bbMax, w, h, Projections::STEP_TYPE::PIXEL_CENTER, false);
+	
+	std::cout << "Input frame" << std::endl;
+	std::cout << inputImage->GetFrame().toString() << std::endl;
+
+
+	ProjectionRenderer pd(inputImage);
+	pd.AddBorders(&cu);
+
+	pd.Clear();
+	//pd.DrawParalells(2, 2);	
+	pd.DrawImage(&imgRawData[0], ProjectionRenderer::RenderImageType::GRAY, w, h, inputImage);
+	pd.DrawBorders();
+	pd.SaveToFile("D://input_image.png");
+
+	//---------------------------------------------------------------
+
+
+	
+	Projections::Equirectangular* outputImage = new Projections::Equirectangular();
+	outputImage->SetFrame(inputImage, false); //same resolution as ipImage frame
+	auto ff = inputImage->GetFrame();
+	//outputImage->SetFrameWithAdjustment(ff.min, ff.max, 800, 600, Projections::STEP_TYPE::PIXEL_CENTER, false);
+	
+	std::cout << "output frame" << std::endl;
+	std::cout << outputImage->GetFrame().toString() << std::endl;
+
+	//compute mapping from input -> output projection   	
+	Reprojection reproj = Reprojection<int>::CreateReprojection(inputImage, outputImage);
+
+	ProjectionRenderer pdOut(outputImage);
+	pdOut.AddBorders(&cu);
+
+	pdOut.Clear();
+	//pdOut.DrawParalells(2, 2);
+	pdOut.DrawImage(&imgRawData[0], ProjectionRenderer::RenderImageType::GRAY, reproj);
+	//pdOut.DrawImage(&imgRawData[0], ProjectionRenderer::RenderImageType::GRAY, w, h, inputImage);
+	//pdOut.SetRawDataTarget(imgRawData.data(), ProjectionRenderer::RenderImageType::GRAY);
+	pdOut.DrawBorders();
+	pdOut.SaveToFile("D://output_image.png");
+
+}
+
 int main(int argc, const char* argv[])
-{	
+{		
+	TestLambertAzimuthalx();
+	return 0;
+
 	//testing();
 
 	//TestReprojectLambertToEq();

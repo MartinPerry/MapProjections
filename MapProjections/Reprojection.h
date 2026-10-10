@@ -7,6 +7,7 @@
 #include "./MapProjectionStructures.h"
 #include "./ProjectionInfo.h"
 
+
 namespace Projections
 {
 
@@ -40,14 +41,18 @@ namespace Projections
 		int outH;
 		std::vector<Pixel<T>> pixels; //[to] = from
 
-		Reprojection() : 
-			inW(0),
-			inH(0),
-			outW(0),
-			outH(0)
-		{
-		}
+		Reprojection();
+		~Reprojection() = default;
+		
+		void ClampInputToSubImage(int startX, int startY, int endX, int endY);
 
+		void SaveToFile(const std::string& fileName);
+		
+		static Reprojection<T> CreateFromFile(const std::string& fileName);
+
+	
+		//====================================================================================
+			
 		/// <summary>
 		/// Create cache name in format:
 		/// reproj_from_w_h_to_w_h
@@ -84,14 +89,8 @@ namespace Projections
 			
 			return tmp;
 		}
+								
 
-		/// <summary>
-		/// Load reprojection from file		
-		/// </summary>
-		/// <param name="imProj"></param>
-		/// <returns></returns>	
-		static Reprojection<T> CreateFromFile(const std::string& fileName);
-		
 		/// <summary>
 		/// Re-project data from -> to
 		/// Calculates mapping: toData[index] = fromData[reprojection[index]]
@@ -251,44 +250,7 @@ namespace Projections
 
 			return reprojection;
 		};
-
-		/// <summary>
-		/// Clamp input fromData to map only from sub-image (sub-region)
-		/// point at startX, startY will become [0, 0]
-		/// Usefull when we calculate reprojection for large area image
-		/// but want to do actuall reprojection only for a smaller image
-		/// that was created from the large one
-		/// </summary>
-		/// <param name="startX"></param>
-		/// <param name="startY"></param>
-		/// <param name="endX"></param>
-		/// <param name="endY"></param>
-		void ClampInputToSubImage(int startX, int startY, int endX, int endY)
-		{
-			int w = endX - startX;
-			int h = endY - startY;
-
-			for (auto& v : this->pixels)
-			{
-				v.x -= startX;
-				v.y -= startY;
-
-				if ((v.x < 0) || (v.y < 0) || (v.x >= w) || (v.y >= h))
-				{
-					v.x = -1;
-					v.y = -1;
-				}
-			}
-			this->inW = w;
-			this->inH = h;
-		}
 		
-		/// <summary>
-		/// Save reprojection to file
-		/// </summary>
-		/// <param name="fileName"></param>
-		void SaveToFile(const std::string& fileName);
-
 
 		/// <summary>
 		/// Reproject inputData based on reproj with Nerest Neighbor interpolation.

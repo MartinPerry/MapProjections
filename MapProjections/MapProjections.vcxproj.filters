@@ -31,6 +31,12 @@
     <Filter Include="Header Files\simd\neon\Projections">
       <UniqueIdentifier>{e781f8cf-e69d-4d15-a674-74ad2741dd96}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\Triangulation">
+      <UniqueIdentifier>{14f8c042-07a5-4655-8944-9a932fb18297}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Triangulation">
+      <UniqueIdentifier>{15fc1b2c-bb02-44b3-be47-86b589f46d0c}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="lodepng.cpp">
@@ -58,6 +64,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="tests.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Triangulation\Triangulation.cpp">
+      <Filter>Source Files\Triangulation</Filter>
+    </ClCompile>
+    <ClCompile Include="ReprojectionPointCloud.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -178,6 +190,15 @@
     </ClInclude>
     <ClInclude Include="Projections\TransverseMercator.h">
       <Filter>Header Files\Projections</Filter>
+    </ClInclude>
+    <ClInclude Include="Triangulation\Triangulation.h">
+      <Filter>Header Files\Triangulation</Filter>
+    </ClInclude>
+    <ClInclude Include="Triangulation\delaunator.hpp">
+      <Filter>Header Files\Triangulation</Filter>
+    </ClInclude>
+    <ClInclude Include="ReprojectionPointCloud.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

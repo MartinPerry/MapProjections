@@ -112,6 +112,7 @@ namespace Projections
 				Projections::Coordinate c;
 				c.lon = Longitude::deg(lon);
 				c.lat = Latitude::deg(lat);
+				auto px = to->template Project<float>(c);
 
 				if ((px.x < 0) || (px.x >= r.outW) ||
 					(px.y < 0) || (px.y >= r.outH))

@@ -16,6 +16,8 @@
 #include "./Projections/GEOS.h"
 #include "./Projections/AEQD.h"
 #include "./Projections/TransverseMercator.h"
+#include "./Projections/AzimuthalEquidistant.h"
+#include "./Projections/AlbersEqualAreaConic.h"
 
 //================================================================
 // AVX

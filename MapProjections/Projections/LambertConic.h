@@ -92,8 +92,11 @@ namespace Projections
 
 		ProjectedValueInverse ProjectInverseInternal(MyRealType x, MyRealType y) const
 		{
-			MyRealType phi = ProjectionUtils::sgn(n) * std::sqrt(x * x + (phi0 - y) * (phi0 - y));
-			MyRealType delta = std::atan(x / (phi0 - y));
+			MyRealType dy = phi0 - y;
+			MyRealType tmp = std::hypot(x, dy);
+
+			MyRealType phi = ProjectionUtils::sgn(n) * tmp;
+			MyRealType delta = std::atan2(x, dy);
 
 			MyRealType t = std::pow(f / phi, (1.0 / n));
 

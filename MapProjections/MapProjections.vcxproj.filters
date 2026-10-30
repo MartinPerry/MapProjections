@@ -66,11 +66,11 @@
     <ClCompile Include="tests.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Triangulation\Triangulation.cpp">
-      <Filter>Source Files\Triangulation</Filter>
-    </ClCompile>
     <ClCompile Include="ReprojectionPointCloud.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Triangulation\PointCloudTriangulation.cpp">
+      <Filter>Source Files\Triangulation</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -191,14 +191,20 @@
     <ClInclude Include="Projections\TransverseMercator.h">
       <Filter>Header Files\Projections</Filter>
     </ClInclude>
-    <ClInclude Include="Triangulation\Triangulation.h">
-      <Filter>Header Files\Triangulation</Filter>
-    </ClInclude>
     <ClInclude Include="Triangulation\delaunator.hpp">
       <Filter>Header Files\Triangulation</Filter>
     </ClInclude>
     <ClInclude Include="ReprojectionPointCloud.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Triangulation\PointCloudTriangulation.h">
+      <Filter>Header Files\Triangulation</Filter>
+    </ClInclude>
+    <ClInclude Include="Projections\AzimuthalEquidistant.h">
+      <Filter>Header Files\Projections</Filter>
+    </ClInclude>
+    <ClInclude Include="Projections\AlbersEqualAreaConic.h">
+      <Filter>Header Files\Projections</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

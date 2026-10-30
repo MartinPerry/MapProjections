@@ -65,7 +65,7 @@ void ReprojectionPointCloud::SaveToFile(const std::string& fileName)
 	fwrite(&this->outW, sizeof(int), 1, f);
 	fwrite(&this->outH, sizeof(int), 1, f);
 
-	fwrite(this->mapping.data(), sizeof(mapping), this->mapping.size(), f);
+	fwrite(this->mapping.data(), sizeof(Triangle), this->mapping.size(), f);
 	fclose(f);
 
 }

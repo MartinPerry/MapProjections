@@ -300,7 +300,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_lib|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release_lib|x64'">true</ExcludedFromBuild>
     </ClCompile>
-    <ClCompile Include="Triangulation\Triangulation.cpp" />
+    <ClCompile Include="Triangulation\PointCloudTriangulation.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="CountriesUtils.h" />
@@ -313,6 +313,8 @@
     <ClInclude Include="ProjectionInfo.h" />
     <ClInclude Include="ProjectionRenderer.h" />
     <ClInclude Include="Projections\AEQD.h" />
+    <ClInclude Include="Projections\AlbersEqualAreaConic.h" />
+    <ClInclude Include="Projections\AzimuthalEquidistant.h" />
     <ClInclude Include="Projections\Equirectangular.h" />
     <ClInclude Include="Projections\GEOS.h" />
     <ClInclude Include="Projections\LambertAzimuthal.h" />
@@ -347,7 +349,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release_lib|x64'">true</ExcludedFromBuild>
     </ClInclude>
     <ClInclude Include="Triangulation\delaunator.hpp" />
-    <ClInclude Include="Triangulation\Triangulation.h" />
+    <ClInclude Include="Triangulation\PointCloudTriangulation.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\README.md" />

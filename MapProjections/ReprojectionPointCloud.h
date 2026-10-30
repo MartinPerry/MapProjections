@@ -1,8 +1,10 @@
 #ifndef REPROJECTION_POINT_CLOUD_H
 #define REPROJECTION_POINT_CLOUD_H
 
+#include <thread>
+#include <atomic>
 #include <vector>
-
+#include <algorithm>
 
 #include "./MapProjectionStructures.h"
 #include "./ProjectionInfo.h"
@@ -110,7 +112,6 @@ namespace Projections
 				Projections::Coordinate c;
 				c.lon = Longitude::deg(lon);
 				c.lat = Latitude::deg(lat);
-				auto px = to->Project<float>(c);
 
 				if ((px.x < 0) || (px.x >= r.outW) ||
 					(px.y < 0) || (px.y >= r.outH))
@@ -123,61 +124,71 @@ namespace Projections
 			}
 
 			auto tris = PointCloudTriangulation::TriangulatePointCloud(ptx, pty);
-			
-			
-			for (int y = 0; y < r.outH; y++)
-			{
-				//printf("%d / %d\n", y, r.outH);
-				for (int x = 0; x < r.outW; x++)
+
+			std::atomic<int> nextRow{ 0 };
+			unsigned int numThreads = std::max(1u, std::thread::hardware_concurrency());
+
+			//iterate reprojected grid and for each point find a triangle that contains this point
+			//calculaet barycentric coordinates of the point inside the triangle
+			//which will be used to interpolate value during reprojection
+			auto worker = [&]() {
+				int y;
+				while ((y = nextRow.fetch_add(1, std::memory_order_relaxed)) < r.outH)
 				{
-					int outIndex = x + y * r.outW;
-
-					for (size_t i = 0; i < tris.size(); i++)
+					for (int x = 0; x < r.outW; x++)
 					{
-						int ai = tris[i].index[0];
+						int outIndex = x + y * r.outW;
 
-						if (std::abs(ptx[ai] - x) > 10)
+						for (size_t i = 0; i < tris.size(); i++)
 						{
-							//too far
-							continue;
-						}
+							int ai = tris[i].index[0];
 
-						if (std::abs(pty[ai] - y) > 10)
-						{
-							//too far
-							continue;
-						}
+							if (std::abs(ptx[ai] - x) > 10) continue;
+							if (std::abs(pty[ai] - y) > 10) continue;
 
-						int bi = tris[i].index[1];
-						int ci = tris[i].index[2];
+							int bi = tris[i].index[1];
+							int ci = tris[i].index[2];
 
-
-						if (ReprojectionPointCloud::PointInTriangle(ptx[ai], pty[ai],
-							ptx[bi], pty[bi],
-							ptx[ci], pty[ci],
-							x, y)
-							)
-						{
-	
-							float u, v, w;
-							ReprojectionPointCloud::Barycentric(
+							if (ReprojectionPointCloud::PointInTriangle(
 								ptx[ai], pty[ai],
 								ptx[bi], pty[bi],
 								ptx[ci], pty[ci],
-								x, y,
-								&u, &v, &w);
+								x, y))
+							{
+								float u, v, w;
 
-							r.mapping[outIndex] = {
-								ptx[ai], pty[ai],
-								ptx[bi], pty[bi],
-								ptx[ci], pty[ci],
-								ai, bi, ci,
-								u, v, w
-							};
-							break;
+								ReprojectionPointCloud::Barycentric(
+									ptx[ai], pty[ai],
+									ptx[bi], pty[bi],
+									ptx[ci], pty[ci],
+									x, y,
+									&u, &v, &w);
+
+								r.mapping[outIndex] = {
+									ptx[ai], pty[ai],
+									ptx[bi], pty[bi],
+									ptx[ci], pty[ci],
+									ai, bi, ci,
+									u, v, w
+								};
+								break;
+							}
 						}
 					}
 				}
+				};
+
+			std::vector<std::thread> threads;
+			threads.reserve(numThreads);
+
+			for (unsigned int i = 0; i < numThreads; i++)
+			{
+				threads.emplace_back(worker);
+			}
+
+			for (auto& thread : threads)
+			{
+				thread.join();
 			}
 
 			return r;

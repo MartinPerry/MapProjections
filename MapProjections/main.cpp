@@ -16,6 +16,8 @@
 #include "./Projections/GEOS.h"
 #include "./Projections/AEQD.h"
 #include "./Projections/TransverseMercator.h"
+#include "./Projections/AzimuthalEquidistant.h"
+#include "./Projections/AlbersEqualAreaConic.h"
 
 
 #include "PoleRotationTransform.h"
@@ -375,61 +377,60 @@ void testing()
 }
 
 
-void TestLambertAzimuthalx()
+void Test()
 {
 	unsigned w = 600;
 	unsigned h = 600;
 
 	std::vector<uint8_t> imgRawData;
 	std::vector<uint8_t> fileData;
-	lodepng::load_file(fileData, "D://orig.png");
-	//lodepng::load_file(fileData, "D://xxx3_empty.png");
-	//lodepng::load_file(fileData, "D://full_disk_ahi_true_color.png");	
-	lodepng::decode(imgRawData, w, h, fileData, LodePNGColorType::LCT_GREY);
+
+	//Albers Equals Area
+	//Center 3.85°N, 114.13°E, bbox approximately 107.08-121.18°E, -2.47-9.18°N
+	lodepng::load_file(fileData, "D://malaysia_east.png");
+	
+	//Azimuthal Equdistant
+	//Center 3.82°N, 101.60°E, bbox approximately 96.92-106.25°E, -1.33-8.97°N
+	//lodepng::load_file(fileData, "D://malaysia_peninsula.png");
+		
+	lodepng::decode(imgRawData, w, h, fileData, LodePNGColorType::LCT_RGB);
 
 
 	CountriesUtils cu;
 	cu.Load("D://borders.csv", 5);
 
-	/*
-	Attribute: LL_lon: -10.434577 (H5T_FLOAT)	
-	Attribute: UL_lon: -39.535786 (H5T_FLOAT)
-	Attribute: UR_lon: 57.811965 (H5T_FLOAT)
-	Attribute: LR_lon: 29.421039 (H5T_FLOAT)
-
-	Attribute: LL_lat: 31.746215 (H5T_FLOAT)
-	Attribute: UL_lat: 67.022833 (H5T_FLOAT)	
-	Attribute: UR_lat: 67.621037 (H5T_FLOAT)	
-	Attribute: LR_lat: 31.987650 (H5T_FLOAT) 
-	*/
-
 
 	Projections::Coordinate bbMin, bbMax;
 
-	//======= lambert conic
-
-	//bbMin.lat = 31.746215_deg; bbMin.lon = -39.535786_deg;
-	//bbMax.lat = 67.621037_deg; bbMax.lon = 57.811965_deg;
-
-	bbMin.lat = 31.746215_deg; bbMin.lon = -10.434577_deg;
-	bbMax.lat = 67.621037_deg; bbMax.lon = 57.811965_deg;
+	//======= AzimuthalEquidistant
+	/*
+	bbMin.lat = -1.33_deg; bbMin.lon = 96.92_deg;
+	bbMax.lat = 8.97_deg; bbMax.lon = 106.25_deg;
 
 	//create input projection and set its visible frame
-	Projections::LambertAzimuthal* inputImage = new Projections::LambertAzimuthal(10.0_deg, 55.0_deg);
-
+	Projections::AzimuthalEquidistant* inputImage = new Projections::AzimuthalEquidistant(101.60_deg, 3.82_deg);
+	*/
 	
+	//======
+	bbMin.lat = -1.47_deg; bbMin.lon = 107.08_deg;
+	bbMax.lat = 9.18_deg; bbMax.lon = 121.18_deg;
+
+	//create input projection and set its visible frame
+	Projections::AlbersEqualAreaConic* inputImage = new Projections::AlbersEqualAreaConic(114.13_deg, 4.85_deg, 0.0_deg, 7.0_deg);
+
 	inputImage->SetFrameWithAdjustment(bbMin, bbMax, w, h, Projections::STEP_TYPE::PIXEL_CENTER, false);
 	
 	std::cout << "Input frame" << std::endl;
 	std::cout << inputImage->GetFrame().toString() << std::endl;
 
 
-	ProjectionRenderer pd(inputImage);
+	ProjectionRenderer pd(inputImage, ProjectionRenderer::RenderImageType::RGB);
 	pd.AddBorders(&cu);
 
 	pd.Clear();
 	//pd.DrawParalells(2, 2);	
-	pd.DrawImage(&imgRawData[0], ProjectionRenderer::RenderImageType::GRAY, w, h, inputImage);
+	pd.SetRawDataTarget(&imgRawData[0], ProjectionRenderer::RenderImageType::RGB);
+	//pd.DrawImage(&imgRawData[0], ProjectionRenderer::RenderImageType::RGB, w, h, inputImage);
 	pd.DrawBorders();
 	pd.SaveToFile("D://input_image.png");
 
@@ -448,12 +449,12 @@ void TestLambertAzimuthalx()
 	//compute mapping from input -> output projection   	
 	Reprojection reproj = Reprojection<int>::CreateReprojection(inputImage, outputImage);
 
-	ProjectionRenderer pdOut(outputImage);
+	ProjectionRenderer pdOut(outputImage, ProjectionRenderer::RenderImageType::RGB);
 	pdOut.AddBorders(&cu);
 
 	pdOut.Clear();
 	//pdOut.DrawParalells(2, 2);
-	pdOut.DrawImage(&imgRawData[0], ProjectionRenderer::RenderImageType::GRAY, reproj);
+	pdOut.DrawImage(&imgRawData[0], ProjectionRenderer::RenderImageType::RGB, reproj);
 	//pdOut.DrawImage(&imgRawData[0], ProjectionRenderer::RenderImageType::GRAY, w, h, inputImage);
 	//pdOut.SetRawDataTarget(imgRawData.data(), ProjectionRenderer::RenderImageType::GRAY);
 	pdOut.DrawBorders();
@@ -463,7 +464,7 @@ void TestLambertAzimuthalx()
 
 int main(int argc, const char* argv[])
 {		
-	TestLambertAzimuthalx();
+	Test();
 	return 0;
 
 	//testing();

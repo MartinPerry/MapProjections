@@ -8,7 +8,9 @@
 
 using namespace Projections;
 
-ReprojectionPointCloud::ReprojectionPointCloud()
+ReprojectionPointCloud::ReprojectionPointCloud() :
+	outW(0),
+	outH(0)
 {
 }
 

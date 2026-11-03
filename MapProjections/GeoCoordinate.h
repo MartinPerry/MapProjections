@@ -121,12 +121,12 @@ protected:
 //String literall operator for Angle only
 //Latitude and longitude can be created from Angle
 
-inline AngleValue operator "" _deg(long double value)
+inline AngleValue operator ""_deg(long double value)
 {
 	return AngleValue::deg(value);
 }
 
-inline AngleValue operator "" _rad(long double value)
+inline AngleValue operator ""_rad(long double value)
 {
 	return  AngleValue::rad(value);
 }

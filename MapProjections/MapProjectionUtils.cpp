@@ -196,13 +196,13 @@ std::vector<Coordinate> ProjectionUtils::CalcGreatCirclePoints(const Coordinate&
 	auto [x0, y0, z0] = start.ConvertToCartesianLHSystem(1.0);
 	auto [x1, y1, z1] = end.ConvertToCartesianLHSystem(1.0);
 
-	
+
 	std::vector<Coordinate> res;
 
 	res.push_back(start);
 
 	//Interpolate linearly between the points.
-    //Let M be fraction along the path from point A to point B:
+	//Let M be fraction along the path from point A to point B:
 
 	auto dx = (x1 - x0);
 	auto dy = (y1 - y0);
@@ -230,8 +230,49 @@ std::vector<Coordinate> ProjectionUtils::CalcGreatCirclePoints(const Coordinate&
 
 	res.push_back(end);
 
-	
+
 	return res;
+}
+
+/// <summary>
+/// Lerp between two points
+/// Lerped point is on great circle
+/// </summary>
+/// <param name="p0"></param>
+/// <param name="p1"></param>
+/// <param name="t"></param>
+/// <returns></returns>
+Coordinate ProjectionUtils::Lerp(const Coordinate& p0, const Coordinate& p1, MyRealType t)
+{
+	//convert start and end points from latitude and longitude to Cartesian XYZ coordinates on the Unit Sphere: 
+	auto [x0, y0, z0] = p0.ConvertToCartesianLHSystem(1.0);
+	auto [x1, y1, z1] = p1.ConvertToCartesianLHSystem(1.0);
+
+
+	//Interpolate linearly between the points.
+	//Let M be fraction along the path from point A to point B:
+
+	auto dx = (x1 - x0);
+	auto dy = (y1 - y0);
+	auto dz = (z1 - z0);
+
+
+
+	MyRealType xm = dx * t + x0;
+	MyRealType ym = dy * t + y0;
+	MyRealType zm = dz * t + z0;
+
+	//Project the interpolated points up to the surface of the Unit Sphere
+	auto tmp = 1.0 / std::sqrt(xm * xm + ym * ym + zm * zm);
+
+	MyRealType xs = xm * tmp;
+	MyRealType ys = ym * tmp;
+	MyRealType zs = zm * tmp;
+
+	//Convert back to latitude and longitude
+	auto mc = Coordinate::CreateFromCartesianLHSystem(xs, ys, zs, 1.0);
+
+	return mc;
 }
 
 /// <summary>
@@ -328,7 +369,7 @@ std::array<Latitude, 2> ProjectionUtils::EarthLatitudeRange(Latitude lat, MyReal
 	{
 		MyRealType overshoot = -minlat - rightangle;
 		minlat = -rightangle + overshoot;
-		if (minlat > maxlat) 
+		if (minlat > maxlat)
 		{
 			maxlat = minlat;
 		}
@@ -339,7 +380,7 @@ std::array<Latitude, 2> ProjectionUtils::EarthLatitudeRange(Latitude lat, MyReal
 	{
 		MyRealType overshoot = maxlat - rightangle;
 		maxlat = rightangle - overshoot;
-		if (maxlat < minlat) 
+		if (maxlat < minlat)
 		{
 			minlat = maxlat;
 		}

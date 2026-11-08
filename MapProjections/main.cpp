@@ -387,7 +387,7 @@ void Test()
 
 	//Albers Equals Area
 	//Center 3.85°N, 114.13°E, bbox approximately 107.08-121.18°E, -2.47-9.18°N
-	lodepng::load_file(fileData, "D://bermuda2.png");
+	lodepng::load_file(fileData, "D://serbia_cut.png");
 	
 	//Azimuthal Equdistant
 	//Center 3.82°N, 101.60°E, bbox approximately 96.92-106.25°E, -1.33-8.97°N
@@ -418,11 +418,12 @@ void Test()
 	//bbMin.lat = 27.840741_deg; bbMin.lon = -69.971842_deg;
 	//bbMax.lat = 36.858366_deg; bbMax.lon = -59.344002_deg;
 
-	bbMin.lat = 30.073034707086844_deg; bbMin.lon = -67.38419884548_deg;
-	bbMax.lat = 34.59517357367844_deg; bbMax.lon = -61.92321191573521_deg;
+
+	bbMin.lat = 40.976696_deg; bbMin.lon = 15.839259_deg;
+	bbMax.lat = 47.441601_deg; bbMax.lon = 25.231145_deg;
 	
 	//create input projection and set its visible frame
-	Projections::AEQD* inputImage = new Projections::AEQD(-64.657922_deg, 32.351164_deg, 250);
+	Projections::AEQD* inputImage = new Projections::AEQD(20.631865_deg, 44.249307_deg, 356);
 
 	inputImage->SetFrameWithAdjustment(bbMin, bbMax, w, h, Projections::STEP_TYPE::PIXEL_CENTER, false);
 	

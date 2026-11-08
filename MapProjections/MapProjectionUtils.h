@@ -31,6 +31,8 @@ namespace Projections
 
 		static std::vector<Coordinate> CalcGreatCirclePoints(const Coordinate& start, const Coordinate& end, MyRealType step);
 
+		static Coordinate Lerp(const Coordinate& p0, const Coordinate& p1, MyRealType t);
+
 		static MyRealType CalcArea(const std::vector<Coordinate> & pts);
 		
 		template <typename PixelType, typename Projection>

@@ -1,6 +1,7 @@
 #include "./MapProjectionUtils.h"
 
 #include <cstdlib>
+#include <array>
 
 #include "./MapProjectionStructures.h"
 
@@ -192,9 +193,11 @@ std::vector<Coordinate> ProjectionUtils::CalcGreatCirclePoints(const Coordinate&
 		return {};
 	}
 
+	auto precomp = Coordinate::PrecalcMultipleSinCos(start, end);
+
 	//convert start and end points from latitude and longitude to Cartesian XYZ coordinates on the Unit Sphere: 
-	auto [x0, y0, z0] = start.ConvertToCartesianLHSystem(1.0);
-	auto [x1, y1, z1] = end.ConvertToCartesianLHSystem(1.0);
+	auto [x0, y0, z0] = start.ConvertToCartesianLHSystem(1.0, &precomp[0]);
+	auto [x1, y1, z1] = end.ConvertToCartesianLHSystem(1.0, &precomp[1]);
 
 
 	std::vector<Coordinate> res;
@@ -244,9 +247,11 @@ std::vector<Coordinate> ProjectionUtils::CalcGreatCirclePoints(const Coordinate&
 /// <returns></returns>
 Coordinate ProjectionUtils::Lerp(const Coordinate& p0, const Coordinate& p1, MyRealType t)
 {
+	auto precomp = Coordinate::PrecalcMultipleSinCos(p0, p1);
+
 	//convert start and end points from latitude and longitude to Cartesian XYZ coordinates on the Unit Sphere: 
-	auto [x0, y0, z0] = p0.ConvertToCartesianLHSystem(1.0);
-	auto [x1, y1, z1] = p1.ConvertToCartesianLHSystem(1.0);
+	auto [x0, y0, z0] = p0.ConvertToCartesianLHSystem(1.0, &precomp[0]);
+	auto [x1, y1, z1] = p1.ConvertToCartesianLHSystem(1.0, &precomp[1]);
 
 
 	//Interpolate linearly between the points.

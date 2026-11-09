@@ -231,33 +231,55 @@ Coordinate::PrecomputedSinCos Coordinate::PrecomputeSinCos() const
 	return tmp;
 }
 
-/// <summary>
-/// Prepare precalculated sin/cos - faster for NEON because we can utilise all
-/// calculations
-/// </summary>
-/// <param name="coords"></param>
-/// <returns></returns>
-std::array<Coordinate::PrecomputedSinCos, 4> Coordinate::PrecalcMultipleSinCos(
-	const std::array<Coordinate, 4> & coords)
+std::array<Coordinate::PrecomputedSinCos, 2> Coordinate::PrecalcMultipleSinCos(
+	const std::array<Coordinate, 2>& coords)
 {
-	
+	return Coordinate::PrecalcMultipleSinCos(coords[0], coords[1]);
+}
+
+std::array<Coordinate::PrecomputedSinCos, 2> Coordinate::PrecalcMultipleSinCos(
+	const Coordinate& c0, const Coordinate& c1)
+{
+	std::array<Coordinate::PrecomputedSinCos, 2> res;
+
 #ifdef HAVE_NEON
 
-	Projections::Neon::CoordinateNeon gpsNeon = Projections::Neon::CoordinateNeon::FromArray(coords);
-	return Projections::Neon::CoordinateNeon::PrecalcMultipleSinCos(gpsNeon);
+	//we can use neon to calculate 2 sin/cos at once
+	float32x4_t v = {
+		static_cast<float32_t>(c0.lat.rad()),
+		static_cast<float32_t>(c0.lon.rad()),
+		static_cast<float32_t>(c1.lat.rad()),
+		static_cast<float32_t>(c1.lon.rad())
+	};
+
+	float32x4_t ysin;
+	float32x4_t ycos;
+	my_sincos_f32(v, &ysin, &ycos);
+
+	float values[4];
+	vst1q_f32(values, ysin);
+	res[0].sinLat = values[0];
+	res[0].sinLon = values[1];
+	res[1].sinLat = values[2];
+	res[1].sinLon = values[3];
+
+	vst1q_f32(values, ycos);
+	res[0].cosLat = values[0];
+	res[0].cosLon = values[1];
+	res[1].cosLat = values[2];
+	res[1].cosLon = values[3];
 
 #else
-
-	std::array<Coordinate::PrecomputedSinCos, 4> res;
-	for (size_t i = 0; i < 4; i++)
+	
+	for (size_t i = 0; i < 2; i++)
 	{
 		res[i].sinLat = std::sin(coords[i].lat.rad());
 		res[i].cosLat = std::cos(coords[i].lat.rad());
 		res[i].sinLon = std::sin(coords[i].lon.rad());
 		res[i].cosLon = std::cos(coords[i].lon.rad());
-	}
+	}	
+#endif	
 
 	return res;
-
-#endif	
 }
+

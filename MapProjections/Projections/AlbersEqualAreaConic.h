@@ -77,7 +77,8 @@ namespace Projections
         ProjectedValueInverse ProjectInverseInternal(MyRealType x, MyRealType y) const
         {            
             MyRealType dy = rho0 - y;
-            MyRealType rho = std::hypot(x, dy);
+            MyRealType rho = std::sqrt(x * x + dy * dy);
+            //MyRealType rho = std::hypot(x, dy);
 
             MyRealType theta = std::atan2(x, dy);
 

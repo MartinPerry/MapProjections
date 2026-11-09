@@ -134,7 +134,8 @@ namespace Projections
 			
 			//ChatGpt
 			
-			const double p = std::hypot(x, y);
+			const double p = std::sqrt(x * x + y * y);
+			//const double p = std::hypot(x, y);
 			if (p < 1e-12) 
 			{
 				return { centerLat, centerLon};

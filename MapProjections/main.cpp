@@ -210,12 +210,21 @@ void TestVectorization()
 		tmp4[i] = gps;
 	}
 
+	std::array< Projections::Coordinate, 2> tmp2a;
+	tmp2a[0] = tmp4[0];
+	tmp2a[1] = tmp4[1];
+	
+	std::array< Projections::Coordinate, 2> tmp2b;
+	tmp2b[0] = tmp4[2];
+	tmp2b[1] = tmp4[3];
+
 	nsNeon::CoordinateNeon gpsNeon = nsNeon::CoordinateNeon::FromArray(tmp4);
 
 	auto projectedMercNeon = mercNeon.Project(gpsNeon);
 	auto projectedEqNeon = eqNeon.Project(gpsNeon);
 
-	auto sinCos4 = Coordinate::PrecalcMultipleSinCos(tmp4);
+	auto sinCos2a = Coordinate::PrecalcMultipleSinCos(tmp2a);
+	auto sinCos2b = Coordinate::PrecalcMultipleSinCos(tmp2b);
 
 	auto sinCosNeon = nsNeon::CoordinateNeon::PrecalcMultipleSinCos(gpsNeon);
 

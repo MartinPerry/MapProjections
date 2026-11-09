@@ -91,8 +91,11 @@ namespace Projections
 
 		PrecomputedSinCos PrecomputeSinCos() const;
 
-		static std::array<Coordinate::PrecomputedSinCos, 4> PrecalcMultipleSinCos(
-			const std::array<Coordinate, 4> & coords);
+		static std::array<Coordinate::PrecomputedSinCos, 2> PrecalcMultipleSinCos(
+			const Coordinate& c0, const Coordinate& c1);
+
+		static std::array<Coordinate::PrecomputedSinCos, 2> PrecalcMultipleSinCos(
+			const std::array<Coordinate, 2>& coords);
 
 		static std::array<Coordinate, 4> CreateFromCartesianLHSystem(
 			const std::array<double, 4> & x,

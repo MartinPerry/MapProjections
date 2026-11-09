@@ -74,8 +74,8 @@ namespace Projections
 
 		ProjectedValueInverse ProjectInverseInternal(MyRealType x, MyRealType y) const
 		{
-			//double c = std::sqrt(x * x + y * y);
-			double c = std::hypot(x, y);
+			double c = std::sqrt(x * x + y * y);
+			//double c = std::hypot(x, y);
 
 			
 			double cosC = std::cos(c);
